@@ -155,11 +155,12 @@ export function JobFeed({ defaultKeywords = "" }: { defaultKeywords?: string }) 
     }
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (didAutoFetch.current || !defaultKeywords.trim()) return;
     didAutoFetch.current = true;
     void fetchJobs(defaultKeywords.trim());
-  }, []); // intentionally runs once on mount
+  }, []); // intentionally runs once on mount — defaultKeywords is the initial prop value
 
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

@@ -472,7 +472,7 @@ export default function Home() {
             Skip to dashboard
           </Link>
         </div>
-        <p className="relative mt-4 text-xs text-slate-500">No credit card · Free plan · Upgrade when you're ready</p>
+        <p className="relative mt-4 text-xs text-slate-500">No credit card · Free plan · Upgrade when you&apos;re ready</p>
       </section>
 
     </div>
