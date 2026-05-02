@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proposalio</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <span class="logo">Proposalio</span>
+    <button id="btn-logout" class="btn-ghost hidden">Logout</button>
+  </header>
+
+  <!-- Loading -->
+  <div id="view-loading" class="view">
+    <div class="spinner"></div>
+    <p class="muted">Loading...</p>
+  </div>
+
+  <!-- Login -->
+  <div id="view-login" class="view hidden">
+    <p class="view-title">Sign in to your account</p>
+    <div id="login-error" class="alert-error hidden"></div>
+    <div class="form-group">
+      <label class="label">Email</label>
+      <input id="input-email" type="email" class="input" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <div class="form-group">
+      <label class="label">Password</label>
+      <input id="input-password" type="password" class="input" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button id="btn-login" class="btn-primary">Sign in</button>
+  </div>
+
+  <!-- No job found -->
+  <div id="view-no-job" class="view hidden">
+    <div class="empty-icon">💼</div>
+    <p class="view-title">No job found on this page</p>
+    <p class="muted">Open an Upwork job posting, then click the extension icon.</p>
+    <a href="https://www.upwork.com/nx/search/jobs/" target="_blank" class="btn-secondary">Browse Upwork jobs ↗</a>
+  </div>
+
+  <!-- Job ready -->
+  <div id="view-job" class="view hidden">
+    <div id="job-badge" class="badge">Job detected</div>
+    <p id="job-title" class="job-title"></p>
+    <p id="job-desc" class="job-desc"></p>
+    <button id="btn-generate" class="btn-primary">Generate Proposal</button>
+  </div>
+
+  <!-- Generating -->
+  <div id="view-generating" class="view hidden">
+    <div class="spinner"></div>
+    <p class="muted">Generating your proposal...</p>
+  </div>
+
+  <!-- Result -->
+  <div id="view-result" class="view hidden">
+    <div class="result-header">
+      <span class="badge badge-green">Proposal ready</span>
+      <button id="btn-copy" class="btn-copy">Copy</button>
+    </div>
+    <div id="result-text" class="result-box"></div>
+    <div class="result-actions">
+      <button id="btn-back" class="btn-secondary">← Generate another</button>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div id="view-error" class="view hidden">
+    <div class="empty-icon">⚠️</div>
+    <p class="view-title">Something went wrong</p>
+    <p id="error-message" class="muted"></p>
+    <button id="btn-retry" class="btn-secondary">Try again</button>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

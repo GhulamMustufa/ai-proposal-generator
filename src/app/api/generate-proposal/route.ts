@@ -226,6 +226,17 @@ function isOptionalControlTableError(error: { code?: string } | null) {
 }
 
 // ─── Route ────────────────────────────────────────────────────────────────────
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type,Authorization",
+    },
+  });
+}
+
 export async function POST(request: Request) {
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -259,9 +270,19 @@ export async function POST(request: Request) {
     }
 
     const supabase = createSupabaseClient();
-    const {
+    let {
       data: { user },
     } = await supabase.auth.getUser();
+
+    // Bearer token fallback — used by the Chrome extension
+    if (!user) {
+      const authHeader = request.headers.get("Authorization");
+      const bearer = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+      if (bearer) {
+        const { data } = await supabase.auth.getUser(bearer);
+        user = data.user ?? null;
+      }
+    }
 
     if (!user) {
       return errorResponse(401, "UNAUTHORIZED", "Unauthorized");

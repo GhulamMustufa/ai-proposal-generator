@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Proposalio",
+  "version": "1.0.0",
+  "description": "Generate AI proposals for Upwork jobs in one click",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "https://www.upwork.com/*",
+    "https://ai-proposal-generator-chi.vercel.app/*",
+    "https://*.supabase.co/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Proposalio"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.upwork.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
