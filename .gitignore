@@ -44,3 +44,7 @@ Thumbs.db
 # ── TypeScript ────────────────────────────────────────────────────────────────
 *.tsbuildinfo
 next-env.d.ts
+
+# ── Chrome extension config (contains real credentials when filled in) ─────────
+chrome-extension/config.js
+!chrome-extension/config.example.js

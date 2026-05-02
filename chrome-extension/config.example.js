@@ -1,6 +1,6 @@
 // ─── Proposalio Extension Config ─────────────────────────────────────────────
-// Find these values in your Supabase project → Settings → API
-// These are public-safe keys — the anon key is not a secret.
+// Copy this file to config.js and fill in your values.
+// Find these in your Supabase project → Settings → API
 
 const SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co";
 const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
