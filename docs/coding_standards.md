@@ -226,11 +226,12 @@ MVP Priorities:
 # 13. Code Comments Rules (IMPORTANT)
 
 ## 13.1 When to add comments
-Add comments ONLY when:
+Add comments when:
+- **Educational Context (NestJS):** Because NestJS is new to the team, heavily comment NestJS decorators (`@Injectable`, `@Controller`, `@Process`) and architectural flow to explain *what* the framework is doing.
 - The logic is not immediately obvious (e.g., regex, complex math).
 - There is a strict business rule (e.g., "We wait 5 seconds here to bypass Lever's anti-bot check").
 - There is a workaround or hack.
-- There is complex SQL or query logic.
+- There is complex SQL/Drizzle query logic.
 - There is a security-related decision.
 
 ## 13.2 What to comment
