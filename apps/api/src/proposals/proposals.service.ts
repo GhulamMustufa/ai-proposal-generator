@@ -204,11 +204,11 @@ export class ProposalsService {
     dayStart.setHours(0, 0, 0, 0);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [dailyUsage] = await this.db.select({ count: sql<number>\`cast(count(*) as integer)\` })
+    const [dailyUsage] = await this.db.select({ count: sql<number>`cast(count(*) as integer)` })
       .from(applications)
       .where(and(eq(applications.userId, userId), gte(applications.createdAt, dayStart)));
 
-    const [monthlyUsage] = await this.db.select({ count: sql<number>\`cast(count(*) as integer)\` })
+    const [monthlyUsage] = await this.db.select({ count: sql<number>`cast(count(*) as integer)` })
       .from(applications)
       .where(and(eq(applications.userId, userId), gte(applications.createdAt, monthStart)));
 
@@ -329,7 +329,7 @@ export class ProposalsService {
             this.redisService.set(`hash:${requestHash}:${userId}`, cacheData, CACHE_TTL_SECONDS),
             idempotencyKey ? this.redisService.set(`idem:${idempotencyKey}:${userId}`, cacheData, CACHE_TTL_SECONDS) : Promise.resolve()
           ]);
-          res.write(\`\\n\\n[DONE:\${JSON.stringify({ proposal_id: savedApp.id })}]\`);
+          res.write(`\n\n[DONE:${JSON.stringify({ proposal_id: savedApp.id })}]`);
         }
       } catch (e) {
         // Ignore DB save errors to not break the successful stream
@@ -347,7 +347,7 @@ export class ProposalsService {
           this.generateSingleProposal(messages, abortController.signal, "Write in a direct, confident register. Lead immediately with the core value you bring to this specific problem. Tone: professional but not stiff — like an expert who doesn't need to oversell."),
           this.generateSingleProposal(messages, abortController.signal, "Write in a warmer, more conversational register. Acknowledge the client's situation first before pivoting to your approach. Tone: collegial — like a trusted colleague who gets the problem and has done this before.")
         ]);
-        generatedProposal = \`Variation A (Direct):\\n\${variationA}\\n\\nVariation B (Conversational):\\n\${variationB}\`;
+        generatedProposal = `Variation A (Direct):\n${variationA}\n\nVariation B (Conversational):\n${variationB}`;
       } else {
         generatedProposal = await this.generateSingleProposal(messages, abortController.signal);
       }
@@ -389,13 +389,13 @@ export class ProposalsService {
       });
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Unknown error';
-      return this.errorResponse(res, 503, 'STORAGE_FAILURE', \`Failed to save proposal: \${message}\`);
+      return this.errorResponse(res, 503, 'STORAGE_FAILURE', `Failed to save proposal: ${message}`);
     }
   }
 
   private async generateSingleProposal(messages: any[], signal: AbortSignal, variationInstruction?: string) {
     const finalMessages = variationInstruction 
-      ? messages.map((m, i) => i === messages.length - 1 ? { ...m, content: \`\${m.content}\\n\\n\${variationInstruction}\` } : m) 
+      ? messages.map((m, i) => i === messages.length - 1 ? { ...m, content: `${m.content}\n\n${variationInstruction}` } : m) 
       : messages;
 
     const response = await this.openai.chat.completions.create(
@@ -480,7 +480,7 @@ export class ProposalsService {
     try {
       const browser = await puppeteer.launch({ headless: true });
       const page = await browser.newPage();
-      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+      await page.setContent(htmlContent, { waitUntil: 'load' });
       
       const pdfBuffer = await page.pdf({
         format: 'A4',

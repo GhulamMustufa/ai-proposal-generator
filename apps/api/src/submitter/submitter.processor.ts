@@ -18,7 +18,7 @@ export class SubmitterProcessor extends WorkerHost {
   }
 
   async process(job: Job<any, any, string>): Promise<any> {
-    this.logger.log(\`Processing job \${job.id} of type \${job.name}\`);
+    this.logger.log(`Processing job ${job.id} of type ${job.name}`);
     
     if (job.name === 'submit-lever') {
       const { applicationId, userId, jobId } = job.data;
@@ -31,6 +31,6 @@ export class SubmitterProcessor extends WorkerHost {
       return { success: true };
     }
     
-    this.logger.warn(\`Unknown job name: \${job.name}\`);
+    this.logger.warn(`Unknown job name: ${job.name}`);
   }
 }

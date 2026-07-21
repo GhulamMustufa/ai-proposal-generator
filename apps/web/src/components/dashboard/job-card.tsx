@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/lib/toast";
 
 type JobCardProps = {
   job: any;
@@ -54,7 +54,7 @@ export function JobCard({ job }: JobCardProps) {
         throw new Error("Failed to enqueue job");
       }
 
-      toast({ title: "Success", description: `${generationType === 'proposal' ? 'Proposal' : 'Cold Email'} generation started in background.` });
+      toast.success(`${generationType === 'proposal' ? 'Proposal' : 'Cold Email'} generation started in background.`);
 
       // Subscribe to Server-Sent Events for real-time completion
       const eventSource = new EventSource(`${apiUrl}/api/proposals/status/${userId}`);
@@ -66,11 +66,11 @@ export function JobCard({ job }: JobCardProps) {
             if (data.status === 'generated') {
               setLoading(false);
               setGenerated(true);
-              toast({ title: "Ready", description: "Your AI draft has been generated!" });
+              toast.success("Your AI draft has been generated!");
               eventSource.close();
             } else if (data.status === 'error') {
               setLoading(false);
-              toast({ title: "Error", description: "Background generation failed.", variant: "destructive" });
+              toast.error("Background generation failed.");
               eventSource.close();
             }
           }
@@ -87,7 +87,7 @@ export function JobCard({ job }: JobCardProps) {
 
     } catch (error) {
       setLoading(false);
-      toast({ title: "Error", description: "Failed to generate text.", variant: "destructive" });
+      toast.error("Failed to generate text.");
     }
   }
 

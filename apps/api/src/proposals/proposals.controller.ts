@@ -1,5 +1,5 @@
 import { Controller, Post, Body, UseGuards, Req, HttpCode, Res, Sse, Param, MessageEvent } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { ProposalsService } from './proposals.service';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { InjectQueue } from '@nestjs/bullmq';

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
@@ -28,7 +28,7 @@ export function Navbar() {
             </li>
           ))}
           
-          <SignedOut>
+          <Show when="signed-out">
             <li>
               <SignInButton mode="modal">
                 <button className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
@@ -43,12 +43,12 @@ export function Navbar() {
                 </button>
               </SignUpButton>
             </li>
-          </SignedOut>
-          <SignedIn>
+          </Show>
+          <Show when="signed-in">
             <li>
-              <UserButton afterSignOutUrl="/" />
+              <UserButton />
             </li>
-          </SignedIn>
+          </Show>
 
           </ul>
           <ThemeToggle />

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/lib/toast";
 
 type JobFilters = {
   targetRegions: string[];
@@ -106,13 +106,13 @@ export default function ProfilePage() {
       });
       
       if (!res.ok) {
-        toast({ title: "Error", description: "Failed to save profile", variant: "destructive" });
+        toast.error("Failed to save profile");
         return;
       }
       
-      toast({ title: "Success", description: "Job filters successfully updated." });
+      toast.success("Job filters successfully updated.");
     } catch {
-      toast({ title: "Error", description: "Request failed. Please try again.", variant: "destructive" });
+      toast.error("Request failed. Please try again.");
     } finally {
       setSaving(false);
     }

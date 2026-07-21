@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/lib/toast";
 
 export default function ProposalEditorPage({ params }: { params: { id: string } }) {
   const { getToken } = useAuth();
@@ -36,10 +36,10 @@ export default function ProposalEditorPage({ params }: { params: { id: string } 
           setProposal(data.data);
           setText(data.data.generatedProposal || "");
         } else {
-          toast({ title: "Error", description: "Proposal not found.", variant: "destructive" });
+          toast.error("Proposal not found.");
         }
       } catch (err) {
-        toast({ title: "Error", description: "Could not fetch proposal.", variant: "destructive" });
+        toast.error("Could not fetch proposal.");
       } finally {
         setLoading(false);
       }
@@ -64,9 +64,9 @@ export default function ProposalEditorPage({ params }: { params: { id: string } 
       });
 
       if (!res.ok) throw new Error("Failed to save");
-      toast({ title: "Success", description: "Changes saved successfully." });
+      toast.success("Changes saved successfully.");
     } catch (err) {
-      toast({ title: "Error", description: "Failed to save changes.", variant: "destructive" });
+      toast.error("Failed to save changes.");
     } finally {
       setSaving(false);
     }
@@ -97,9 +97,9 @@ export default function ProposalEditorPage({ params }: { params: { id: string } 
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       
-      toast({ title: "Downloaded", description: "Your PDF is ready!" });
+      toast.success("Your PDF is ready!");
     } catch (err) {
-      toast({ title: "Error", description: "Failed to generate PDF.", variant: "destructive" });
+      toast.error("Failed to generate PDF.");
     } finally {
       setDownloading(false);
     }

@@ -15,12 +15,12 @@ export class SubmitterService {
    * Fetches the generated PDF from the Cloudinary URL and uploads it via Playwright.
    */
   async submitApplication(applicationId: string, userId: string, jobId: string) {
-    this.logger.log(\`Starting automated submission for application \${applicationId}\`);
+    this.logger.log(`Starting automated submission for application ${applicationId}`);
 
     const logs: string[] = [];
     const addLog = (msg: string) => {
       this.logger.log(msg);
-      logs.push(\`[\${new Date().toISOString()}] \${msg}\`);
+      logs.push(`[${new Date().toISOString()}] ${msg}`);
     };
 
     try {
@@ -34,13 +34,13 @@ export class SubmitterService {
       if (!profile || !profile.contactDetails) throw new Error('User profile missing contact details');
 
       const contact = profile.contactDetails as any;
-      const fullName = \`\${contact.firstName || ''} \${contact.lastName || ''}\`.trim();
+      const fullName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim();
       if (!fullName || !contact.email) throw new Error('First Name, Last Name, and Email are required');
 
       // 2. Fetch PDF Buffer from Cloudinary (remote URL)
-      addLog(\`Fetching PDF from \${app.pdfUrl}\`);
+      addLog(`Fetching PDF from ${app.pdfUrl}`);
       const pdfRes = await fetch(app.pdfUrl);
-      if (!pdfRes.ok) throw new Error(\`Failed to fetch PDF: \${pdfRes.statusText}\`);
+      if (!pdfRes.ok) throw new Error(`Failed to fetch PDF: ${pdfRes.statusText}`);
       const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
 
       // 3. Launch Playwright
@@ -52,10 +52,10 @@ export class SubmitterService {
       try {
         let applyUrl = app.jobLink;
         if (!applyUrl.endsWith('/apply')) {
-          applyUrl = applyUrl.endsWith('/') ? \`\${applyUrl}apply\` : \`\${applyUrl}/apply\`;
+          applyUrl = applyUrl.endsWith('/') ? `${applyUrl}apply` : `${applyUrl}/apply`;
         }
 
-        addLog(\`Navigating to Lever apply page: \${applyUrl}\`);
+        addLog(`Navigating to Lever apply page: ${applyUrl}`);
         await page.goto(applyUrl, { waitUntil: 'domcontentloaded' });
 
         // 4. Fill Form Fields
@@ -76,7 +76,7 @@ export class SubmitterService {
         addLog('Injecting PDF resume buffer into file input...');
         const fileInput = page.locator('input[type="file"][name="resume"]');
         await fileInput.setInputFiles({
-          name: \`Resume_\${contact.firstName || 'Candidate'}.pdf\`,
+          name: `Resume_${contact.firstName || 'Candidate'}.pdf`,
           mimeType: 'application/pdf',
           buffer: pdfBuffer,
         });
@@ -103,7 +103,7 @@ export class SubmitterService {
 
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      addLog(\`ERROR: \${msg}\`);
+      addLog(`ERROR: ${msg}`);
       
       // Update status to failed
       await this.db.update(applications)

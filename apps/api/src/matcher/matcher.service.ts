@@ -24,13 +24,13 @@ export class MatcherService {
    * Processes sequentially to avoid OpenAI rate limits.
    */
   async evaluateJob(jobId: string) {
-    this.logger.log(\`Starting AI matching evaluation for job \${jobId}\`);
+    this.logger.log(`Starting AI matching evaluation for job ${jobId}`);
 
     // Fetch the target job
     const [job] = await this.db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
     
     if (!job) {
-      this.logger.warn(\`Job \${jobId} not found in DB\`);
+      this.logger.warn(`Job ${jobId} not found in DB`);
       return;
     }
 
@@ -52,7 +52,7 @@ export class MatcherService {
         let hasKeywordMatch = true;
         
         if (userSkills.length > 0) {
-          const matchedSkills = userSkills.filter(skill => jobText.includes(String(skill).toLowerCase()));
+          const matchedSkills = userSkills.filter((skill: any) => jobText.includes(String(skill).toLowerCase()));
           const matchPercentage = matchedSkills.length / userSkills.length;
           
           if (matchPercentage < 0.70) {
@@ -100,25 +100,25 @@ ${JSON.stringify(jobFilters, null, 2)}
       `;
     }
 
-    const prompt = \`
+    const prompt = `
 You are an expert technical recruiter AI. 
 Evaluate how well the user's skills match the job description.
 
-\${filterConstraints}
+${filterConstraints}
 
 USER SKILLS:
-\${skillsText}
+${skillsText}
 
 JOB DESCRIPTION:
-Title: \${job.title}
-\${job.description}
+Title: ${job.title}
+${job.description}
 
 Output MUST be exactly in this JSON format:
 {
   "match_score": number (0 to 100),
   "match_reasoning": "A concise 1-2 sentence explanation of why this score was given. If it was rejected due to a strict preference violation, state that clearly."
 }
-\`;
+`;
 
     const response = await this.openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -133,7 +133,7 @@ Output MUST be exactly in this JSON format:
     const result = JSON.parse(outputStr);
     
     if (typeof result.match_score !== 'number' || typeof result.match_reasoning !== 'string') {
-      throw new Error(\`Invalid JSON schema returned by OpenAI: \${outputStr}\`);
+      throw new Error(`Invalid JSON schema returned by OpenAI: ${outputStr}`);
     }
 
     // Save into aiMatches table
@@ -144,6 +144,6 @@ Output MUST be exactly in this JSON format:
       matchReasoning: result.match_reasoning,
     });
 
-    this.logger.debug(\`Saved match score \${result.match_score} for user \${userId} and job \${job.id}\`);
+    this.logger.debug(`Saved match score ${result.match_score} for user ${userId} and job ${job.id}`);
   }
 }

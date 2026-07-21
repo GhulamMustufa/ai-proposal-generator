@@ -133,7 +133,7 @@ export default async function DashboardPage() {
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-white mb-2">No matches found yet</h3>
-              <p className="text-slate-400 max-w-sm">The ATS Engine is still scanning jobs. Check back soon for roles that meet your >70% criteria.</p>
+              <p className="text-muted-foreground max-w-md mx-auto">No matching jobs found at the moment. Check back soon for roles that meet your &gt;70% criteria.</p>
             </div>
           )}
         </div>

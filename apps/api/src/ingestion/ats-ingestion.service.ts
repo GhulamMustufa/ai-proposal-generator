@@ -1,16 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { db } from '../db';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { cleanDescription } from '../utils/clean-description';
+import { DB_CONNECTION } from '../db/db.module';
 import { jobs, targetCompanies } from '../db/schema';
 import { eq } from 'drizzle-orm';
-import { extractJobTextFromHtml } from '../utils/html-parser';
 
 @Injectable()
 export class AtsIngestionService {
   private readonly logger = new Logger(AtsIngestionService.name);
 
+  constructor(@Inject(DB_CONNECTION) private readonly db: any) {}
+
   async scrapeGreenhouse(): Promise<string[]> {
     this.logger.log('Starting Universal Greenhouse ATS scraping...');
-    const companies = await db.select().from(targetCompanies).where(eq(targetCompanies.atsProvider, 'greenhouse'));
+    const companies = await this.db.select().from(targetCompanies).where(eq(targetCompanies.atsProvider, 'greenhouse'));
     this.logger.log(`Found ${companies.length} Greenhouse companies to scrape.`);
     
     const newJobIds: string[] = [];
@@ -39,13 +41,13 @@ export class AtsIngestionService {
              const detailRes = await fetch(`https://boards-api.greenhouse.io/v1/boards/${company.atsBoardToken}/jobs/${job.id}`);
              if (detailRes.ok) {
                 const detailData = await detailRes.json();
-                description = extractJobTextFromHtml(detailData.content || decodeURIComponent(detailData.content || ''));
+                description = cleanDescription(detailData.content || decodeURIComponent(detailData.content || ''));
              }
           } catch(e) {}
           
           if (!description) description = `Job title: ${job.title}. Apply at ${job.absolute_url}`;
 
-          const inserted = await db.insert(jobs).values({
+          const inserted = await this.db.insert(jobs).values({
             platform: 'greenhouse',
             externalId,
             title: job.title,
@@ -67,7 +69,7 @@ export class AtsIngestionService {
 
   async scrapeLever(): Promise<string[]> {
     this.logger.log('Starting Universal Lever ATS scraping...');
-    const companies = await db.select().from(targetCompanies).where(eq(targetCompanies.atsProvider, 'lever'));
+    const companies = await this.db.select().from(targetCompanies).where(eq(targetCompanies.atsProvider, 'lever'));
     this.logger.log(`Found ${companies.length} Lever companies to scrape.`);
     
     const newJobIds: string[] = [];
@@ -81,9 +83,9 @@ export class AtsIngestionService {
         
         for (const job of jobsList || []) {
           const externalId = `lever_${company.atsBoardToken}_${job.id}`;
-          const description = extractJobTextFromHtml(job.descriptionPlain || job.description || '');
+          const description = cleanDescription(job.descriptionPlain || job.description || '');
 
-          const inserted = await db.insert(jobs).values({
+          const inserted = await this.db.insert(jobs).values({
             platform: 'lever',
             externalId,
             title: job.text,

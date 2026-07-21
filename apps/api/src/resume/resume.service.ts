@@ -26,7 +26,7 @@ export class ResumeService {
   }
 
   async generateResume(userId: string, jobId: string): Promise<string> {
-    this.logger.log(\`Generating tailored resume for user \${userId} and job \${jobId}\`);
+    this.logger.log(`Generating tailored resume for user ${userId} and job ${jobId}`);
 
     // 1. Fetch Job and User Profile
     const [job] = await this.db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
@@ -47,7 +47,7 @@ export class ResumeService {
 
     // 4. Upload to Cloudinary
     this.logger.log('Uploading PDF to Cloudinary...');
-    const publicId = \`resume_\${userId}_\${job.id}_\${Date.now()}\`;
+    const publicId = `resume_${userId}_${job.id}_${Date.now()}`;
     const pdfUrl = await this.uploadToCloudinary(pdfBuffer, publicId);
 
     // 5. Save to Applications table
@@ -59,26 +59,26 @@ export class ResumeService {
       status: 'generated', // Indicates resume generated, pending submission
     });
 
-    this.logger.log(\`Successfully generated resume PDF: \${pdfUrl}\`);
+    this.logger.log(`Successfully generated resume PDF: ${pdfUrl}`);
     return pdfUrl;
   }
 
   private async tailorResumeWithAI(profile: typeof userProfiles.$inferSelect, job: typeof jobs.$inferSelect) {
-    const prompt = \`
+    const prompt = `
 You are an expert resume writer.
 Rewrite the user's base resume to be highly tailored for the following job description.
 Keep the formatting professional and ATS-friendly. Focus the bullet points on achievements relevant to the job.
 
 USER'S BASE RESUME:
-\${profile.resumeText}
+${profile.resumeText}
 
 USER CONTACT INFO:
-\${JSON.stringify(profile.contactDetails || {})}
+${JSON.stringify(profile.contactDetails || {})}
 
 TARGET JOB DESCRIPTION:
-Title: \${job.title}
-Company: \${job.company}
-\${job.description}
+Title: ${job.title}
+Company: ${job.company}
+${job.description}
 
 Output MUST be exactly in this JSON format:
 {
@@ -95,7 +95,7 @@ Output MUST be exactly in this JSON format:
   ],
   "skills": ["Skill 1", "Skill 2"]
 }
-\`;
+`;
 
     const response = await this.openai.chat.completions.create({
       model: 'gpt-4o', // Using GPT-4o as requested for complex resume rewriting
@@ -110,7 +110,7 @@ Output MUST be exactly in this JSON format:
   }
 
   private generateHtmlTemplate(data: any): string {
-    return \`
+    return `
       <!DOCTYPE html>
       <html>
       <head>
@@ -178,30 +178,30 @@ Output MUST be exactly in this JSON format:
         </style>
       </head>
       <body>
-        <h1>\${data.name || 'Professional Resume'}</h1>
+        <h1>${data.name || 'Professional Resume'}</h1>
         <div class="contact-info">
-          \${data.contact || ''}
+          ${data.contact || ''}
         </div>
         
         <div class="section-title">Professional Summary</div>
-        <p>\${data.summary || ''}</p>
+        <p>${data.summary || ''}</p>
 
         <div class="section-title">Experience</div>
-        \${(data.experience || []).map((exp: any) => \`
+        ${(data.experience || []).map((exp: any) => `
           <div class="exp-header">
-            <span class="job-title">\${exp.title}</span>, <span class="company">\${exp.company}</span>
-            <span class="dates">\${exp.dates}</span>
+            <span class="job-title">${exp.title}</span>, <span class="company">${exp.company}</span>
+            <span class="dates">${exp.dates}</span>
           </div>
           <ul>
-            \${(exp.bullets || []).map((bullet: string) => \`<li>\${bullet}</li>\`).join('')}
+            ${(exp.bullets || []).map((bullet: string) => `<li>${bullet}</li>`).join('')}
           </ul>
-        \`).join('')}
+        `).join('')}
         
         <div class="section-title">Technical Skills</div>
-        <p>\${(data.skills || []).join(' • ')}</p>
+        <p>${(data.skills || []).join(' • ')}</p>
       </body>
       </html>
-    \`;
+    `;
   }
 
   private async renderPdfBuffer(resumeData: any): Promise<Buffer> {
@@ -215,7 +215,7 @@ Output MUST be exactly in this JSON format:
     
     try {
       const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      await page.setContent(html, { waitUntil: 'load' });
       
       const pdfUint8Array = await page.pdf({
         format: 'A4',
