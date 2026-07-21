@@ -5,6 +5,7 @@ import { IngestionService } from './ingestion.service';
 import { AtsIngestionService } from './ats-ingestion.service';
 import { DorkIngestionService } from './dork-ingestion.service';
 import { IngestionProcessor } from './ingestion.processor';
+import { IngestionController } from './ingestion.controller';
 
 /**
  * IngestionModule
@@ -21,6 +22,7 @@ import { IngestionProcessor } from './ingestion.processor';
       name: 'matcher-queue',
     }),
   ],
+  controllers: [IngestionController],
   providers: [IngestionService, AtsIngestionService, DorkIngestionService, IngestionProcessor],
   exports: [IngestionService, AtsIngestionService, DorkIngestionService],
 })
