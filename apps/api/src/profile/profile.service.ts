@@ -39,6 +39,16 @@ export class ProfileService {
         .where(eq(userProfiles.userId, userId))
         .limit(1);
 
+      // JIT user provisioning (handles E2E tests and webhook race conditions)
+      try {
+        await this.db
+          .insert(require('../db/schema').users)
+          .values({ id: userId, email: `${userId}@placeholder.local` })
+          .onConflictDoNothing();
+      } catch (e) {
+        // ignore
+      }
+
       if (existing.length > 0) {
         await this.db
           .update(userProfiles)

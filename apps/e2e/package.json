@@ -1,0 +1,14 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@clerk/testing": "^1.2.3",
+    "@playwright/test": "^1.45.0",
+    "dotenv": "^16.4.5"
+  }
+}
