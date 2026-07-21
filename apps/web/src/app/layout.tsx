@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/navbar";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { ClerkThemeProvider } from "@/components/providers/clerk-theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { ClerkProvider } from "@clerk/nextjs";
-import { shadcn } from "@clerk/ui/themes";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ai-proposal-generator-chi.vercel.app";
@@ -64,13 +63,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
-        <ClerkProvider appearance={{ theme: shadcn }}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ClerkThemeProvider>
             <Navbar />
             <main className="mx-auto w-full max-w-5xl px-6 py-10">{children}</main>
             <Toaster />
-          </ThemeProvider>
-        </ClerkProvider>
+          </ClerkThemeProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

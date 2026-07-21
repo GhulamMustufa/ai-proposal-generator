@@ -18,16 +18,16 @@ export function JobCard({ job }: JobCardProps) {
   const isGood = job.matchScore >= 80 && job.matchScore < 90;
   
   const scoreColor = isElite 
-    ? "text-emerald-400" 
+    ? "text-emerald-600 dark:text-emerald-400" 
     : isGood 
-      ? "text-blue-400" 
-      : "text-amber-400";
+      ? "text-blue-600 dark:text-blue-400" 
+      : "text-amber-600 dark:text-amber-400";
       
   const scoreBg = isElite 
-    ? "bg-emerald-400/10 border-emerald-400/20 shadow-[0_0_15px_rgba(52,211,153,0.15)]" 
+    ? "bg-emerald-50 dark:bg-emerald-400/10 border-emerald-200 dark:border-emerald-400/20 shadow-[0_0_15px_rgba(52,211,153,0.05)] dark:shadow-[0_0_15px_rgba(52,211,153,0.15)]" 
     : isGood 
-      ? "bg-blue-400/10 border-blue-400/20" 
-      : "bg-amber-400/10 border-amber-400/20";
+      ? "bg-blue-50 dark:bg-blue-400/10 border-blue-200 dark:border-blue-400/20" 
+      : "bg-amber-50 dark:bg-amber-400/10 border-amber-200 dark:border-amber-400/20";
 
   async function handleGenerate() {
     setLoading(true);
@@ -93,9 +93,9 @@ export function JobCard({ job }: JobCardProps) {
 
   return (
     <div 
-      className="group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 transition-all duration-300 hover:border-white/10 hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-indigo-500/5"
+      className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-6 transition-all duration-300 hover:border-slate-300 dark:hover:border-white/10 hover:bg-slate-50 dark:hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-indigo-500/5"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-100/50 dark:from-white/[0.03] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       
       <div className="relative flex flex-col md:flex-row md:items-start md:justify-between gap-6">
         
@@ -103,20 +103,20 @@ export function JobCard({ job }: JobCardProps) {
         <div className="flex-1 space-y-4">
           <div>
             <div className="flex items-center gap-3">
-              <h3 className="text-xl font-semibold text-white tracking-tight">{job.title}</h3>
-              <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wider text-slate-300 border border-white/5">
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-white tracking-tight">{job.title}</h3>
+              <span className="rounded-full bg-slate-100 dark:bg-white/10 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wider text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/5">
                 {job.platform}
               </span>
             </div>
-            <p className="mt-1.5 text-sm font-medium text-slate-400 flex items-center gap-2">
+            <p className="mt-1.5 text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
               <span className="h-4 w-4 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] text-white font-bold">{job.company?.charAt(0) || "C"}</span>
               {job.company || "Confidential Company"}
             </p>
           </div>
 
-          <div className="rounded-xl bg-black/40 border border-white/5 p-4 relative overflow-hidden">
+          <div className="rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/5 p-4 relative overflow-hidden">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500/50 to-purple-500/50" />
-            <p className="text-sm leading-relaxed text-slate-300">
+            <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
               {job.matchReasoning || "AI Evaluation completed. Profile alignment is strong across core requirements."}
             </p>
           </div>
@@ -138,22 +138,22 @@ export function JobCard({ job }: JobCardProps) {
               href={job.url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-xl bg-white/5 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10 border border-white/10 mb-2"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-white transition hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 mb-2"
             >
               View Job
             </a>
             
             {!loading && !generated && (
-              <div className="flex items-center justify-center gap-1 mb-2 p-1 bg-black/40 rounded-xl border border-white/5">
+              <div className="flex items-center justify-center gap-1 mb-2 p-1 bg-slate-100 dark:bg-black/40 rounded-xl border border-slate-200 dark:border-white/5">
                 <button
                   onClick={() => setGenerationType('proposal')}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition ${generationType === 'proposal' ? 'bg-indigo-500/20 text-indigo-300' : 'text-slate-400 hover:text-slate-200'}`}
+                  className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition ${generationType === 'proposal' ? 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                 >
                   Proposal
                 </button>
                 <button
                   onClick={() => setGenerationType('cold_email')}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition ${generationType === 'cold_email' ? 'bg-purple-500/20 text-purple-300' : 'text-slate-400 hover:text-slate-200'}`}
+                  className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition ${generationType === 'cold_email' ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                 >
                   Cold Email
                 </button>
@@ -161,15 +161,15 @@ export function JobCard({ job }: JobCardProps) {
             )}
             
             {loading ? (
-              <div className="flex items-center justify-center h-10 rounded-xl bg-indigo-500/20 px-6 py-2.5 text-sm font-medium text-indigo-300 border border-indigo-500/30">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <div className="flex items-center justify-center h-10 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 px-6 py-2.5 text-sm font-medium text-indigo-600 dark:text-indigo-300 border border-indigo-500/20 dark:border-indigo-500/30">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-500 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 AI Generating...
               </div>
             ) : generated ? (
-              <div className="inline-flex items-center justify-center rounded-xl bg-emerald-500/20 px-6 py-2.5 text-sm font-medium text-emerald-400 border border-emerald-500/30">
+              <div className="inline-flex items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 px-6 py-2.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30">
                 Generated ✨
               </div>
             ) : (

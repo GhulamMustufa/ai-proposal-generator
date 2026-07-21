@@ -86,20 +86,20 @@ export default async function DashboardPage() {
   const displayJobs = matchedJobs.filter((job) => job.matchScore >= 70);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B] text-slate-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0A0A0B] text-slate-900 dark:text-slate-200">
       {/* Premium Header */}
-      <header className="relative overflow-hidden border-b border-white/5 bg-[#0A0A0B]/80 px-6 py-12 backdrop-blur-xl">
+      <header className="relative overflow-hidden border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-[#0A0A0B]/80 px-6 py-12 backdrop-blur-xl">
         <div className="absolute -top-40 right-20 h-96 w-96 rounded-full bg-indigo-500/10 blur-[100px]" />
         <div className="absolute left-20 top-0 h-64 w-64 rounded-full bg-emerald-500/10 blur-[80px]" />
         
         <div className="relative mx-auto max-w-5xl">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-emerald-400">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400">
             ATS Sourcing Engine Active
           </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
             Your Match Dashboard
           </h1>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
             We have scanned thousands of jobs across 14+ platforms. These roles have successfully bypassed your strict AI pre-filters. Review your highest probability matches below.
           </p>
         </div>
@@ -108,14 +108,14 @@ export default async function DashboardPage() {
       {/* Main Content */}
       <main className="mx-auto max-w-5xl px-6 py-12">
         {apiError && (
-          <div className="mb-8 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300">
+          <div className="mb-8 rounded-xl border border-rose-500/20 bg-rose-50 dark:bg-rose-500/10 p-4 text-sm text-rose-600 dark:text-rose-300">
             <strong>API Connection Warning:</strong> Could not reach the NestJS backend on port 3001. Displaying mock data for UI preview.
           </div>
         )}
 
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xl font-medium text-white">Highly Qualified Leads</h2>
-          <span className="rounded-full bg-white/5 px-4 py-1.5 text-xs font-medium text-slate-400 border border-white/10">
+          <h2 className="text-xl font-medium text-slate-900 dark:text-white">Highly Qualified Leads</h2>
+          <span className="rounded-full bg-slate-200 dark:bg-white/5 px-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-white/10">
             {displayJobs.length} Matches Found
           </span>
         </div>
@@ -126,14 +126,14 @@ export default async function DashboardPage() {
           ))}
 
           {displayJobs.length === 0 && !apiError && (
-            <div className="flex flex-col items-center justify-center py-24 text-center rounded-2xl border border-white/5 bg-white/[0.02]">
-              <div className="h-16 w-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex flex-col items-center justify-center py-24 text-center rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02]">
+              <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">No matches found yet</h3>
-              <p className="text-muted-foreground max-w-md mx-auto">No matching jobs found at the moment. Check back soon for roles that meet your &gt;70% criteria.</p>
+              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No matches found yet</h3>
+              <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">No matching jobs found at the moment. Check back soon for roles that meet your &gt;70% criteria.</p>
             </div>
           )}
         </div>
