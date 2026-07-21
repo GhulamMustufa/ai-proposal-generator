@@ -3,6 +3,7 @@ import { BullModule, InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { IngestionService } from './ingestion.service';
 import { AtsIngestionService } from './ats-ingestion.service';
+import { DorkIngestionService } from './dork-ingestion.service';
 import { IngestionProcessor } from './ingestion.processor';
 
 /**
@@ -20,8 +21,8 @@ import { IngestionProcessor } from './ingestion.processor';
       name: 'matcher-queue',
     }),
   ],
-  providers: [IngestionService, AtsIngestionService, IngestionProcessor],
-  exports: [IngestionService, AtsIngestionService],
+  providers: [IngestionService, AtsIngestionService, DorkIngestionService, IngestionProcessor],
+  exports: [IngestionService, AtsIngestionService, DorkIngestionService],
 })
 export class IngestionModule implements OnApplicationBootstrap {
   private readonly logger = new Logger(IngestionModule.name);
@@ -125,5 +126,12 @@ export class IngestionModule implements OnApplicationBootstrap {
       repeat: { pattern: '0 3 * * *' },
       jobId: 'repeatable-ats-lever',
     });
+
+    // Execute Google Dorks at 4am everyday (optimized for 250 limits)
+    await this.ingestionQueue.add('scrape-dorks', {}, {
+      repeat: { pattern: '0 4 * * *' },
+      jobId: 'repeatable-dorks',
+    });
   }
 }
+

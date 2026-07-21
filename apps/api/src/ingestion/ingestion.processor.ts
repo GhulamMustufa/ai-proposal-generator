@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { Job, Queue } from 'bullmq';
 import { IngestionService } from './ingestion.service';
 import { AtsIngestionService } from './ats-ingestion.service';
+import { DorkIngestionService } from './dork-ingestion.service';
 
 /**
  * IngestionProcessor
@@ -17,6 +18,7 @@ export class IngestionProcessor extends WorkerHost {
   constructor(
     private readonly ingestionService: IngestionService,
     private readonly atsIngestionService: AtsIngestionService,
+    private readonly dorkIngestionService: DorkIngestionService,
     @InjectQueue('matcher-queue') private readonly matcherQueue: Queue,
   ) {
     super();
@@ -126,6 +128,12 @@ export class IngestionProcessor extends WorkerHost {
 
     if (job.name === 'scrape-ats-lever') {
       const newJobIds = await this.atsIngestionService.scrapeLever();
+      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      return { insertedCount: newJobIds.length };
+    }
+    
+    if (job.name === 'scrape-dorks') {
+      const newJobIds = await this.dorkIngestionService.scrapeGoogleDorks();
       for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
       return { insertedCount: newJobIds.length };
     }
