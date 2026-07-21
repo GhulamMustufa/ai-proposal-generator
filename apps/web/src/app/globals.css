@@ -1,0 +1,16 @@
+@import '@clerk/ui/themes/shadcn.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+body {
+  @apply antialiased;
+}

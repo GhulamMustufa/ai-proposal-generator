@@ -10,10 +10,10 @@ AI-powered freelance proposal generator. Next.js 14 App Router SaaS with Supabas
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 14.2 (App Router, server components) |
+| Framework | Next.js 15 (App Router, server components) |
 | Language | TypeScript 5 |
-| Styling | Tailwind CSS 3.4 + `next-themes` (dark mode) |
-| Auth + DB | Supabase (`@supabase/ssr` — cookie-based SSR auth) |
+| Styling | Tailwind CSS 3.4 + `next-themes` (dark mode) + `@clerk/ui` (shadcn theme) |
+| Auth | Clerk (via `@clerk/nextjs`) |
 | AI | OpenAI SDK 6.x — `gpt-4o-mini`, `chat.completions.create()` |
 | HTTP (jobs) | Native `fetch` with `AbortSignal.timeout()` |
 | HTML parsing | `cheerio` (job URL extraction) |
@@ -24,10 +24,17 @@ AI-powered freelance proposal generator. Next.js 14 App Router SaaS with Supabas
 ## Environment Variables
 
 ```
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
+# Clerk Auth
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+CLERK_SECRET_KEY
+
+# Database & Storage (Coming Soon)
+DATABASE_URL
+REDIS_URL
+R2_ACCESS_KEY_ID
+
+# AI
 OPENAI_API_KEY
-NEXT_PUBLIC_SITE_URL        # used for password-reset redirect
 ```
 
 ---
