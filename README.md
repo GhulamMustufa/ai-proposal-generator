@@ -1,133 +1,131 @@
-# Proposalio — AI Proposal Generator
-
-An AI-powered SaaS that generates personalized, high-converting freelance proposals in your own voice — in under 90 seconds.
-
-Built with Next.js 14, Supabase, and OpenAI.
-
----
-
-## Features
-
-- **Streaming AI generation** — proposals write themselves token-by-token in real time
-- **Voice matching** — paste up to 3 past proposals; the AI mirrors your tone and phrasing
-- **Profile injection** — set your skills, rate, and bio once; every proposal is auto-personalized
-- **Job feed** — search live remote jobs from Remotive without leaving the dashboard
-- **Application tracker** — tag proposals as Draft / Sent / Interview / Won / Lost
-- **Proposal history** — full archive of every generated proposal, linkable by ID
-- **Two-variation mode** — generate a Direct and a Conversational version in parallel
-- **Password reset** — full PKCE-based reset flow via Supabase email
-- **Dark mode** — system-aware with manual toggle
+<div align="center">
+  <h1>🚀 Auto-Apply AI Agent</h1>
+  <p><strong>A hyper-scalable, AI-powered social media & job board automation engine.</strong></p>
+  <p>Fully autonomous job sourcing, semantic resume matching, and dynamic proposal generation powered by LLMs.</p>
+</div>
 
 ---
 
-## Tech Stack
+## 📖 Overview
 
-| | |
-|---|---|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript 5 |
-| Styling | Tailwind CSS 3 + next-themes |
-| Auth + Database | Supabase (`@supabase/ssr`) |
-| AI | OpenAI `gpt-4o-mini` via `chat.completions` (streaming) |
-| Job source | Remotive public API |
+This project is a high-performance, distributed background worker system designed to automate the process of finding, filtering, and applying to high-paying freelance, contract, and full-time remote tech jobs. 
+
+Rather than relying on basic string matching, the engine leverages **OpenAI (`gpt-4o-mini` & `gpt-4o`)** to syntactically validate jobs, score them against user profiles, and generate bespoke cover letters/proposals.
+
+## 🏗️ Architecture Stack
+
+### **Frontend**
+*   **Framework:** Next.js 14 (App Router)
+*   **Styling:** Tailwind CSS + Shadcn UI
+*   **State & Auth:** Clerk Auth
+
+### **Backend (API & Background Workers)**
+*   **Framework:** NestJS
+*   **Task Queue:** BullMQ + Redis (Asynchronous distributed processing)
+*   **Database:** PostgreSQL (Neon Serverless)
+*   **ORM:** Drizzle ORM
+*   **Scraping & Automation:** Playwright, Cheerio, SerpApi
+
+### **AI & LLM Tier**
+*   **Extraction & Validation:** `gpt-4o-mini` (For fast, low-cost job snippet validation)
+*   **Matching & Scoring:** `gpt-4o-mini` (Scores user skills against job descriptions)
+*   **Proposal Generation:** Configurable LLMs (Drafts custom proposals and cold emails)
 
 ---
 
-## Getting Started
+## ⚙️ Core Modules
 
-### 1. Clone and install
+### 1. The Ingestion Engine (Scraping)
+The system runs autonomous background workers on Cron schedules using BullMQ. It currently aggregates jobs from **23+ different platforms**, preventing duplicates using deterministic MD5 hashing (`externalId`).
 
-```bash
-git clone https://github.com/GhulamMustufa/ai-proposal-generator.git
-cd ai-proposal-generator
+**Standard Job Boards:**
+`Remotive`, `We Work Remotely`, `RemoteOK`, `Upwork`, `Freelancer.com`, `WorkingNomads`, `Himalayas`, `Jobicy`, `Arbeitnow`, `Remote.co`, `Dribbble`, `Relocate.me`.
+
+**ATS Providers:**
+Universal scrapers for `Greenhouse` and `Lever`.
+
+**Google Dorks (Hidden Jobs):**
+Using SerpApi, the engine searches Google for raw posts from founders and recruiters, circumventing traditional ATS tracking.
+*   *Hacker News ("who is hiring")*
+*   *Twitter / X*
+*   *LinkedIn (Direct Social Posts)*
+*   *Reddit (r/forhire, r/reactnative)*
+*   *IndieHackers & Wellfound*
+*   *Braintrust & Arc.dev*
+*   *GitHub Issue Boards*
+
+### 2. The AI Matcher
+To prevent API cost bloat, the Matcher Service operates on a two-tier system:
+1.  **Hard Keyword Filter:** A strict regex/keyword filter checks if the job description contains at least 70% of the user's defined core skills.
+2.  **LLM Scoring:** If the 70% threshold is met, the job is sent to OpenAI to generate a contextual `match_score` (0-100) and a `match_reasoning` summary.
+
+### 3. The Proposal Generator
+Once a high-quality job is approved on the frontend dashboard, the engine fires a task to generate a bespoke proposal or cold email.
+
+---
+
+## 🗄️ Database Schema (Drizzle ORM)
+
+The database is built on PostgreSQL, utilizing standard UUIDs and relational constraints.
+
+| Table | Description | Key Columns |
+| :--- | :--- | :--- |
+| **`users`** | Core user account mapping (Clerk ID). | `id` (Clerk ID), `email`, `stripeCustomerId`, `subscriptionStatus` |
+| **`user_profiles`** | AI context for the user. | `userId`, `skills` (JSON), `jobFilters` (JSON), `resumeText` |
+| **`jobs`** | Centralized, deduplicated job repository. | `id`, `platform`, `externalId` (Hash), `title`, `company`, `description`, `url` |
+| **`ai_matches`** | Scoring relations between users and jobs. | `userId`, `jobId`, `matchScore` (0-100), `matchReasoning` |
+| **`applications`** | Tracked proposals and automated submissions. | `userId`, `jobId`, `generatedProposal`, `status` (`pending`, `submitted`) |
+| **`target_companies`** | Tracking parameters for universal ATS scraping. | `name`, `atsProvider` (`greenhouse`/`lever`), `atsBoardToken` |
+
+---
+
+## 🚀 Quick Start / Development
+
+### Prerequisites
+*   Node.js 18+
+*   Redis (Local or Cloud)
+*   PostgreSQL Database
+*   API Keys: Clerk, OpenAI, SerpApi
+
+### 1. Installation
+\`\`\`bash
 npm install
-```
+\`\`\`
 
-### 2. Set up environment variables
-
-Copy the example file and fill in your keys:
-
-```bash
-cp .env.example .env.local
-```
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+### 2. Environment Variables
+Create a \`.env\` file in both the \`apps/api\` and \`apps/web\` directories.
+\`\`\`env
+# API (.env)
+DATABASE_URL=postgres://user:pass@host/db
+REDIS_URL=redis://localhost:6379
 OPENAI_API_KEY=sk-...
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-```
+SERPAPI_KEY=...
+CLERK_SECRET_KEY=sk_test_...
 
-### 3. Set up the database
+# WEB (.env)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+NEXT_PUBLIC_API_URL=http://localhost:3001
+\`\`\`
 
-Run these SQL files against your Supabase project in order (SQL editor or `supabase db push`):
+### 3. Run the Stack
+\`\`\`bash
+# Start the NestJS Backend & Background Workers
+npm run dev:api
 
-```
-supabase/saas_controls.sql           # api_usage_events + ai_request_cache tables
-supabase/add_user_preferences.sql    # user_preferences table
-supabase/add_job_fields_to_proposals.sql   # job_title + job_link on proposals
-supabase/add_status_and_profile.sql  # status on proposals + profile fields on user_preferences
-```
+# Start the Next.js Frontend
+npm run dev:web
+\`\`\`
 
-### 4. Run the dev server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
----
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── page.tsx                      # Landing / marketing page
-│   ├── dashboard/                    # Main app — ProposalGenerator + JobFeed
-│   ├── history/                      # Proposal history list
-│   ├── proposals/[id]/               # Proposal detail
-│   ├── profile/                      # Profile editor
-│   ├── login/ signup/ forgot-password/
-│   ├── auth/                         # Server actions + OAuth callback + reset-password
-│   └── api/
-│       ├── generate-proposal/        # POST — AI generation (streaming + non-streaming)
-│       ├── jobs/                     # GET — Remotive job feed
-│       ├── preferences/              # GET/PUT — user preferences & profile
-│       └── proposals/[id]/           # PATCH — update proposal status
-├── components/
-│   ├── dashboard/                    # ProposalGenerator, JobFeed
-│   ├── history/status-badge.tsx      # Color-coded status selector
-│   ├── layout/                       # Navbar, ThemeToggle
-│   └── ui/toaster.tsx                # Toast notifications
-└── lib/
-    ├── clean-description.ts          # Strip HTML from job descriptions
-    ├── toast.ts                      # Singleton toast system
-    └── supabase/                     # Browser + server Supabase clients
-```
+### 4. Trigger Ingestion Manually
+To bypass the cron schedules and force the ingestion workers to run immediately, you can hit the local trigger endpoint:
+\`\`\`bash
+# Trigger the Google Dorks worker
+curl -X POST http://localhost:3001/ingestion/trigger/scrape-dorks
+\`\`\`
 
 ---
 
-## Environment Variables Reference
-
-| Variable | Required | Description |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon/public key |
-| `OPENAI_API_KEY` | Yes | OpenAI secret key |
-| `NEXT_PUBLIC_SITE_URL` | Yes | Full URL of your deployment (for password reset redirect) |
-
----
-
-## Deployment
-
-The app is ready to deploy on [Vercel](https://vercel.com). Set the four environment variables above in your Vercel project settings, connect the GitHub repo, and deploy.
-
-Make sure `NEXT_PUBLIC_SITE_URL` is set to your production URL (e.g. `https://your-app.vercel.app`) so password-reset emails link to the right place.
-
----
-
-## License
-
-MIT
+## 🛡️ Best Practices & Cost Optimization
+- **Deduplication:** Jobs are heavily deduplicated before database insertion.
+- **LLM Rate Limits:** OpenAI processing occurs sequentially within BullMQ to prevent `429 Rate Limit` errors.
+- **SerpApi Budgets:** Dork queries rely heavily on boolean `OR` operators to fetch 6+ tech stacks across 3+ platforms in a single API call, allowing massive scale on free or low-tier SerpApi plans.
