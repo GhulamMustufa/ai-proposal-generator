@@ -1,4 +1,6 @@
-import { Controller, Get, Param, UseGuards, Inject, UnauthorizedException, Req } from '@nestjs/common';
+import { Controller, Get, Post, Param, UseGuards, Inject, UnauthorizedException, Req } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { DB_CONNECTION } from '../db/db.module';
 import { aiMatches, jobs } from '../db/schema';
@@ -7,7 +9,19 @@ import { eq, desc } from 'drizzle-orm';
 @Controller('api/matches')
 @UseGuards(ClerkAuthGuard)
 export class MatcherController {
-  constructor(@Inject(DB_CONNECTION) private readonly db: any) {}
+  constructor(
+    @Inject(DB_CONNECTION) private readonly db: any,
+    @InjectQueue('matcher-queue') private readonly matcherQueue: Queue,
+  ) {}
+
+  @Post('re-evaluate')
+  async triggerReEvaluation(@Req() req: any) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('User ID not found');
+
+    await this.matcherQueue.add('match-user', { userId });
+    return { success: true, message: 'Re-evaluation enqueued. Matches will update in the background.' };
+  }
 
   /**
    * Retrieves the AI match scores and job details for a specific user,

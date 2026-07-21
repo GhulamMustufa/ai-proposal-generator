@@ -83,6 +83,7 @@ export default async function DashboardPage() {
   }
 
   // Filter to show only jobs > 70 score (just in case)
+  // Filter to show only jobs > 70 score
   const displayJobs = matchedJobs.filter((job) => job.matchScore >= 70);
 
   return (

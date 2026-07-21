@@ -48,28 +48,35 @@ export class MatcherService {
         const userSkills = Array.isArray(user.skills) ? user.skills : [];
         const jobText = `${job.title} ${job.description}`.toLowerCase();
         
-        // Cost-Reduction: Only send to OpenAI if at least 70% of the user's skills are found in the job description
+        // Cost-Reduction: Only send to OpenAI if at least 3 of the user's skills are found in the job description
         let hasKeywordMatch = true;
         
         if (userSkills.length > 0) {
-          const matchedSkills = userSkills.filter((skill: any) => jobText.includes(String(skill).toLowerCase()));
-          const matchPercentage = matchedSkills.length / userSkills.length;
-          
-          if (matchPercentage < 0.70) {
-            hasKeywordMatch = false;
-            this.logger.debug(`Job ${job.id} filtered out. Only ${Math.round(matchPercentage * 100)}% of skills matched (Requires 70%). Skipping OpenAI.`);
-          }
-        }
-
-        if (!hasKeywordMatch) {
-          // Save a 0 score without calling OpenAI
-          await this.db.insert(aiMatches).values({
-            userId: user.userId,
-            jobId: job.id,
-            matchScore: 0,
-            matchReasoning: 'Filtered out by keyword check to save AI costs. Job description does not contain at least 70% of your core skills.',
+          const matchedSkills = userSkills.filter((skill: any) => {
+            const skillStr = String(skill).toLowerCase();
+            // Escape regex characters
+            let pattern = skillStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // Make .js suffixes interchangeable with 'js' and ' js'
+            pattern = pattern.replace(/\\\.(js)/g, '(?:\\.js|js|\\sjs)');
+            // Allow spaces or dashes to be interchangeable
+            pattern = pattern.replace(/[- ]/g, '[- ]?');
+            
+            const regex = new RegExp(`\\b${pattern}\\b`, 'i');
+            return regex.test(jobText);
           });
-          continue; // Move to the next user
+          
+          if (matchedSkills.length < 3) {
+            hasKeywordMatch = false;
+            this.logger.debug(`Job ${job.id} filtered out. Only matched ${matchedSkills.length} skills (Requires at least 3). Skipping OpenAI.`);
+            
+            await this.db.insert(aiMatches).values({
+              userId: user.userId,
+              jobId: job.id,
+              matchScore: 0,
+              matchReasoning: 'Filtered out by keyword check. Job description does not contain at least 3 of your core skills.',
+            });
+            continue; // Move to the next user
+          }
         }
 
         await this.evaluateUserForJob(user.userId, user.skills, user.jobFilters, job);
@@ -85,17 +92,17 @@ export class MatcherService {
   private async evaluateUserForJob(userId: string, skills: any, jobFilters: any, job: typeof jobs.$inferSelect) {
     const skillsText = Array.isArray(skills) ? skills.join(', ') : JSON.stringify(skills);
     
-    // Convert strict user preferences into explicit constraints for the AI
+    // Convert user preferences into preferred criteria for the AI (instead of strict constraints)
     let filterConstraints = '';
     if (jobFilters) {
       filterConstraints = `
-STRICT JOB PREFERENCES (MUST OBEY):
-The user has provided strict filters for the jobs they will accept. 
-You MUST critically evaluate the job description against these rules.
-If the job violates ANY of these constraints, you MUST give a match_score of 0 and explain which constraint it failed.
-Do not penalize the job if a constraint (like salary) is simply hidden or not mentioned. Only penalize if it explicitly violates the rule (e.g. states a salary lower than the minimum, or states it requires US citizenship when user doesn't have it).
+USER PREFERENCES (BONUS POINTS):
+The user has provided preferences for the jobs they want (e.g., equity, specific salary). 
+Treat these as "Nice to Haves". If the job mentions these, boost the match_score higher!
+Do NOT penalize or reject the job (do not give a 0) if a preference is simply not mentioned. Most job descriptions hide these details.
+Only reduce the score slightly if the job explicitly contradicts a preference (e.g., states a salary significantly lower than requested).
 
-USER'S HARD CONSTRAINTS:
+USER'S PREFERENCES:
 ${JSON.stringify(jobFilters, null, 2)}
       `;
     }
@@ -145,5 +152,75 @@ Output MUST be exactly in this JSON format:
     });
 
     this.logger.debug(`Saved match score ${result.match_score} for user ${userId} and job ${job.id}`);
+  }
+
+  /**
+   * Re-evaluates a specific user against all existing jobs.
+   * Useful when a user updates their skills or job preferences.
+   */
+  async reEvaluateUser(userId: string) {
+    this.logger.log(`Starting full re-evaluation for user ${userId}`);
+
+    // Fetch user profile
+    const [user] = await this.db
+      .select({ skills: userProfiles.skills, jobFilters: userProfiles.jobFilters })
+      .from(userProfiles)
+      .where(eq(userProfiles.userId, userId))
+      .limit(1);
+
+    if (!user || !user.skills || (Array.isArray(user.skills) && user.skills.length === 0)) {
+      this.logger.warn(`User ${userId} has no skills configured. Skipping matching.`);
+      return;
+    }
+
+    // Delete existing matches to prevent duplicates
+    await this.db.delete(aiMatches).where(eq(aiMatches.userId, userId));
+    this.logger.log(`Deleted old matches for user ${userId}`);
+
+    // Fetch all jobs
+    const allJobs = await this.db.select().from(jobs);
+    this.logger.log(`Re-evaluating ${allJobs.length} jobs for user ${userId}...`);
+
+    for (const job of allJobs) {
+      try {
+        const userSkills = Array.isArray(user.skills) ? user.skills : [];
+        const jobText = `${job.title} ${job.description}`.toLowerCase();
+        
+        let hasKeywordMatch = true;
+        
+        if (userSkills.length > 0) {
+          const matchedSkills = userSkills.filter((skill: any) => {
+            const skillStr = String(skill).toLowerCase();
+            let pattern = skillStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            pattern = pattern.replace(/\\\.(js)/g, '(?:\\.js|js|\\sjs)');
+            pattern = pattern.replace(/[- ]/g, '[- ]?');
+            
+            const regex = new RegExp(`\\b${pattern}\\b`, 'i');
+            return regex.test(jobText);
+          });
+          
+          if (matchedSkills.length < 3) {
+            hasKeywordMatch = false;
+          }
+        }
+
+        if (!hasKeywordMatch) {
+          await this.db.insert(aiMatches).values({
+            userId,
+            jobId: job.id,
+            matchScore: 0,
+            matchReasoning: 'Filtered out by keyword check. Job description does not contain at least 3 of your core skills.',
+          });
+          continue;
+        }
+
+        await this.evaluateUserForJob(userId, user.skills, user.jobFilters, job);
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        this.logger.error(`Failed to evaluate user ${userId} for job ${job.id}: ${msg}`);
+      }
+    }
+
+    this.logger.log(`Completed full re-evaluation for user ${userId}`);
   }
 }

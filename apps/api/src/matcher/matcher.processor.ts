@@ -18,6 +18,10 @@ export class MatcherProcessor extends WorkerHost {
         this.logger.log(`Received new job ${job.data.jobId} for matching. Evaluating...`);
         await this.matcherService.evaluateJob(job.data.jobId);
         break;
+      case 'match-user':
+        this.logger.log(`Received user ${job.data.userId} for full re-evaluation.`);
+        await this.matcherService.reEvaluateUser(job.data.userId);
+        break;
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);
     }

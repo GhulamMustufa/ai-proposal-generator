@@ -21,6 +21,16 @@ export class ClerkAuthGuard implements CanActivate {
     }
 
     const token = authHeader.split(' ')[1];
+
+    // --- LOCAL DEVELOPMENT BYPASS ---
+    // If you use a token starting with "dev_", it will automatically bypass Clerk validation
+    // and use the remaining string as the userId. E.g., Bearer dev_user_123 -> userId = "user_123"
+    if (process.env.NODE_ENV !== 'production' && token.startsWith('dev_')) {
+      request.user = { id: token.replace('dev_', '') };
+      return true;
+    }
+    // --------------------------------
+
     const secretKey = this.configService.get<string>('CLERK_SECRET_KEY');
 
     try {
