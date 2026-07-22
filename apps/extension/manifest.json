@@ -3,7 +3,7 @@
   "name": "Proposalio",
   "version": "1.0.0",
   "description": "Generate AI proposals for Upwork jobs in one click",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
   "host_permissions": [
     "<all_urls>"
   ],

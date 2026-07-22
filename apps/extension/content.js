@@ -117,8 +117,9 @@ function extractJob() {
 
   if (!description) {
     // Look for any large text block on a page that looks like a job URL
-    const isJobPage = /\/(jobs|proposals|nx\/jobs|project|gig|job)\//.test(location.pathname);
-    if (isJobPage || activePlatform) {
+    const isJobPath = /\/(jobs|proposals|nx\/jobs|project|gig|job)\//.test(location.pathname);
+    const isJobHost = /jobs?|apply|boards|careers|greenhouse|lever|workable|breezy|ashby/.test(location.hostname);
+    if (isJobPath || isJobHost || activePlatform) {
       const paras = Array.from(document.querySelectorAll('p, div, article, section'));
       // Find the element with the most text that isn't the entire body
       let bestEl = null;

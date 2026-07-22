@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "test": "playwright test",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "test:ext": "playwright test extension.spec.ts --project=chromium --workers=1"
   },
   "devDependencies": {
     "@clerk/testing": "^1.2.3",

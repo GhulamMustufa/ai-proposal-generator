@@ -44,7 +44,15 @@ function logout() {
 // ─── Job detection ────────────────────────────────────────────────────────────
 async function getActiveTab() {
   return new Promise(resolve => {
-    chrome.tabs.query({ active: true, currentWindow: true }, tabs => resolve(tabs[0]));
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      if (tabs[0] && tabs[0].url && tabs[0].url.startsWith("chrome-extension://")) {
+        // Playwright E2E workaround: When testing, the popup is opened as a normal active tab.
+        // So we need to query for the actual web page tab instead.
+        chrome.tabs.query({ url: ["http://*/*", "https://*/*"] }, webTabs => resolve(webTabs[0]));
+      } else {
+        resolve(tabs[0]);
+      }
+    });
   });
 }
 
