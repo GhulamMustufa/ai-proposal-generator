@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bullmq';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -39,6 +41,12 @@ import { ProfileModule } from './profile/profile.module';
       inject: [ConfigService], // Tell Nest to pass ConfigService into the useFactory function (Dependency Injection)
     }),
 
+    // Global Rate Limiting: Max 100 requests per minute (60000ms) by default
+    ThrottlerModule.forRoot([{
+      ttl: 60000, 
+      limit: 100,
+    }]),
+
     // Global Database Module for Drizzle ORM
     DbModule,
 
@@ -59,6 +67,12 @@ import { ProfileModule } from './profile/profile.module';
     ProfileModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard, // Applies rate limiting globally across all routes
+    }
+  ],
 })
 export class AppModule {}

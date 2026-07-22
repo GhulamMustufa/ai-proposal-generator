@@ -4,6 +4,7 @@ import { ProposalsService } from './proposals.service';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 
@@ -47,6 +48,7 @@ export class ProposalsController {
 
   @Post('enqueue')
   @UseGuards(ClerkAuthGuard)
+  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // Limit: 5 requests per hour (3,600,000ms) to protect OpenAI credits
   async enqueueProposal(@Req() req: any, @Body() body: any) {
     const userId = req.user.id;
     const { jobId, jobTitle, jobDescription, company, generationType } = body;

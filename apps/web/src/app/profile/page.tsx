@@ -8,6 +8,9 @@ type JobFilters = {
   targetRegions: string[];
   employmentTypes: string[];
   salaryFloor: string;
+  experienceLevels: string[];
+  companySizes: string[];
+  industries: string[];
 };
 
 export default function ProfilePage() {
@@ -17,6 +20,9 @@ export default function ProfilePage() {
     targetRegions: [],
     employmentTypes: [],
     salaryFloor: "",
+    experienceLevels: [],
+    companySizes: [],
+    industries: [],
   });
   
   const [skills, setSkills] = useState<string[]>([]);
@@ -28,6 +34,9 @@ export default function ProfilePage() {
   // Constants for checkboxes
   const REGIONS = ["Remote Worldwide", "United States", "Europe", "Middle East", "Asia"];
   const EMPLOYMENT_TYPES = ["Full-Time (W2)", "Contract", "Freelance/1099", "Part-Time"];
+  const EXPERIENCE_LEVELS = ["Junior (0-2y)", "Mid-Level (3-5y)", "Senior (6-9y)", "Staff/Lead (10y+)"];
+  const COMPANY_SIZES = ["Early-stage Startup (1-50)", "Mid-size (51-500)", "Enterprise (500+)"];
+  const INDUSTRIES = ["FinTech / Crypto", "Healthcare / MedTech", "E-Commerce", "AI / Machine Learning", "SaaS / B2B", "Developer Tools"];
 
   useEffect(() => {
     async function fetchProfile() {
@@ -50,6 +59,9 @@ export default function ProfilePage() {
               targetRegions: data.jobFilters.targetRegions || [],
               employmentTypes: data.jobFilters.employmentTypes || [],
               salaryFloor: data.jobFilters.salaryFloor || "",
+              experienceLevels: data.jobFilters.experienceLevels || [],
+              companySizes: data.jobFilters.companySizes || [],
+              industries: data.jobFilters.industries || [],
             });
           }
           if (data && data.skills) {
@@ -88,6 +100,18 @@ export default function ProfilePage() {
         employmentTypes: isSelected 
           ? prev.employmentTypes.filter(t => t !== type)
           : [...prev.employmentTypes, type]
+      };
+    });
+  }
+
+  function handleFilterToggle(field: 'experienceLevels' | 'companySizes' | 'industries', value: string) {
+    setFilters(prev => {
+      const isSelected = prev[field].includes(value);
+      return {
+        ...prev,
+        [field]: isSelected 
+          ? prev[field].filter(item => item !== value)
+          : [...prev[field], value]
       };
     });
   }
@@ -273,19 +297,106 @@ export default function ProfilePage() {
             </div>
           </section>
 
+          {/* Experience Levels */}
+          <section className="rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-8">
+            <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-1">Experience Level</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Filter out jobs that require significantly more or less experience than you have.</p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {EXPERIENCE_LEVELS.map(level => (
+                <label key={level} onClick={() => handleFilterToggle('experienceLevels', level)} className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border transition-all ${
+                  filters.experienceLevels.includes(level) 
+                    ? "border-amber-500/50 bg-amber-50 dark:bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]" 
+                    : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10"
+                }`}>
+                  <div className={`w-5 h-5 rounded flex items-center justify-center border ${
+                    filters.experienceLevels.includes(level) ? "bg-amber-500 border-amber-500" : "border-slate-300 dark:border-white/20"
+                  }`}>
+                    {filters.experienceLevels.includes(level) && (
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-slate-700 dark:text-white">{level}</span>
+                </label>
+              ))}
+            </div>
+          </section>
+
+          {/* Company Sizes */}
+          <section className="rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-8">
+            <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-1">Company Size</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Do you prefer fast-paced startups or stable enterprises?</p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {COMPANY_SIZES.map(size => (
+                <label key={size} onClick={() => handleFilterToggle('companySizes', size)} className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border transition-all ${
+                  filters.companySizes.includes(size) 
+                    ? "border-sky-500/50 bg-sky-50 dark:bg-sky-500/10 shadow-[0_0_15px_rgba(14,165,233,0.1)]" 
+                    : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10"
+                }`}>
+                  <div className={`w-5 h-5 rounded flex items-center justify-center border ${
+                    filters.companySizes.includes(size) ? "bg-sky-500 border-sky-500" : "border-slate-300 dark:border-white/20"
+                  }`}>
+                    {filters.companySizes.includes(size) && (
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-slate-700 dark:text-white">{size}</span>
+                </label>
+              ))}
+            </div>
+          </section>
+
+          {/* Industries */}
+          <section className="rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-8">
+            <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-1">Preferred Industries</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Select your favorite niches. The AI will boost jobs matching these industries.</p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {INDUSTRIES.map(ind => (
+                <label key={ind} onClick={() => handleFilterToggle('industries', ind)} className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border transition-all ${
+                  filters.industries.includes(ind) 
+                    ? "border-fuchsia-500/50 bg-fuchsia-50 dark:bg-fuchsia-500/10 shadow-[0_0_15px_rgba(217,70,239,0.1)]" 
+                    : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10"
+                }`}>
+                  <div className={`w-5 h-5 rounded flex items-center justify-center border ${
+                    filters.industries.includes(ind) ? "bg-fuchsia-500 border-fuchsia-500" : "border-slate-300 dark:border-white/20"
+                  }`}>
+                    {filters.industries.includes(ind) && (
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-slate-700 dark:text-white">{ind}</span>
+                </label>
+              ))}
+            </div>
+          </section>
+
           {/* Salary Floor */}
           <section className="rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-8">
             <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-1">Compensation Floor</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Jobs with listed compensation below this will be penalized by the matcher.</p>
             
             <div>
-              <input
-                type="text"
+              <select
                 value={filters.salaryFloor}
                 onChange={(e) => setFilters(prev => ({ ...prev, salaryFloor: e.target.value }))}
-                placeholder="e.g., $150k annually or $80/hr"
-                className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-3.5 text-sm text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-indigo-500/50 focus:bg-slate-100 dark:focus:bg-white/10 focus:ring-1 focus:ring-indigo-500/50"
-              />
+                className="w-full appearance-none rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-3.5 text-sm text-slate-900 dark:text-white outline-none transition focus:border-indigo-500/50 focus:bg-slate-100 dark:focus:bg-white/10 focus:ring-1 focus:ring-indigo-500/50"
+              >
+                <option value="">No minimum requirement</option>
+                <option value="$50k / year ($25/hr)">$50,000+ / year ($25/hr)</option>
+                <option value="$75k / year ($35/hr)">$75,000+ / year ($35/hr)</option>
+                <option value="$100k / year ($50/hr)">$100,000+ / year ($50/hr)</option>
+                <option value="$125k / year ($60/hr)">$125,000+ / year ($60/hr)</option>
+                <option value="$150k / year ($75/hr)">$150,000+ / year ($75/hr)</option>
+                <option value="$200k / year ($100/hr)">$200,000+ / year ($100/hr)</option>
+              </select>
             </div>
           </section>
 
