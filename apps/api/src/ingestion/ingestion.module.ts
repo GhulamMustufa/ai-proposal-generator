@@ -4,6 +4,7 @@ import { Queue } from 'bullmq';
 import { IngestionService } from './ingestion.service';
 import { AtsIngestionService } from './ats-ingestion.service';
 import { DorkIngestionService } from './dork-ingestion.service';
+import { GraphqlIngestionService } from './graphql-ingestion.service';
 import { IngestionProcessor } from './ingestion.processor';
 import { IngestionController } from './ingestion.controller';
 
@@ -23,8 +24,14 @@ import { IngestionController } from './ingestion.controller';
     }),
   ],
   controllers: [IngestionController],
-  providers: [IngestionService, AtsIngestionService, DorkIngestionService, IngestionProcessor],
-  exports: [IngestionService, AtsIngestionService, DorkIngestionService],
+  providers: [
+    IngestionService, 
+    AtsIngestionService, 
+    DorkIngestionService, 
+    GraphqlIngestionService,
+    IngestionProcessor
+  ],
+  exports: [IngestionService, AtsIngestionService, DorkIngestionService, GraphqlIngestionService],
 })
 export class IngestionModule implements OnApplicationBootstrap {
   private readonly logger = new Logger(IngestionModule.name);
@@ -170,6 +177,12 @@ export class IngestionModule implements OnApplicationBootstrap {
     await this.ingestionQueue.add('scrape-hackernews', {}, {
       repeat: { pattern: '0 12 1,2,3 * *' },
       jobId: 'repeatable-hackernews',
+    });
+
+    // Scrape Braintrust every 12 hours (e.g. 5 AM and 5 PM)
+    await this.ingestionQueue.add('scrape-braintrust', {}, {
+      repeat: { pattern: '0 5,17 * * *' },
+      jobId: 'repeatable-braintrust',
     });
 
     // Cleanup old jobs from database at 12:30 AM every day

@@ -4,6 +4,7 @@ import { Job, Queue } from 'bullmq';
 import { IngestionService } from './ingestion.service';
 import { AtsIngestionService } from './ats-ingestion.service';
 import { DorkIngestionService } from './dork-ingestion.service';
+import { GraphqlIngestionService } from './graphql-ingestion.service';
 
 /**
  * IngestionProcessor
@@ -19,6 +20,7 @@ export class IngestionProcessor extends WorkerHost {
     private readonly ingestionService: IngestionService,
     private readonly atsIngestionService: AtsIngestionService,
     private readonly dorkIngestionService: DorkIngestionService,
+    private readonly graphqlIngestionService: GraphqlIngestionService,
     @InjectQueue('matcher-queue') private readonly matcherQueue: Queue,
   ) {
     super();
@@ -170,6 +172,12 @@ export class IngestionProcessor extends WorkerHost {
 
     if (job.name === 'scrape-hackernews') {
       const newJobIds = await this.ingestionService.scrapeHackerNews();
+      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      return { insertedCount: newJobIds.length };
+    }
+
+    if (job.name === 'scrape-braintrust') {
+      const newJobIds = await this.graphqlIngestionService.scrapeBraintrust();
       for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
       return { insertedCount: newJobIds.length };
     }
