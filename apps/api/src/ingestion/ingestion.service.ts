@@ -1,8 +1,8 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { DB_CONNECTION } from '../db/db.module';
 import { extractJobTextFromHtml } from '../utils/job-extractor';
-import { jobs } from '../db/schema';
-import { sql } from 'drizzle-orm';
+import { jobs, aiMatches } from '../db/schema';
+import { sql, lt } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
 
 /**
@@ -75,6 +75,30 @@ export class IngestionService {
       const msg = error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to scrape Remotive: ${msg}`);
       throw error;
+    }
+  }
+
+  /**
+   * Deletes jobs older than 30 days to keep the database size small and relevant.
+   */
+  async cleanupOldJobs(): Promise<void> {
+    this.logger.log('Starting cleanup of jobs older than 30 days...');
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const result = await this.db
+        .delete(jobs)
+        .where(lt(jobs.scrapedAt, thirtyDaysAgo))
+        .returning({ id: jobs.id });
+      
+      // Also cleanup aiMatches directly (cascade should handle this if foreign key is set up, but let's be safe)
+      await this.db.delete(aiMatches).where(lt(aiMatches.createdAt, thirtyDaysAgo));
+
+      this.logger.log(`Successfully deleted ${result.length} old jobs from database.`);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to clean up old jobs: ${msg}`);
     }
   }
 

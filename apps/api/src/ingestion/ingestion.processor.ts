@@ -167,6 +167,11 @@ export class IngestionProcessor extends WorkerHost {
       for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
       return { insertedCount: newJobIds.length };
     }
+
+    if (job.name === 'cleanup-old-jobs') {
+      await this.ingestionService.cleanupOldJobs();
+      return { status: 'cleaned up old jobs' };
+    }
     
     this.logger.warn(`Unknown job name: ${job.name}`);
   }

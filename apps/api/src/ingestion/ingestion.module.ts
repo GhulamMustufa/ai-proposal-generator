@@ -164,5 +164,11 @@ export class IngestionModule implements OnApplicationBootstrap {
       repeat: { pattern: '0 10,16 * * *' },
       jobId: 'repeatable-jobcity',
     });
+
+    // Cleanup old jobs from database at 12:30 AM every day
+    await this.ingestionQueue.add('cleanup-old-jobs', {}, {
+      repeat: { pattern: '30 0 * * *' },
+      jobId: 'repeatable-cleanup-old-jobs',
+    });
   }
 }
