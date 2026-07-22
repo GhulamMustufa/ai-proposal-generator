@@ -2,7 +2,9 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { toast } from "@/lib/toast";
+import { useAuth } from "@clerk/nextjs";
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const MAX_VOICE_SAMPLES = 3;
 
 function CopyButton({ text }: { text: string }) {
@@ -31,8 +33,6 @@ function CopyButton({ text }: { text: string }) {
     </button>
   );
 }
-
-import { useAuth } from "@clerk/nextjs";
 
 export function ProposalGenerator() {
   const { getToken } = useAuth();
@@ -69,7 +69,7 @@ export function ProposalGenerator() {
 
     try {
       const token = await getToken();
-      const response = await fetch("http://localhost:4000/api/generate-proposal", {
+      const response = await fetch(`${apiUrl}/api/proposals/generate`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

@@ -13,6 +13,8 @@ const STATUS_STYLES = {
 
 type Status = keyof typeof STATUS_STYLES;
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 export function StatusBadge({
   proposalId,
   initialStatus,
@@ -26,7 +28,7 @@ export function StatusBadge({
   async function handleChange(newStatus: Status) {
     setUpdating(true);
     try {
-      const res = await fetch(`/api/proposals/${proposalId}`, {
+      const res = await fetch(`${apiUrl}/api/proposals/${proposalId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),

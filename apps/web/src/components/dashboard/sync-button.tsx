@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 export function SyncButton() {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -18,7 +20,7 @@ export function SyncButton() {
         throw new Error("Authentication token not found.");
       }
 
-      const res = await fetch("http://localhost:3001/api/ingestion/trigger-all", {
+      const res = await fetch(`${apiUrl}/api/ingestion/trigger-all`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

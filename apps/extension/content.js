@@ -117,7 +117,7 @@ function extractJob() {
 
   if (!description) {
     // Look for any large text block on a page that looks like a job URL
-    const isJobPage = /\\/(jobs|proposals|nx\\/jobs|project|gig|job)\\//.test(location.pathname);
+    const isJobPage = /\/(jobs|proposals|nx\/jobs|project|gig|job)\//.test(location.pathname);
     if (isJobPage || activePlatform) {
       const paras = Array.from(document.querySelectorAll('p, div, article, section'));
       // Find the element with the most text that isn't the entire body
@@ -162,7 +162,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   function checkInputs() {
     if (btnInjected) return;
-    const inputs = document.querySelectorAll('input[type="text"], input[type="email"], textarea');
+    const inputs = document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]), textarea');
     // Inject button if there are forms that look like applications
     if (inputs.length > 2) {
       injectAutoFillButton();
@@ -174,8 +174,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const btn = document.createElement('button');
     btn.textContent = '✨ Auto-Fill Application';
     btn.style.position = 'fixed';
-    btn.style.bottom = '20px';
-    btn.style.right = '20px';
+    btn.style.bottom = '30px';
+    btn.style.left = '50%';
+    btn.style.transform = 'translateX(-50%)';
     btn.style.zIndex = '2147483647'; // Max z-index
     btn.style.padding = '12px 24px';
     btn.style.backgroundColor = '#0052cc';
@@ -189,8 +190,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     btn.style.fontSize = '14px';
     btn.style.transition = 'all 0.2s';
 
-    btn.onmouseover = () => btn.style.transform = 'scale(1.05)';
-    btn.onmouseout = () => btn.style.transform = 'scale(1)';
+    btn.onmouseover = () => btn.style.transform = 'translateX(-50%) scale(1.05)';
+    btn.onmouseout = () => btn.style.transform = 'translateX(-50%) scale(1)';
 
     btn.addEventListener('click', async () => {
       btn.textContent = 'Generating...';
@@ -233,11 +234,27 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const fieldMap = {
       'first': contact.firstName,
       'last': contact.lastName,
-      'name': \`\${contact.firstName || ''} \${contact.lastName || ''}\`.trim(),
+      'name': `${contact.firstName || ''} ${contact.lastName || ''}`.trim(),
       'email': contact.email,
       'phone': contact.phone,
       'linkedin': contact.linkedin,
     };
+
+    function setReactValue(element, value) {
+      if (!value) return;
+      const prototype = Object.getPrototypeOf(element);
+      const setter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set 
+                  || Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+                  || Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+      
+      if (setter) {
+        setter.call(element, value);
+      } else {
+        element.value = value;
+      }
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
     const inputs = document.querySelectorAll('input:not([type="hidden"]), textarea');
     inputs.forEach(input => {
@@ -245,14 +262,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       
       // Map contact fields
       for (const [key, val] of Object.entries(fieldMap)) {
-        // e.g. if key is 'first' and nameAttr includes 'first', it's a match
         if (nameAttr.includes(key) && val) {
-          // Special exception: don't overwrite 'last name' with 'name' (full name)
           if (key === 'name' && (nameAttr.includes('first') || nameAttr.includes('last'))) continue;
-          
-          input.value = val;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
+          setReactValue(input, val);
           return;
         }
       }
@@ -265,9 +277,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         nameAttr.includes('additional')
       ) {
         if (input.tagName.toLowerCase() === 'textarea') {
-          input.value = generated_proposal || '';
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
+          setReactValue(input, generated_proposal || '');
         }
       }
     });

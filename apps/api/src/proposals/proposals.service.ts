@@ -84,6 +84,7 @@ export class ProposalsService {
   }
 
   private errorResponse(res: Response, status: number, code: string, message: string, details?: any) {
+    console.error(`[ProposalsService Error] ${code} (${status}):`, message, details ?? '');
     return res.status(status).json({ error: { code, message, ...(details ?? {}) } });
   }
 

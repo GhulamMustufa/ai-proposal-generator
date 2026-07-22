@@ -62,15 +62,15 @@ async function fetchJob(tabId) {
 
 // ─── Generation ───────────────────────────────────────────────────────────────
 async function generateProposal(jobTitle, jobDescription) {
-  const res = await fetch(`${API_BASE}/api/generate-proposal`, {
+  const res = await fetch(`${API_BASE}/api/proposals/generate`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      jobDescription,
-      jobTitle,
+      job_description: jobDescription,
+      job_title: jobTitle,
       stream: false,
     }),
   });
@@ -109,9 +109,7 @@ async function init() {
 async function loadJobView() {
   try {
     const tab = await getActiveTab();
-    const isUpwork = tab?.url && /upwork\.com/.test(tab.url);
-
-    if (!isUpwork) {
+    if (!tab?.url) {
       showView("view-no-job");
       return;
     }

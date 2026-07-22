@@ -14,14 +14,14 @@ async function handleAutoFill(context) {
   const token = storage.accessToken;
   if (!token) throw new Error('Not authenticated - Please set Clerk Token in extension popup');
 
-  // Hardcode API_BASE to localhost:4000 for development, or could read from config if we importScripts
-  const API_BASE = 'http://localhost:4000';
+  // Hardcode API_BASE to localhost:3001 for development, or could read from config if we importScripts
+  const API_BASE = 'http://localhost:3001';
 
-  const res = await fetch(\`\${API_BASE}/api/generate-proposal\`, {
+  const res = await fetch(`${API_BASE}/api/proposals/generate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': \`Bearer \${token}\`
+      'Authorization': `Bearer ${token}`
     },
     body: JSON.stringify({
       job_title: 'Auto-Fill Job',
@@ -32,7 +32,7 @@ async function handleAutoFill(context) {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(\`Server returned \${res.status}: \${text}\`);
+    throw new Error(`Server returned ${res.status}: ${text}`);
   }
 
   const data = await res.json();

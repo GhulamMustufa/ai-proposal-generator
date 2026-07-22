@@ -2,6 +2,9 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "@/lib/toast";
+import { useAuth } from "@clerk/nextjs";
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 type Job = {
   title: string;
@@ -37,8 +40,6 @@ function CopyButton({ text, size = "sm" }: { text: string; size?: "xs" | "sm" })
   );
 }
 
-import { useAuth } from "@clerk/nextjs";
-
 function JobCard({ job }: { job: Job }) {
   const { getToken } = useAuth();
   const [generating, setGenerating] = useState(false);
@@ -50,7 +51,7 @@ function JobCard({ job }: { job: Job }) {
 
     try {
       const token = await getToken();
-      const response = await fetch("http://localhost:4000/api/generate-proposal", {
+      const response = await fetch(`${apiUrl}/api/proposals/generate`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -148,7 +149,7 @@ export function JobFeed({ defaultKeywords = "" }: { defaultKeywords?: string }) 
 
     try {
       const token = await getToken();
-      const response = await fetch(`http://localhost:4000/api/jobs?query=${encodeURIComponent(q)}`, {
+      const response = await fetch(`${apiUrl}/api/jobs?query=${encodeURIComponent(q)}`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -186,7 +187,7 @@ export function JobFeed({ defaultKeywords = "" }: { defaultKeywords?: string }) 
 
     try {
       const token = await getToken();
-      const response = await fetch("http://localhost:4000/api/preferences", {
+      const response = await fetch(`${apiUrl}/api/preferences`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
