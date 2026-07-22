@@ -129,11 +129,34 @@ export class IngestionModule implements OnApplicationBootstrap {
       jobId: 'repeatable-ats-lever',
     });
 
-    // Execute Google Dorks at 4am everyday (optimized for 250 limits)
-    await this.ingestionQueue.add('scrape-dorks', {}, {
+    // Scrape all SmartRecruiters ATS Boards at 4am
+    await this.ingestionQueue.add('scrape-ats-smartrecruiters', {}, {
       repeat: { pattern: '0 4 * * *' },
+      jobId: 'repeatable-ats-smartrecruiters',
+    });
+
+    // Scrape all Workable ATS Boards at 5am
+    await this.ingestionQueue.add('scrape-ats-workable', {}, {
+      repeat: { pattern: '0 5 * * *' },
+      jobId: 'repeatable-ats-workable',
+    });
+
+    // Scrape all Breezy HR ATS Boards at 6am
+    await this.ingestionQueue.add('scrape-ats-breezy', {}, {
+      repeat: { pattern: '0 6 * * *' },
+      jobId: 'repeatable-ats-breezy',
+    });
+
+    // Scrape all Ashby HQ ATS Boards at 7am
+    await this.ingestionQueue.add('scrape-ats-ashby', {}, {
+      repeat: { pattern: '0 7 * * *' },
+      jobId: 'repeatable-ats-ashby',
+    });
+    
+    // Scrape Google Dorks at 8am and 8pm
+    await this.ingestionQueue.add('scrape-dorks', {}, {
+      repeat: { pattern: '0 8,20 * * *' },
       jobId: 'repeatable-dorks',
     });
   }
 }
-

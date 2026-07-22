@@ -131,6 +131,30 @@ export class IngestionProcessor extends WorkerHost {
       for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
       return { insertedCount: newJobIds.length };
     }
+
+    if (job.name === 'scrape-ats-smartrecruiters') {
+      const newJobIds = await this.atsIngestionService.scrapeSmartRecruiters();
+      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      return { insertedCount: newJobIds.length };
+    }
+
+    if (job.name === 'scrape-ats-workable') {
+      const newJobIds = await this.atsIngestionService.scrapeWorkable();
+      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      return { insertedCount: newJobIds.length };
+    }
+
+    if (job.name === 'scrape-ats-breezy') {
+      const newJobIds = await this.atsIngestionService.scrapeBreezy();
+      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      return { insertedCount: newJobIds.length };
+    }
+
+    if (job.name === 'scrape-ats-ashby') {
+      const newJobIds = await this.atsIngestionService.scrapeAshby();
+      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      return { insertedCount: newJobIds.length };
+    }
     
     if (job.name === 'scrape-dorks') {
       const newJobIds = await this.dorkIngestionService.scrapeGoogleDorks();
