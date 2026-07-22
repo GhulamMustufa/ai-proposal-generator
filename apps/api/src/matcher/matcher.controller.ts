@@ -4,7 +4,7 @@ import { Queue } from 'bullmq';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { DB_CONNECTION } from '../db/db.module';
 import { aiMatches, jobs } from '../db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, gte, and } from 'drizzle-orm';
 
 @Controller('api/matches')
 @UseGuards(ClerkAuthGuard)
@@ -34,6 +34,10 @@ export class MatcherController {
       throw new UnauthorizedException('You can only view your own job matches.');
     }
 
+    // Calculate date 30 days ago
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     // Fetch user's matches joined with job details
     const matches = await this.db
       .select({
@@ -49,8 +53,13 @@ export class MatcherController {
       })
       .from(aiMatches)
       .innerJoin(jobs, eq(aiMatches.jobId, jobs.id))
-      .where(eq(aiMatches.userId, userId))
-      .orderBy(desc(aiMatches.matchScore))
+      .where(
+        and(
+          eq(aiMatches.userId, userId),
+          gte(aiMatches.createdAt, thirtyDaysAgo)
+        )
+      )
+      .orderBy(desc(aiMatches.matchScore), desc(aiMatches.createdAt))
       .limit(100); // Return top 100 recent matches
 
     return matches;

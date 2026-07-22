@@ -28,5 +28,32 @@ export const DORK_QUERIES = [
   '(site:upwork.com/freelance-jobs OR site:upwork.com/jobs) ("React Native" OR "React" OR "Next.js" OR "Node.js" OR "TypeScript" OR "AI")',
 
   // 8. GITHUB (Hidden Issue Board Jobs)
-  'site:github.com "we are hiring" ("React Native" OR "React" OR "Next.js" OR "Node.js" OR "TypeScript" OR "AI") ("contract" OR "freelance" OR "part time" OR "full time" OR "remote")'
+  'site:github.com "we are hiring" ("React Native" OR "React" OR "Next.js" OR "Node.js" OR "TypeScript" OR "AI") ("contract" OR "freelance" OR "part time" OR "full time" OR "remote")',
+
+  // 9. TARGETED: Big Tech & Hardware (Malaysia/Remote)
+  '("Intel" OR "AMD" OR "NVIDIA" OR "Dell" OR "HP" OR "Oracle" OR "IBM" OR "Microsoft" OR "Google" OR "AWS") ("React Native" OR "React" OR "Node.js") ("Malaysia" OR "Remote")',
+
+  // 10. TARGETED: FinTech & E-Commerce (Malaysia/Singapore)
+  '("Shopee" OR "Lazada" OR "TikTok" OR "Carsome" OR "Grab" OR "MoneyLion" OR "GXBank" OR "Setel" OR "BigPay") ("React Native" OR "React" OR "Node.js") ("Malaysia" OR "Remote")',
+
+  // 11. TARGETED: Consulting, GCCs & Engineering
+  '("Accenture" OR "PwC" OR "EY" OR "HSBC" OR "Shell" OR "Petronas" OR "DHL" OR "Keysight" OR "Motorola" OR "Infineon") ("React Native" OR "React" OR "Node.js") ("Malaysia" OR "Remote")',
+
+  // 12. TARGETED: Singapore Agencies 1
+  '("Michael Page" OR "Robert Walters" OR "Randstad" OR "JAC Recruitment" OR "RecruitFirst") ("React Native" OR "React" OR "Node.js") "Singapore"',
+
+  // 13. TARGETED: Singapore Agencies 2
+  '("HRnetOne" OR "PeopleSearch" OR "BGC Group" OR "Trust Recruit" OR "Robert Half") ("React Native" OR "React" OR "Node.js") "Singapore"',
+
+  // 14. TARGETED: Singapore Tech Tier 1
+  '("Sea Group" OR "ByteDance" OR "Foodpanda" OR "Carousell" OR "ShopBack" OR "Meta" OR "Apple" OR "Salesforce" OR "ServiceNow") ("React Native" OR "React" OR "Node.js") "Singapore"',
+
+  // 15. TARGETED: Singapore FinTech & Banking
+  '("Nium" OR "Airwallex" OR "Wise" OR "Stripe" OR "Adyen" OR "Revolut" OR "DBS" OR "OCBC" OR "UOB") ("React Native" OR "React" OR "Node.js") "Singapore"',
+
+  // 16. TARGETED: Singapore Finance & Engineering
+  '("JPMorgan" OR "Goldman Sachs" OR "Morgan Stanley" OR "Micron" OR "GlobalFoundries" OR "STMicroelectronics") ("React Native" OR "React" OR "Node.js") "Singapore"',
+
+  // 17. TARGETED: Singapore AI & Growth
+  '("Anthropic" OR "OpenAI" OR "Datadog" OR "Cloudflare" OR "Canva" OR "PayPal") ("React Native" OR "React" OR "Node.js") "Singapore"'
 ];

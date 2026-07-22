@@ -15,10 +15,10 @@ export class DorkIngestionService {
   }
 
   async scrapeGoogleDorks(): Promise<string[]> {
-    this.logger.log('Starting Google Dork Ingestion via SerpApi...');
+    this.logger.log('Starting Google Dork Ingestion via Serper.dev...');
     
-    if (!process.env.SERPAPI_KEY) {
-      this.logger.error('SERPAPI_KEY is not set in the environment variables.');
+    if (!process.env.SERPER_API_KEY) {
+      this.logger.error('SERPER_API_KEY is not set in the environment variables.');
       return [];
     }
 
@@ -29,16 +29,23 @@ export class DorkIngestionService {
       this.logger.log(`Executing Dork Query ${i + 1}/${DORK_QUERIES.length}: ${query}`);
 
       try {
-        // Build SerpApi URL (tbs=qdr:d ensures only results from the past 24 hours)
-        const url = new URL('https://serpapi.com/search.json');
-        url.searchParams.append('engine', 'google');
-        url.searchParams.append('q', query);
-        url.searchParams.append('tbs', 'qdr:d');
-        url.searchParams.append('api_key', process.env.SERPAPI_KEY);
+        const url = 'https://google.serper.dev/search';
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-API-KEY': process.env.SERPER_API_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            q: query,
+            tbs: 'qdr:d' // past 24 hours
+          }),
+          signal: AbortSignal.timeout(30000)
+        });
 
-        const response = await fetch(url.toString(), { signal: AbortSignal.timeout(30000) });
         if (!response.ok) {
-          this.logger.warn(`SerpApi responded with status ${response.status} for query ${i + 1}`);
+          this.logger.warn(`Serper.dev responded with status ${response.status} for query ${i + 1}`);
           continue;
         }
 

@@ -1,7 +1,7 @@
 import { Injectable, Inject, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { DB_CONNECTION } from '../db/db.module';
 import { aiMatches, jobs } from '../db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, gte, and } from 'drizzle-orm';
 
 @Injectable()
 export class JobsService {
@@ -19,6 +19,9 @@ export class JobsService {
     }
 
     try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
       const results = await this.db
         .select({
           id: jobs.id,
@@ -30,11 +33,17 @@ export class JobsService {
           matchScore: aiMatches.matchScore,
           matchReasoning: aiMatches.matchReasoning,
           scrapedAt: jobs.scrapedAt,
+          createdAt: aiMatches.createdAt,
         })
         .from(aiMatches)
         .innerJoin(jobs, eq(aiMatches.jobId, jobs.id))
-        .where(eq(aiMatches.userId, userId))
-        .orderBy(desc(aiMatches.matchScore));
+        .where(
+          and(
+            eq(aiMatches.userId, userId),
+            gte(aiMatches.createdAt, thirtyDaysAgo)
+          )
+        )
+        .orderBy(desc(aiMatches.matchScore), desc(aiMatches.createdAt));
 
       return results;
     } catch (error) {

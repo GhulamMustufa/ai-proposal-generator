@@ -108,10 +108,23 @@ export function JobCard({ job }: JobCardProps) {
                 {job.platform}
               </span>
             </div>
-            <p className="mt-1.5 text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-              <span className="h-4 w-4 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] text-white font-bold">{job.company?.charAt(0) || "C"}</span>
-              {job.company || "Confidential Company"}
-            </p>
+            <div className="mt-1.5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                <span className="h-4 w-4 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] text-white font-bold">{job.company?.charAt(0) || "C"}</span>
+                {job.company || "Confidential Company"}
+              </p>
+              
+              {(job.createdAt || job.scrapedAt) && (
+                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500">
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {new Date(job.createdAt || job.scrapedAt).toLocaleDateString(undefined, { 
+                    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/5 p-4 relative overflow-hidden">

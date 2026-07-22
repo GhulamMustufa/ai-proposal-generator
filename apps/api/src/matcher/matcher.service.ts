@@ -3,6 +3,7 @@ import { DB_CONNECTION } from '../db/db.module';
 import { userProfiles, jobs, aiMatches } from '../db/schema';
 import { eq, isNotNull } from 'drizzle-orm';
 import OpenAI from 'openai';
+import { TARGET_COMPANIES } from '../workers/target-companies.config';
 
 /**
  * MatcherService
@@ -143,15 +144,32 @@ Output MUST be exactly in this JSON format:
       throw new Error(`Invalid JSON schema returned by OpenAI: ${outputStr}`);
     }
 
+    let finalScore = result.match_score;
+    let finalReasoning = result.match_reasoning;
+
+    // STRICT COMPANY BOOST: Only boost if the skills are already a strong match (>= 75)
+    if (finalScore >= 75) {
+      const companyStr = job.company?.toLowerCase() || '';
+      const titleStr = job.title?.toLowerCase() || '';
+      const isTargetCompany = TARGET_COMPANIES.some(tc => 
+        companyStr.includes(tc.toLowerCase()) || titleStr.includes(tc.toLowerCase())
+      );
+      
+      if (isTargetCompany) {
+        finalScore = Math.min(100, finalScore + 15);
+        finalReasoning += ' [Target Company Boost applied due to strong skills match]';
+      }
+    }
+
     // Save into aiMatches table
     await this.db.insert(aiMatches).values({
       userId,
       jobId: job.id,
-      matchScore: result.match_score,
-      matchReasoning: result.match_reasoning,
+      matchScore: finalScore,
+      matchReasoning: finalReasoning,
     });
 
-    this.logger.debug(`Saved match score ${result.match_score} for user ${userId} and job ${job.id}`);
+    this.logger.debug(`Saved match score ${finalScore} for user ${userId} and job ${job.id}`);
   }
 
   /**
