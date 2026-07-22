@@ -483,4 +483,69 @@ export class IngestionService {
       this.logger.error(`Failed to scrape Relocate.me: ${error}`); throw error;
     }
   }
+
+  /**
+   * Scrapes JobCity.my RSS feed for Malaysia jobs.
+   */
+  async scrapeJobcity(): Promise<string[]> {
+    this.logger.log('Starting Jobcity.my scraping...');
+    const url = 'https://www.jobcity.my/rss/';
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'Accept': 'application/rss+xml, application/xml, text/xml',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        },
+        signal: AbortSignal.timeout(20000),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Jobcity returned ${response.status}`);
+      }
+
+      const xml = await response.text();
+      const $ = cheerio.load(xml, { xmlMode: true });
+      const items = $('item');
+
+      this.logger.log(`Fetched ${items.length} jobs from Jobcity.my.`);
+
+      const actuallyInsertedIds: string[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = $(items[i]);
+        const title = item.children('title').text().trim();
+        const link = item.children('link').text().trim();
+        const descriptionHtml = item.children('description').text().trim();
+        const guid = item.children('guid').text().trim() || link;
+        
+        if (!title || !link) continue;
+        const externalId = `jobcity_${Buffer.from(guid).toString('base64').substring(0, 30)}`;
+        const $desc = cheerio.load(descriptionHtml);
+        const description = $desc.text().replace(/\s+/g, ' ').trim().slice(0, 7000);
+
+        try {
+          const inserted = await this.db.insert(jobs).values({
+            platform: 'jobcity',
+            externalId,
+            title,
+            company: 'JobCity Agency',
+            description,
+            url: link,
+          }).onConflictDoNothing().returning({ id: jobs.id });
+
+          if (inserted.length > 0) {
+            actuallyInsertedIds.push(inserted[0].id);
+          }
+        } catch (error) {
+          this.logger.error(`Error inserting Jobcity job ${externalId}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+
+      this.logger.log(`Ingested ${actuallyInsertedIds.length} new jobs from Jobcity.my.`);
+      return actuallyInsertedIds;
+    } catch (error) {
+      this.logger.error(`Failed to scrape Jobcity: ${error instanceof Error ? error.message : String(error)}`);
+      return [];
+    }
+  }
 }

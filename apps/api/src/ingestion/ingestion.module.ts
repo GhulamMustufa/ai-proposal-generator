@@ -158,5 +158,11 @@ export class IngestionModule implements OnApplicationBootstrap {
       repeat: { pattern: '0 8,20 * * *' },
       jobId: 'repeatable-dorks',
     });
+
+    // Scrape JobCity Malaysia at 10am and 4pm
+    await this.ingestionQueue.add('scrape-jobcity', {}, {
+      repeat: { pattern: '0 10,16 * * *' },
+      jobId: 'repeatable-jobcity',
+    });
   }
 }

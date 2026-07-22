@@ -161,6 +161,12 @@ export class IngestionProcessor extends WorkerHost {
       for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
       return { insertedCount: newJobIds.length };
     }
+
+    if (job.name === 'scrape-jobcity') {
+      const newJobIds = await this.ingestionService.scrapeJobcity();
+      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      return { insertedCount: newJobIds.length };
+    }
     
     this.logger.warn(`Unknown job name: ${job.name}`);
   }
