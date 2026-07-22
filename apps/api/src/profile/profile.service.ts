@@ -69,4 +69,47 @@ export class ProfileService {
       throw new HttpException('Failed to update job filters', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  /**
+   * Updates the user's core skills array.
+   */
+  async updateSkills(userId: string, skills: string[]) {
+    try {
+      // Check if profile exists
+      const existing = await this.db
+        .select()
+        .from(userProfiles)
+        .where(eq(userProfiles.userId, userId))
+        .limit(1);
+
+      // JIT user provisioning (handles E2E tests and webhook race conditions)
+      try {
+        await this.db
+          .insert(require('../db/schema').users)
+          .values({ id: userId, email: `${userId}@placeholder.local` })
+          .onConflictDoNothing();
+      } catch (e) {
+        // ignore
+      }
+
+      if (existing.length > 0) {
+        await this.db
+          .update(userProfiles)
+          .set({ skills, updatedAt: new Date() })
+          .where(eq(userProfiles.userId, userId));
+      } else {
+        await this.db
+          .insert(userProfiles)
+          .values({
+            userId,
+            skills,
+          });
+      }
+
+      return { success: true, skills };
+    } catch (error) {
+      this.logger.error(`Failed to update skills: ${error}`);
+      throw new HttpException('Failed to update skills', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

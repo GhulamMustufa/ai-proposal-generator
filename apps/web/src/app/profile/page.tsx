@@ -19,6 +19,9 @@ export default function ProfilePage() {
     salaryFloor: "",
   });
   
+  const [skills, setSkills] = useState<string[]>([]);
+  const [newSkill, setNewSkill] = useState("");
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -48,6 +51,9 @@ export default function ProfilePage() {
               employmentTypes: data.jobFilters.employmentTypes || [],
               salaryFloor: data.jobFilters.salaryFloor || "",
             });
+          }
+          if (data && data.skills) {
+            setSkills(data.skills);
           }
         }
       } catch (error) {
@@ -86,6 +92,20 @@ export default function ProfilePage() {
     });
   }
 
+  function handleAddSkill(e: React.KeyboardEvent<HTMLInputElement> | React.MouseEvent<HTMLButtonElement>) {
+    if ('key' in e && e.key !== 'Enter') return;
+    e.preventDefault();
+    if (!newSkill.trim()) return;
+    if (skills.includes(newSkill.trim())) return;
+    
+    setSkills([...skills, newSkill.trim()]);
+    setNewSkill("");
+  }
+
+  function handleRemoveSkill(skillToRemove: string) {
+    setSkills(skills.filter(skill => skill !== skillToRemove));
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -104,13 +124,22 @@ export default function ProfilePage() {
           jobFilters: filters
         }),
       });
+
+      const skillsRes = await fetch(`${apiUrl}/api/profile/skills`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ skills }),
+      });
       
-      if (!res.ok) {
+      if (!res.ok || !skillsRes.ok) {
         toast.error("Failed to save profile");
         return;
       }
       
-      toast.success("Job filters successfully updated.");
+      toast.success("Job filters and skills successfully updated.");
     } catch {
       toast.error("Request failed. Please try again.");
     } finally {
@@ -146,6 +175,50 @@ export default function ProfilePage() {
         </div>
 
         <form onSubmit={handleSave} className="space-y-8">
+          {/* Core Skills */}
+          <section className="rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-8">
+            <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-1">Core Skills</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">These are the skills the AI will use to match you with jobs. We require at least 3 matching skills for a job to pass.</p>
+            
+            <div className="flex flex-wrap gap-2 mb-6">
+              {skills.map((skill, idx) => (
+                <div key={idx} className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                  {skill}
+                  <button 
+                    type="button" 
+                    onClick={() => handleRemoveSkill(skill)}
+                    className="ml-1 rounded-full p-0.5 hover:bg-emerald-500/20 transition-colors"
+                  >
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              {skills.length === 0 && (
+                <span className="text-sm text-slate-400 italic">No skills added yet.</span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                onKeyDown={handleAddSkill}
+                placeholder="e.g., React.js, Node.js, TypeScript"
+                className="flex-1 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-3.5 text-sm text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500/50 focus:bg-slate-100 dark:focus:bg-white/10 focus:ring-1 focus:ring-emerald-500/50"
+              />
+              <button
+                type="button"
+                onClick={handleAddSkill}
+                className="rounded-xl bg-emerald-500 px-6 py-3.5 text-sm font-medium text-white transition hover:bg-emerald-400 shadow-lg shadow-emerald-500/25 shrink-0"
+              >
+                Add Skill
+              </button>
+            </div>
+          </section>
+
           {/* Target Regions */}
           <section className="rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-8">
             <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-1">Target Regions</h2>

@@ -19,4 +19,11 @@ export class ProfileController {
     const userId = req.user.id;
     return this.profileService.updateJobFilters(userId, body.jobFilters);
   }
+
+  @Put('skills')
+  @UseGuards(ClerkAuthGuard)
+  async updateSkills(@Req() req: any, @Body() body: any) {
+    const userId = req.user.id;
+    return this.profileService.updateSkills(userId, body.skills);
+  }
 }

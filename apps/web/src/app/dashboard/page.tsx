@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { JobCard } from "@/components/dashboard/job-card";
+import { SyncButton } from "@/components/dashboard/sync-button";
 
 // Optional: Fallback data for preview/development if backend is offline
 const MOCK_JOBS = [
@@ -97,9 +98,12 @@ export default async function DashboardPage() {
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400">
             ATS Sourcing Engine Active
           </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
-            Your Match Dashboard
-          </h1>
+          <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h1 className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
+              Your Match Dashboard
+            </h1>
+            <SyncButton />
+          </div>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
             We have scanned thousands of jobs across 14+ platforms. These roles have successfully bypassed your strict AI pre-filters. Review your highest probability matches below.
           </p>
