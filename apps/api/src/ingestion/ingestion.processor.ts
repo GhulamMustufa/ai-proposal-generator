@@ -168,6 +168,12 @@ export class IngestionProcessor extends WorkerHost {
       return { insertedCount: newJobIds.length };
     }
 
+    if (job.name === 'scrape-hackernews') {
+      const newJobIds = await this.ingestionService.scrapeHackerNews();
+      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      return { insertedCount: newJobIds.length };
+    }
+
     if (job.name === 'cleanup-old-jobs') {
       await this.ingestionService.cleanupOldJobs();
       return { status: 'cleaned up old jobs' };

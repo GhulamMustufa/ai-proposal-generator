@@ -39,7 +39,7 @@ export class IngestionController {
       'scrape-remoteco', 'scrape-dribbble', 'scrape-relocateme', 
       'scrape-ats-greenhouse', 'scrape-ats-lever', 'scrape-ats-smartrecruiters',
       'scrape-ats-workable', 'scrape-ats-breezy', 'scrape-ats-ashby',
-      'scrape-dorks', 'scrape-jobcity'
+      'scrape-dorks', 'scrape-jobcity', 'scrape-hackernews'
     ];
 
     // Dispatch all jobs to the queue

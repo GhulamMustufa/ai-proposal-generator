@@ -165,6 +165,13 @@ export class IngestionModule implements OnApplicationBootstrap {
       jobId: 'repeatable-jobcity',
     });
 
+    // Scrape Hacker News at 12pm on the 1st, 2nd, and 3rd of every month
+    // (HN Mega threads are usually posted on the 1st)
+    await this.ingestionQueue.add('scrape-hackernews', {}, {
+      repeat: { pattern: '0 12 1,2,3 * *' },
+      jobId: 'repeatable-hackernews',
+    });
+
     // Cleanup old jobs from database at 12:30 AM every day
     await this.ingestionQueue.add('cleanup-old-jobs', {}, {
       repeat: { pattern: '30 0 * * *' },

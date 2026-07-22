@@ -103,6 +103,91 @@ export class IngestionService {
   }
 
   /**
+   * Scrapes Hacker News "Ask HN: Who is hiring?" mega-threads.
+   * Gets the most recent thread, then fetches the top 100 comments.
+   */
+  async scrapeHackerNews(): Promise<string[]> {
+    this.logger.log('Starting Hacker News scraping...');
+    const newJobIds: string[] = [];
+
+    try {
+      // 1. Get the "whoishiring" user profile to find recent submissions
+      const userRes = await fetch('https://hacker-news.firebaseio.com/v0/user/whoishiring.json');
+      if (!userRes.ok) throw new Error('Failed to fetch HN user');
+      const userData = await userRes.json();
+      
+      if (!userData || !userData.submitted || userData.submitted.length === 0) {
+        return [];
+      }
+
+      // 2. Find the most recent "Who is hiring?" thread (check the first 3 submissions)
+      let threadId = null;
+      for (let i = 0; i < 3; i++) {
+        const itemId = userData.submitted[i];
+        const itemRes = await fetch(`https://hacker-news.firebaseio.com/v0/item/${itemId}.json`);
+        const itemData = await itemRes.json();
+        if (itemData && itemData.title && itemData.title.includes('Ask HN: Who is hiring?')) {
+          threadId = itemId;
+          break;
+        }
+      }
+
+      if (!threadId) {
+        this.logger.log('No recent "Who is hiring?" thread found.');
+        return [];
+      }
+
+      // 3. Fetch the thread details to get comments (kids)
+      const threadRes = await fetch(`https://hacker-news.firebaseio.com/v0/item/${threadId}.json`);
+      const threadData = await threadRes.json();
+      const kids = threadData.kids || [];
+
+      this.logger.log(`Found HN thread ${threadId} with ${kids.length} comments.`);
+
+      // 4. Fetch the top 100 comments
+      const maxComments = Math.min(kids.length, 100);
+      for (let i = 0; i < maxComments; i++) {
+        const commentId = kids[i];
+        const commentRes = await fetch(`https://hacker-news.firebaseio.com/v0/item/${commentId}.json`);
+        const commentData = await commentRes.json();
+
+        if (!commentData || commentData.deleted || commentData.dead || !commentData.text) {
+          continue;
+        }
+
+        const cleanDesc = extractJobTextFromHtml(commentData.text);
+        if (cleanDesc.length < 50) continue; // Skip very short comments
+
+        const externalId = `hn_${commentId}`;
+        const title = cleanDesc.split('\n')[0].substring(0, 100).trim() || 'Hacker News Job';
+
+        const inserted = await this.db.insert(jobs)
+          .values({
+            platform: 'hackernews',
+            externalId,
+            title,
+            company: 'YC/Startup (Hacker News)',
+            description: cleanDesc.slice(0, 7000),
+            url: `https://news.ycombinator.com/item?id=${commentId}`,
+          })
+          .onConflictDoNothing({ target: jobs.externalId })
+          .returning({ id: jobs.id });
+
+        if (inserted.length > 0) {
+          newJobIds.push(inserted[0].id);
+        }
+      }
+
+      this.logger.log(`Successfully ingested ${newJobIds.length} new unique jobs from Hacker News.`);
+      return newJobIds;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to scrape Hacker News: ${msg}`);
+      throw error;
+    }
+  }
+
+  /**
    * Scrapes We Work Remotely (WWR) RSS feed.
    */
   async scrapeWWR(): Promise<string[]> {
