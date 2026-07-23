@@ -30,7 +30,7 @@ export function ClerkThemeProvider({ children }: { children: React.ReactNode }) 
           dividerText: 'text-slate-500',
           formFieldAction: 'text-indigo-400 hover:text-indigo-300',
         } : undefined
-      }}
+      } as any}
     >
       {children}
     </ClerkProvider>

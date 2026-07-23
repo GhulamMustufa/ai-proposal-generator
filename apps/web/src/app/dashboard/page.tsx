@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { JobCard } from "@/components/dashboard/job-card";
 import { SyncButton } from "@/components/dashboard/sync-button";
+import { ManualJobEntry } from "@/components/dashboard/manual-job-entry";
 
 // Optional: Fallback data for preview/development if backend is offline
 const MOCK_JOBS = [
@@ -117,6 +118,8 @@ export default async function DashboardPage() {
             <strong>API Connection Warning:</strong> Could not reach the NestJS backend on port 3001. Displaying mock data for UI preview.
           </div>
         )}
+
+        <ManualJobEntry />
 
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-xl font-medium text-slate-900 dark:text-white">Highly Qualified Leads</h2>

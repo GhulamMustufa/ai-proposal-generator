@@ -28,6 +28,7 @@ export class ProposalsProcessor extends WorkerHost {
         jobDescription,
         company,
         generationType,
+        clientReferenceId,
       } = job.data;
 
       try {
@@ -58,6 +59,7 @@ export class ProposalsProcessor extends WorkerHost {
         this.proposalsService.jobStatusEvents.next({
           userId,
           jobId,
+          clientReferenceId,
           status: 'generated',
           generatedText,
         });
@@ -71,6 +73,7 @@ export class ProposalsProcessor extends WorkerHost {
         this.proposalsService.jobStatusEvents.next({
           userId,
           jobId: job.data?.jobId,
+          clientReferenceId: job.data?.clientReferenceId,
           status: 'error',
         });
 

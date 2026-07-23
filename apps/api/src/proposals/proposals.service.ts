@@ -68,7 +68,8 @@ export class ProposalsService {
   private readonly openai: OpenAI;
   public readonly jobStatusEvents = new Subject<{
     userId: string;
-    jobId: string;
+    jobId?: string | null;
+    clientReferenceId?: string;
     status: string;
     generatedText?: string;
   }>();
