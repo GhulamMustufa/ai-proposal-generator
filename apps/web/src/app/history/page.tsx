@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { StatusBadge } from "@/components/history/status-badge";
 
 function EmptyState() {
@@ -26,9 +28,34 @@ function EmptyState() {
 }
 
 export default async function HistoryPage() {
-  // Temporary placeholders until we connect to NestJS API
-  const proposals: any[] = [];
-  const error = null;
+  const { userId, getToken } = await auth();
+
+  if (!userId) {
+    redirect("/sign-in");
+  }
+
+  const token = await getToken();
+  let proposals: any[] = [];
+  let error = null;
+
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    const res = await fetch(`${apiUrl}/api/proposals/history`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (res.ok) {
+      proposals = await res.json();
+    } else {
+      error = true;
+    }
+  } catch (err) {
+    console.error("Failed to fetch history", err);
+    error = true;
+  }
 
   if (error) {
     return (
@@ -50,11 +77,15 @@ export default async function HistoryPage() {
       ) : (
         <ul className="mt-6 space-y-3">
           {proposals.map((proposal) => {
-            const title = proposal.job_title ?? null;
-            const snippet = proposal.job_description.length > 160
-              ? `${proposal.job_description.slice(0, 160)}...`
-              : proposal.job_description;
-            const status = (proposal.status ?? "draft") as "draft" | "sent" | "interview" | "won" | "lost";
+            const title = proposal.jobTitle ?? null;
+            const descriptionStr = typeof proposal.jobDescription === 'string' ? proposal.jobDescription : (proposal.generatedProposal || "Proposal Draft");
+            const snippet = descriptionStr.length > 160
+              ? `${descriptionStr.slice(0, 160)}...`
+              : descriptionStr;
+            const rawStatus = proposal.status ?? "draft";
+            const status = (["draft", "sent", "interview", "won", "lost"].includes(rawStatus) 
+              ? rawStatus 
+              : "draft") as "draft" | "sent" | "interview" | "won" | "lost";
 
             return (
               <li
@@ -68,14 +99,14 @@ export default async function HistoryPage() {
                     ) : null}
                     <p className={`text-sm text-slate-600 dark:text-slate-300 ${title ? "mt-0.5" : ""}`}>{snippet}</p>
                     <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
-                      {new Date(proposal.created_at).toLocaleString()}
+                      {new Date(proposal.createdAt).toLocaleString()}
                     </p>
                   </Link>
                   <div className="flex shrink-0 items-center gap-2 pt-0.5">
                     <StatusBadge proposalId={proposal.id} initialStatus={status} />
-                    {proposal.job_link ? (
+                    {proposal.jobLink ? (
                       <a
-                        href={proposal.job_link}
+                        href={proposal.jobLink}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"

@@ -66,29 +66,54 @@ WRITING RULES:
 @Injectable()
 export class ProposalsService {
   private readonly openai: OpenAI;
-  public readonly jobStatusEvents = new Subject<{ userId: string; jobId: string; status: string }>();
+  public readonly jobStatusEvents = new Subject<{
+    userId: string;
+    jobId: string;
+    status: string;
+    generatedText?: string;
+  }>();
 
   constructor(
     private readonly redisService: RedisService,
-    @Inject(DB_CONNECTION) private readonly db: any
+    @Inject(DB_CONNECTION) private readonly db: any,
   ) {
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   }
 
   private cleanText(text: string) {
-    return text.replace(/\s+/g, ' ').replace(/\n\s*\n/g, '\n').trim();
+    return text
+      .replace(/\s+/g, ' ')
+      .replace(/\n\s*\n/g, '\n')
+      .trim();
   }
 
   private hashRequest(input: object) {
     return createHash('sha256').update(JSON.stringify(input)).digest('hex');
   }
 
-  private errorResponse(res: Response, status: number, code: string, message: string, details?: any) {
-    console.error(`[ProposalsService Error] ${code} (${status}):`, message, details ?? '');
-    return res.status(status).json({ error: { code, message, ...(details ?? {}) } });
+  private errorResponse(
+    res: Response,
+    status: number,
+    code: string,
+    message: string,
+    details?: any,
+  ) {
+    console.error(
+      `[ProposalsService Error] ${code} (${status}):`,
+      message,
+      details ?? '',
+    );
+    return res
+      .status(status)
+      .json({ error: { code, message, ...(details ?? {}) } });
   }
 
-  private buildMessages(jobDescription: string, voiceSamples: string[], profileText?: string, generationType: 'proposal' | 'cold_email' = 'proposal') {
+  private buildMessages(
+    jobDescription: string,
+    voiceSamples: string[],
+    profileText?: string,
+    generationType: 'proposal' | 'cold_email' = 'proposal',
+  ) {
     const parts: string[] = [];
 
     if (profileText) {
@@ -100,13 +125,16 @@ export class ProposalsService {
         .map((sample, i) => `[Sample ${i + 1}]\n${sample}`)
         .join('\n\n');
       parts.push(
-        `VOICE AND STYLE REFERENCE\nThe samples below are from proposals this freelancer has written and been hired from. Study them to extract: sentence length patterns, how formal or casual the tone is, how they open paragraphs, and any distinctive phrasing habits. Mirror those stylistic qualities in the proposal you write. Do not copy sentences verbatim.\n\n${samplesText}`
+        `VOICE AND STYLE REFERENCE\nThe samples below are from proposals this freelancer has written and been hired from. Study them to extract: sentence length patterns, how formal or casual the tone is, how they open paragraphs, and any distinctive phrasing habits. Mirror those stylistic qualities in the proposal you write. Do not copy sentences verbatim.\n\n${samplesText}`,
       );
     }
 
     parts.push(`JOB DESCRIPTION\n${jobDescription}`);
-    
-    const sysMsg = generationType === 'cold_email' ? COLD_EMAIL_SYSTEM_MESSAGE : PROPOSAL_SYSTEM_MESSAGE;
+
+    const sysMsg =
+      generationType === 'cold_email'
+        ? COLD_EMAIL_SYSTEM_MESSAGE
+        : PROPOSAL_SYSTEM_MESSAGE;
 
     return [
       { role: 'system' as const, content: sysMsg },
@@ -114,89 +142,151 @@ export class ProposalsService {
     ];
   }
 
-  async generateBackground(userId: string, jobDescription: string, generationType: 'proposal' | 'cold_email' = 'proposal') {
-    const [profileRecord] = await this.db.select().from(userProfiles).where(eq(userProfiles.userId, userId)).limit(1);
+  async generateBackground(
+    userId: string,
+    jobDescription: string,
+    generationType: 'proposal' | 'cold_email' = 'proposal',
+  ) {
+    const [profileRecord] = await this.db
+      .select()
+      .from(userProfiles)
+      .where(eq(userProfiles.userId, userId))
+      .limit(1);
     let profileText: string | undefined;
     if (profileRecord) {
       const parts: string[] = [];
-      if (profileRecord.contactDetails) parts.push(`Contact: ${JSON.stringify(profileRecord.contactDetails)}`);
-      if (profileRecord.skills) parts.push(`Skills: ${JSON.stringify(profileRecord.skills)}`);
-      if (profileRecord.resumeText) parts.push(`Resume: ${profileRecord.resumeText}`);
+      if (profileRecord.contactDetails)
+        parts.push(`Contact: ${JSON.stringify(profileRecord.contactDetails)}`);
+      if (profileRecord.skills)
+        parts.push(`Skills: ${JSON.stringify(profileRecord.skills)}`);
+      if (profileRecord.resumeText)
+        parts.push(`Resume: ${profileRecord.resumeText}`);
       if (parts.length) profileText = parts.join('\n');
     }
-    
-    const messages = this.buildMessages(jobDescription, [], profileText, generationType);
-    
+
+    const messages = this.buildMessages(
+      jobDescription,
+      [],
+      profileText,
+      generationType,
+    );
+
     const response = await this.openai.chat.completions.create({
       model: MODEL,
       messages,
       temperature: TEMPERATURE,
       max_tokens: MAX_OUTPUT_TOKENS,
     });
-    
+
     return response.choices[0]?.message?.content?.trim() ?? '';
   }
 
-  async generate(userId: string, ipAddress: string, idempotencyKey: string | undefined, body: any, res: Response) {
+  async generate(
+    userId: string,
+    ipAddress: string,
+    idempotencyKey: string | undefined,
+    body: any,
+    res: Response,
+  ) {
     const jobDescriptionInput = body.job_description?.trim();
     const twoVariations = Boolean(body.two_variations);
     const wantsStream = Boolean(body.stream) && !twoVariations;
 
     if (!jobDescriptionInput) {
-      return this.errorResponse(res, 400, 'BAD_REQUEST', 'job_description is required');
+      return this.errorResponse(
+        res,
+        400,
+        'BAD_REQUEST',
+        'job_description is required',
+      );
     }
 
     // Prepare voice samples
     const voiceSamples = (body.voice_samples ?? [])
       .filter((sample: any): sample is string => typeof sample === 'string')
-      .map((sample: string) => this.cleanText(sample).slice(0, MAX_VOICE_SAMPLE_CHARS))
+      .map((sample: string) =>
+        this.cleanText(sample).slice(0, MAX_VOICE_SAMPLE_CHARS),
+      )
       .filter(Boolean)
       .slice(0, MAX_VOICE_SAMPLES);
 
     let jobDescription = '';
     try {
-      const resolved = await resolveJobDescription(jobDescriptionInput, MAX_JOB_DESCRIPTION_CHARS);
+      const resolved = await resolveJobDescription(
+        jobDescriptionInput,
+        MAX_JOB_DESCRIPTION_CHARS,
+      );
       jobDescription = resolved.text;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to process job description input';
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to process job description input';
       return this.errorResponse(res, 400, 'BAD_REQUEST', message);
     }
 
     // 1. Database Queries: Get user profile and current plan
-    const [userRecord] = await this.db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const [userRecord] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
     if (!userRecord) {
       // User must exist in the users table
-      return this.errorResponse(res, 401, 'UNAUTHORIZED', 'User not found in database');
+      return this.errorResponse(
+        res,
+        401,
+        'UNAUTHORIZED',
+        'User not found in database',
+      );
     }
 
-    const plan: PlanName = userRecord.subscriptionStatus === 'pro' ? 'pro' : 'free';
+    const plan: PlanName =
+      userRecord.subscriptionStatus === 'pro' ? 'pro' : 'free';
     const planLimits = PLAN_LIMITS[plan];
 
-    const [profileRecord] = await this.db.select().from(userProfiles).where(eq(userProfiles.userId, userId)).limit(1);
+    const [profileRecord] = await this.db
+      .select()
+      .from(userProfiles)
+      .where(eq(userProfiles.userId, userId))
+      .limit(1);
     let profileText: string | undefined;
     if (profileRecord) {
       const parts: string[] = [];
-      if (profileRecord.contactDetails) parts.push(`Contact: ${JSON.stringify(profileRecord.contactDetails)}`);
-      if (profileRecord.skills) parts.push(`Skills: ${JSON.stringify(profileRecord.skills)}`);
-      if (profileRecord.resumeText) parts.push(`Resume: ${profileRecord.resumeText}`);
+      if (profileRecord.contactDetails)
+        parts.push(`Contact: ${JSON.stringify(profileRecord.contactDetails)}`);
+      if (profileRecord.skills)
+        parts.push(`Skills: ${JSON.stringify(profileRecord.skills)}`);
+      if (profileRecord.resumeText)
+        parts.push(`Resume: ${profileRecord.resumeText}`);
       if (parts.length) profileText = parts.join('\n');
     }
 
     // 2. Rate Limiting via Redis
     const userRateKey = `rate:user:${userId}`;
     const ipRateKey = `rate:ip:${ipAddress}`;
-    
+
     // Check 10 minute windows (600 seconds)
     const [userAllowed, ipAllowed] = await Promise.all([
-      this.redisService.checkRateLimit(userRateKey, planLimits.rateUser10m, 600),
-      this.redisService.checkRateLimit(ipRateKey, planLimits.rateIp10m, 600)
+      this.redisService.checkRateLimit(
+        userRateKey,
+        planLimits.rateUser10m,
+        600,
+      ),
+      this.redisService.checkRateLimit(ipRateKey, planLimits.rateIp10m, 600),
     ]);
 
     if (!userAllowed || !ipAllowed) {
-      return this.errorResponse(res, 429, 'RATE_LIMITED', 'Rate limit exceeded', {
-        limit_user_10m: planLimits.rateUser10m,
-        limit_ip_10m: planLimits.rateIp10m,
-      });
+      return this.errorResponse(
+        res,
+        429,
+        'RATE_LIMITED',
+        'Rate limit exceeded',
+        {
+          limit_user_10m: planLimits.rateUser10m,
+          limit_ip_10m: planLimits.rateIp10m,
+        },
+      );
     }
 
     // 3. Check Quotas via Postgres Applications table
@@ -205,24 +295,42 @@ export class ProposalsService {
     dayStart.setHours(0, 0, 0, 0);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [dailyUsage] = await this.db.select({ count: sql<number>`cast(count(*) as integer)` })
+    const [dailyUsage] = await this.db
+      .select({ count: sql<number>`cast(count(*) as integer)` })
       .from(applications)
-      .where(and(eq(applications.userId, userId), gte(applications.createdAt, dayStart)));
+      .where(
+        and(
+          eq(applications.userId, userId),
+          gte(applications.createdAt, dayStart),
+        ),
+      );
 
-    const [monthlyUsage] = await this.db.select({ count: sql<number>`cast(count(*) as integer)` })
+    const [monthlyUsage] = await this.db
+      .select({ count: sql<number>`cast(count(*) as integer)` })
       .from(applications)
-      .where(and(eq(applications.userId, userId), gte(applications.createdAt, monthStart)));
+      .where(
+        and(
+          eq(applications.userId, userId),
+          gte(applications.createdAt, monthStart),
+        ),
+      );
 
     const dailyCount = dailyUsage?.count ?? 0;
     const monthlyCount = monthlyUsage?.count ?? 0;
 
     if (dailyCount >= planLimits.daily || monthlyCount >= planLimits.monthly) {
-      return this.errorResponse(res, 402, 'PLAN_QUOTA_EXCEEDED', 'Daily or monthly usage cap reached', {
-        daily_limit: planLimits.daily,
-        monthly_limit: planLimits.monthly,
-        daily_used: dailyCount,
-        monthly_used: monthlyCount,
-      });
+      return this.errorResponse(
+        res,
+        402,
+        'PLAN_QUOTA_EXCEEDED',
+        'Daily or monthly usage cap reached',
+        {
+          daily_limit: planLimits.daily,
+          monthly_limit: planLimits.monthly,
+          daily_used: dailyCount,
+          monthly_used: monthlyCount,
+        },
+      );
     }
 
     // 4. Check Redis Caches (Idempotency and Request Hash)
@@ -238,7 +346,9 @@ export class ProposalsService {
     const requestHash = this.hashRequest(cacheInput);
 
     if (idempotencyKey) {
-      const idemCacheStr = await this.redisService.get(`idem:${idempotencyKey}:${userId}`);
+      const idemCacheStr = await this.redisService.get(
+        `idem:${idempotencyKey}:${userId}`,
+      );
       if (idemCacheStr) {
         const idemCache = JSON.parse(idemCacheStr);
         return res.json({
@@ -251,7 +361,9 @@ export class ProposalsService {
       }
     }
 
-    const hashCacheStr = await this.redisService.get(`hash:${requestHash}:${userId}`);
+    const hashCacheStr = await this.redisService.get(
+      `hash:${requestHash}:${userId}`,
+    );
     if (hashCacheStr) {
       const hashCache = JSON.parse(hashCacheStr);
       return res.json({
@@ -263,9 +375,16 @@ export class ProposalsService {
       });
     }
 
-    const messages = this.buildMessages(jobDescription, voiceSamples, profileText);
+    const messages = this.buildMessages(
+      jobDescription,
+      voiceSamples,
+      profileText,
+    );
     const abortController = new AbortController();
-    const timeoutId = setTimeout(() => abortController.abort(), OPENAI_TIMEOUT_MS);
+    const timeoutId = setTimeout(
+      () => abortController.abort(),
+      OPENAI_TIMEOUT_MS,
+    );
 
     // 5. Streaming Path
     if (wantsStream) {
@@ -279,14 +398,24 @@ export class ProposalsService {
             max_tokens: MAX_OUTPUT_TOKENS,
             stream: true,
           },
-          { signal: abortController.signal }
+          { signal: abortController.signal },
         );
       } catch (error) {
         clearTimeout(timeoutId);
         if (error instanceof Error && error.name === 'AbortError') {
-          return this.errorResponse(res, 503, 'UPSTREAM_TIMEOUT', 'Generation timed out. Please retry.');
+          return this.errorResponse(
+            res,
+            503,
+            'UPSTREAM_TIMEOUT',
+            'Generation timed out. Please retry.',
+          );
         }
-        return this.errorResponse(res, 503, 'UPSTREAM_FAILURE', 'OpenAI request failed');
+        return this.errorResponse(
+          res,
+          503,
+          'UPSTREAM_FAILURE',
+          'OpenAI request failed',
+        );
       }
 
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -315,22 +444,40 @@ export class ProposalsService {
 
       // Save to Drizzle Applications table
       try {
-        const [savedApp] = await this.db.insert(applications).values({
-          userId,
-          jobDescription,
-          jobTitle: body.job_title?.trim() || null,
-          jobLink: body.job_link?.trim() || null,
-          generatedProposal: finalText,
-          status: 'generated',
-        }).returning({ id: applications.id });
+        const [savedApp] = await this.db
+          .insert(applications)
+          .values({
+            userId,
+            jobDescription,
+            jobTitle: body.job_title?.trim() || null,
+            jobLink: body.job_link?.trim() || null,
+            generatedProposal: finalText,
+            status: 'generated',
+          })
+          .returning({ id: applications.id });
 
         if (savedApp) {
-          const cacheData = JSON.stringify({ generated_proposal: finalText, proposal_id: savedApp.id });
+          const cacheData = JSON.stringify({
+            generated_proposal: finalText,
+            proposal_id: savedApp.id,
+          });
           await Promise.all([
-            this.redisService.set(`hash:${requestHash}:${userId}`, cacheData, CACHE_TTL_SECONDS),
-            idempotencyKey ? this.redisService.set(`idem:${idempotencyKey}:${userId}`, cacheData, CACHE_TTL_SECONDS) : Promise.resolve()
+            this.redisService.set(
+              `hash:${requestHash}:${userId}`,
+              cacheData,
+              CACHE_TTL_SECONDS,
+            ),
+            idempotencyKey
+              ? this.redisService.set(
+                  `idem:${idempotencyKey}:${userId}`,
+                  cacheData,
+                  CACHE_TTL_SECONDS,
+                )
+              : Promise.resolve(),
           ]);
-          res.write(`\n\n[DONE:${JSON.stringify({ proposal_id: savedApp.id })}]`);
+          res.write(
+            `\n\n[DONE:${JSON.stringify({ proposal_id: savedApp.id })}]`,
+          );
         }
       } catch (e) {
         // Ignore DB save errors to not break the successful stream
@@ -345,40 +492,82 @@ export class ProposalsService {
     try {
       if (twoVariations) {
         const [variationA, variationB] = await Promise.all([
-          this.generateSingleProposal(messages, abortController.signal, "Write in a direct, confident register. Lead immediately with the core value you bring to this specific problem. Tone: professional but not stiff — like an expert who doesn't need to oversell."),
-          this.generateSingleProposal(messages, abortController.signal, "Write in a warmer, more conversational register. Acknowledge the client's situation first before pivoting to your approach. Tone: collegial — like a trusted colleague who gets the problem and has done this before.")
+          this.generateSingleProposal(
+            messages,
+            abortController.signal,
+            "Write in a direct, confident register. Lead immediately with the core value you bring to this specific problem. Tone: professional but not stiff — like an expert who doesn't need to oversell.",
+          ),
+          this.generateSingleProposal(
+            messages,
+            abortController.signal,
+            "Write in a warmer, more conversational register. Acknowledge the client's situation first before pivoting to your approach. Tone: collegial — like a trusted colleague who gets the problem and has done this before.",
+          ),
         ]);
         generatedProposal = `Variation A (Direct):\n${variationA}\n\nVariation B (Conversational):\n${variationB}`;
       } else {
-        generatedProposal = await this.generateSingleProposal(messages, abortController.signal);
+        generatedProposal = await this.generateSingleProposal(
+          messages,
+          abortController.signal,
+        );
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        return this.errorResponse(res, 503, 'UPSTREAM_TIMEOUT', 'Generation timed out. Please retry.');
+        return this.errorResponse(
+          res,
+          503,
+          'UPSTREAM_TIMEOUT',
+          'Generation timed out. Please retry.',
+        );
       }
-      return this.errorResponse(res, 503, 'UPSTREAM_FAILURE', 'OpenAI request failed');
+      return this.errorResponse(
+        res,
+        503,
+        'UPSTREAM_FAILURE',
+        'OpenAI request failed',
+      );
     } finally {
       clearTimeout(timeoutId);
     }
 
     if (!generatedProposal) {
-      return this.errorResponse(res, 503, 'UPSTREAM_FAILURE', 'Failed to generate proposal');
+      return this.errorResponse(
+        res,
+        503,
+        'UPSTREAM_FAILURE',
+        'Failed to generate proposal',
+      );
     }
 
     try {
-      const [savedApp] = await this.db.insert(applications).values({
-        userId,
-        jobDescription,
-        jobTitle: body.job_title?.trim() || null,
-        jobLink: body.job_link?.trim() || null,
-        generatedProposal,
-        status: 'generated',
-      }).returning({ id: applications.id });
+      const [savedApp] = await this.db
+        .insert(applications)
+        .values({
+          userId,
+          jobDescription,
+          jobTitle: body.job_title?.trim() || null,
+          jobLink: body.job_link?.trim() || null,
+          generatedProposal,
+          status: 'generated',
+        })
+        .returning({ id: applications.id });
 
-      const cacheData = JSON.stringify({ generated_proposal: generatedProposal, proposal_id: savedApp.id });
+      const cacheData = JSON.stringify({
+        generated_proposal: generatedProposal,
+        proposal_id: savedApp.id,
+      });
       await Promise.all([
-        this.redisService.set(`hash:${requestHash}:${userId}`, cacheData, CACHE_TTL_SECONDS),
-        idempotencyKey ? this.redisService.set(`idem:${idempotencyKey}:${userId}`, cacheData, CACHE_TTL_SECONDS) : Promise.resolve()
+        this.redisService.set(
+          `hash:${requestHash}:${userId}`,
+          cacheData,
+          CACHE_TTL_SECONDS,
+        ),
+        idempotencyKey
+          ? this.redisService.set(
+              `idem:${idempotencyKey}:${userId}`,
+              cacheData,
+              CACHE_TTL_SECONDS,
+            )
+          : Promise.resolve(),
       ]);
 
       return res.json({
@@ -386,17 +575,30 @@ export class ProposalsService {
         proposal_id: savedApp.id,
         user_profile: profileRecord,
         cached: false,
-        meta: { model: MODEL, plan }
+        meta: { model: MODEL, plan },
       });
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Unknown error';
-      return this.errorResponse(res, 503, 'STORAGE_FAILURE', `Failed to save proposal: ${message}`);
+      return this.errorResponse(
+        res,
+        503,
+        'STORAGE_FAILURE',
+        `Failed to save proposal: ${message}`,
+      );
     }
   }
 
-  private async generateSingleProposal(messages: any[], signal: AbortSignal, variationInstruction?: string) {
-    const finalMessages = variationInstruction 
-      ? messages.map((m, i) => i === messages.length - 1 ? { ...m, content: `${m.content}\n\n${variationInstruction}` } : m) 
+  private async generateSingleProposal(
+    messages: any[],
+    signal: AbortSignal,
+    variationInstruction?: string,
+  ) {
+    const finalMessages = variationInstruction
+      ? messages.map((m, i) =>
+          i === messages.length - 1
+            ? { ...m, content: `${m.content}\n\n${variationInstruction}` }
+            : m,
+        )
       : messages;
 
     const response = await this.openai.chat.completions.create(
@@ -406,7 +608,7 @@ export class ProposalsService {
         temperature: TEMPERATURE,
         max_tokens: MAX_OUTPUT_TOKENS,
       },
-      { signal }
+      { signal },
     );
     return response.choices[0]?.message?.content?.trim() ?? '';
   }
@@ -415,15 +617,32 @@ export class ProposalsService {
     const [proposal] = await this.db
       .select()
       .from(applications)
-      .where(and(eq(applications.id, proposalId), eq(applications.userId, userId)))
+      .where(
+        and(eq(applications.id, proposalId), eq(applications.userId, userId)),
+      )
       .limit(1);
     return proposal;
   }
 
-  async updateProposal(userId: string, proposalId: string, updatedText: string) {
+  async updateProposal(
+    userId: string,
+    proposalId: string,
+    updatedText: string,
+  ) {
     const [updated] = await this.db
       .update(applications)
       .set({ generatedProposal: updatedText })
+      .where(
+        and(eq(applications.id, proposalId), eq(applications.userId, userId)),
+      )
+      .returning();
+    return updated;
+  }
+
+  async updateProposalStatus(userId: string, proposalId: string, status: string) {
+    const [updated] = await this.db
+      .update(applications)
+      .set({ status })
       .where(and(eq(applications.id, proposalId), eq(applications.userId, userId)))
       .returning();
     return updated;
@@ -482,13 +701,13 @@ export class ProposalsService {
       const browser = await puppeteer.launch({ headless: true });
       const page = await browser.newPage();
       await page.setContent(htmlContent, { waitUntil: 'load' });
-      
+
       const pdfBuffer = await page.pdf({
         format: 'A4',
         printBackground: true,
         margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
       });
-      
+
       await browser.close();
 
       res.set({
@@ -499,7 +718,12 @@ export class ProposalsService {
 
       res.end(pdfBuffer);
     } catch (error) {
-      return this.errorResponse(res, 500, 'PDF_ERROR', 'Failed to generate PDF');
+      return this.errorResponse(
+        res,
+        500,
+        'PDF_ERROR',
+        'Failed to generate PDF',
+      );
     }
   }
 }

@@ -9,7 +9,7 @@ export const DB_CONNECTION = 'DB_CONNECTION';
 
 /**
  * DbModule
- * 
+ *
  * We use the @Global() decorator so we only have to import this module once in the AppModule.
  * The DB_CONNECTION provider will then be accessible everywhere in our application.
  */
@@ -25,12 +25,14 @@ export const DB_CONNECTION = 'DB_CONNECTION';
       useFactory: (configService: ConfigService) => {
         const databaseUrl = configService.get<string>('DATABASE_URL');
         if (!databaseUrl) {
-          throw new Error('DATABASE_URL is not defined in environment variables.');
+          throw new Error(
+            'DATABASE_URL is not defined in environment variables.',
+          );
         }
-        
+
         // We use the Neon serverless HTTP driver, which is optimized for fast, connectionless querying.
         const sql = neon(databaseUrl);
-        
+
         // Return the Drizzle ORM instance with our schema attached for type-safe queries.
         return drizzle(sql, { schema });
       },

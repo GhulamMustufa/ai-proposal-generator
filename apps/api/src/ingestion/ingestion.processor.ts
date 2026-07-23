@@ -8,7 +8,7 @@ import { GraphqlIngestionService } from './graphql-ingestion.service';
 
 /**
  * IngestionProcessor
- * 
+ *
  * BullMQ Worker for the 'ingestion-queue'.
  * Handles processing of scraping jobs and dispatches events to the matcher.
  */
@@ -28,16 +28,16 @@ export class IngestionProcessor extends WorkerHost {
 
   async process(job: Job<any, any, string>): Promise<any> {
     this.logger.log(`Processing ingestion job ${job.id} of type ${job.name}`);
-    
+
     if (job.name === 'scrape-remotive') {
       const newJobIds = await this.ingestionService.scrapeRemotive();
-      
+
       // Dispatch an event to the Matcher Queue for each newly inserted job
       for (const jobId of newJobIds) {
         await this.matcherQueue.add('match-job', { jobId });
         this.logger.log(`Dispatched matcher job for new job ID: ${jobId}`);
       }
-      
+
       return { insertedCount: newJobIds.length };
     }
 
@@ -82,103 +82,137 @@ export class IngestionProcessor extends WorkerHost {
 
     if (job.name === 'scrape-workingnomads') {
       const newJobIds = await this.ingestionService.scrapeWorkingNomads();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-himalayas') {
       const newJobIds = await this.ingestionService.scrapeHimalayas();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-jobicy') {
       const newJobIds = await this.ingestionService.scrapeJobicy();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-arbeitnow') {
       const newJobIds = await this.ingestionService.scrapeArbeitnow();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-remoteco') {
       const newJobIds = await this.ingestionService.scrapeRemoteCo();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-dribbble') {
       const newJobIds = await this.ingestionService.scrapeDribbbleJobs();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-relocateme') {
       const newJobIds = await this.ingestionService.scrapeRelocateMe();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-ats-greenhouse') {
       const newJobIds = await this.atsIngestionService.scrapeGreenhouse();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-ats-lever') {
       const newJobIds = await this.atsIngestionService.scrapeLever();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-ats-smartrecruiters') {
       const newJobIds = await this.atsIngestionService.scrapeSmartRecruiters();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-ats-workable') {
       const newJobIds = await this.atsIngestionService.scrapeWorkable();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-ats-breezy') {
       const newJobIds = await this.atsIngestionService.scrapeBreezy();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-ats-ashby') {
       const newJobIds = await this.atsIngestionService.scrapeAshby();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
-    
+
     if (job.name === 'scrape-dorks') {
       const newJobIds = await this.dorkIngestionService.scrapeGoogleDorks();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-jobcity') {
       const newJobIds = await this.ingestionService.scrapeJobcity();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-hackernews') {
       const newJobIds = await this.ingestionService.scrapeHackerNews();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
     if (job.name === 'scrape-braintrust') {
       const newJobIds = await this.graphqlIngestionService.scrapeBraintrust();
-      for (const jobId of newJobIds) { await this.matcherQueue.add('match-job', { jobId }); }
+      for (const jobId of newJobIds) {
+        await this.matcherQueue.add('match-job', { jobId });
+      }
       return { insertedCount: newJobIds.length };
     }
 
@@ -186,7 +220,7 @@ export class IngestionProcessor extends WorkerHost {
       await this.ingestionService.cleanupOldJobs();
       return { status: 'cleaned up old jobs' };
     }
-    
+
     this.logger.warn(`Unknown job name: ${job.name}`);
   }
 }

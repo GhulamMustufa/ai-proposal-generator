@@ -1,16 +1,28 @@
-import { pgTable, text, timestamp, jsonb, uuid, integer } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  jsonb,
+  uuid,
+  integer,
+} from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(), // Clerk User ID (string)
   email: text('email').notNull().unique(),
   stripeCustomerId: text('stripe_customer_id'),
+  lemonsqueezyCustomerId: text('lemonsqueezy_customer_id'),
+  lemonsqueezySubscriptionId: text('lemonsqueezy_subscription_id'),
+  generationsCount: integer('generations_count').default(0).notNull(),
   subscriptionStatus: text('subscription_status').default('free'), // 'free', 'pro'
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 export const userProfiles = pgTable('user_profiles', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: text('user_id').references(() => users.id).notNull(),
+  userId: text('user_id')
+    .references(() => users.id)
+    .notNull(),
   contactDetails: jsonb('contact_details'), // { firstName, lastName, phone, linkedin }
   skills: jsonb('skills'), // Array of strings
   jobFilters: jsonb('job_filters'), // Advanced job filtering preferences
@@ -31,8 +43,12 @@ export const jobs = pgTable('jobs', {
 
 export const aiMatches = pgTable('ai_matches', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: text('user_id').references(() => users.id).notNull(),
-  jobId: uuid('job_id').references(() => jobs.id).notNull(),
+  userId: text('user_id')
+    .references(() => users.id)
+    .notNull(),
+  jobId: uuid('job_id')
+    .references(() => jobs.id)
+    .notNull(),
   matchScore: integer('match_score').notNull(),
   matchReasoning: text('match_reasoning'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -40,7 +56,9 @@ export const aiMatches = pgTable('ai_matches', {
 
 export const applications = pgTable('applications', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: text('user_id').references(() => users.id).notNull(),
+  userId: text('user_id')
+    .references(() => users.id)
+    .notNull(),
   jobId: uuid('job_id').references(() => jobs.id), // Nullable for standalone proposals
   jobDescription: text('job_description'), // Raw text if no job is linked
   jobTitle: text('job_title'), // Optional title

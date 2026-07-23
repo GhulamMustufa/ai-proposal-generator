@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Param, UseGuards, Inject, UnauthorizedException, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  UseGuards,
+  Inject,
+  UnauthorizedException,
+  Req,
+} from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
@@ -20,7 +29,10 @@ export class MatcherController {
     if (!userId) throw new UnauthorizedException('User ID not found');
 
     await this.matcherQueue.add('match-user', { userId });
-    return { success: true, message: 'Re-evaluation enqueued. Matches will update in the background.' };
+    return {
+      success: true,
+      message: 'Re-evaluation enqueued. Matches will update in the background.',
+    };
   }
 
   /**
@@ -31,7 +43,9 @@ export class MatcherController {
   async getUserMatches(@Param('userId') userId: string, @Req() req: any) {
     // Security check: ensure the requesting user is fetching their own matches
     if (req.user?.id !== userId) {
-      throw new UnauthorizedException('You can only view your own job matches.');
+      throw new UnauthorizedException(
+        'You can only view your own job matches.',
+      );
     }
 
     // Calculate date 30 days ago
@@ -56,8 +70,8 @@ export class MatcherController {
       .where(
         and(
           eq(aiMatches.userId, userId),
-          gte(aiMatches.createdAt, thirtyDaysAgo)
-        )
+          gte(aiMatches.createdAt, thirtyDaysAgo),
+        ),
       )
       .orderBy(desc(aiMatches.matchScore), desc(aiMatches.createdAt))
       .limit(100); // Return top 100 recent matches

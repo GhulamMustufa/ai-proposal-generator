@@ -27,31 +27,36 @@ export class GraphqlIngestionService {
       const res = await fetch('https://app.usebraintrust.com/api/jobs');
       if (!res.ok) throw new Error(`Braintrust API returned ${res.status}`);
       const data = await res.json();
-      
+
       const results = data.results || [];
       this.logger.log(`Fetched ${results.length} jobs from Braintrust.`);
 
       for (const job of results) {
         const externalId = `braintrust_${job.id}`;
-        
+
         // 2. Fetch the detailed description for this job
         // (The list API does not contain the description)
         let descriptionHtml = '';
         try {
-          const detailRes = await fetch(`https://app.usebraintrust.com/api/jobs/${job.id}/`);
+          const detailRes = await fetch(
+            `https://app.usebraintrust.com/api/jobs/${job.id}/`,
+          );
           if (detailRes.ok) {
             const detailData = await detailRes.json();
             descriptionHtml = detailData.description || '';
           }
         } catch (e) {
-          this.logger.warn(`Failed to fetch details for Braintrust job ${job.id}`);
+          this.logger.warn(
+            `Failed to fetch details for Braintrust job ${job.id}`,
+          );
         }
 
         const cleanDesc = extractJobTextFromHtml(descriptionHtml);
         if (cleanDesc.length < 50) continue; // Skip if no description
 
         // 3. Insert using ON CONFLICT DO NOTHING
-        const inserted = await this.db.insert(jobs)
+        const inserted = await this.db
+          .insert(jobs)
           .values({
             platform: 'braintrust',
             externalId,
@@ -68,7 +73,9 @@ export class GraphqlIngestionService {
         }
       }
 
-      this.logger.log(`Successfully ingested ${newJobIds.length} new unique jobs from Braintrust.`);
+      this.logger.log(
+        `Successfully ingested ${newJobIds.length} new unique jobs from Braintrust.`,
+      );
       return newJobIds;
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);

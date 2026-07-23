@@ -1,4 +1,10 @@
-import { Injectable, Inject, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { DB_CONNECTION } from '../db/db.module';
 import { userProfiles } from '../db/schema';
 import { eq } from 'drizzle-orm';
@@ -23,7 +29,10 @@ export class ProfileService {
       return profile[0] || {};
     } catch (error) {
       this.logger.error(`Failed to fetch profile: ${error}`);
-      throw new HttpException('Failed to fetch profile', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Failed to fetch profile',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -55,18 +64,19 @@ export class ProfileService {
           .set({ jobFilters, updatedAt: new Date() }) // Drizzle may complain if updatedAt doesn't exist, we'll see
           .where(eq(userProfiles.userId, userId));
       } else {
-        await this.db
-          .insert(userProfiles)
-          .values({
-            userId,
-            jobFilters,
-          });
+        await this.db.insert(userProfiles).values({
+          userId,
+          jobFilters,
+        });
       }
 
       return { success: true, jobFilters };
     } catch (error) {
       this.logger.error(`Failed to update job filters: ${error}`);
-      throw new HttpException('Failed to update job filters', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Failed to update job filters',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -98,18 +108,19 @@ export class ProfileService {
           .set({ skills, updatedAt: new Date() })
           .where(eq(userProfiles.userId, userId));
       } else {
-        await this.db
-          .insert(userProfiles)
-          .values({
-            userId,
-            skills,
-          });
+        await this.db.insert(userProfiles).values({
+          userId,
+          skills,
+        });
       }
 
       return { success: true, skills };
     } catch (error) {
       this.logger.error(`Failed to update skills: ${error}`);
-      throw new HttpException('Failed to update skills', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Failed to update skills',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

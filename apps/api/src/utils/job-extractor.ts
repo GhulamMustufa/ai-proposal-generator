@@ -1,7 +1,10 @@
 import { load } from 'cheerio';
 
 function cleanText(text: string) {
-  return text.replace(/\s+/g, ' ').replace(/\n\s*\n/g, '\n').trim();
+  return text
+    .replace(/\s+/g, ' ')
+    .replace(/\n\s*\n/g, '\n')
+    .trim();
 }
 
 function isValidUrl(value: string) {
@@ -43,7 +46,10 @@ export function extractJobTextFromHtml(html: string) {
 
 export async function resolveJobDescription(input: string, maxChars: number) {
   if (!isValidUrl(input)) {
-    return { source: 'text' as const, text: cleanText(input).slice(0, maxChars) };
+    return {
+      source: 'text' as const,
+      text: cleanText(input).slice(0, maxChars),
+    };
   }
 
   const response = await fetch(input, {
@@ -57,6 +63,7 @@ export async function resolveJobDescription(input: string, maxChars: number) {
   if (!response.ok) throw new Error(`Failed to fetch URL (${response.status})`);
   const html = await response.text();
   const extractedText = extractJobTextFromHtml(html);
-  if (!extractedText) throw new Error('Could not extract readable job description from URL');
+  if (!extractedText)
+    throw new Error('Could not extract readable job description from URL');
   return { source: 'url' as const, text: extractedText.slice(0, maxChars) };
 }

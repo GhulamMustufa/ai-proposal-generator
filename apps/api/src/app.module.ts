@@ -14,19 +14,20 @@ import { MatcherModule } from './matcher/matcher.module';
 import { ResumeModule } from './resume/resume.module';
 import { SubmitterModule } from './submitter/submitter.module';
 import { ProfileModule } from './profile/profile.module';
+import { BillingModule } from './billing/billing.module';
 /**
  * Root AppModule
- * 
- * NestJS uses Modules to organize the application structure. Every application has at least one module, 
+ *
+ * NestJS uses Modules to organize the application structure. Every application has at least one module,
  * the root module (this file). We use it to configure global providers and external integrations.
  */
 @Module({
   imports: [
     // ConfigModule loads environment variables from .env files or the system environment.
-    // By setting `isGlobal: true`, we make the `ConfigService` available in every other module 
+    // By setting `isGlobal: true`, we make the `ConfigService` available in every other module
     // without needing to explicitly import ConfigModule everywhere.
     ConfigModule.forRoot({
-      isGlobal: true, 
+      isGlobal: true,
     }),
 
     // BullModule configures our Redis connection for BullMQ.
@@ -42,10 +43,12 @@ import { ProfileModule } from './profile/profile.module';
     }),
 
     // Global Rate Limiting: Max 100 requests per minute (60000ms) by default
-    ThrottlerModule.forRoot([{
-      ttl: 60000, 
-      limit: 100,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
 
     // Global Database Module for Drizzle ORM
     DbModule,
@@ -65,6 +68,8 @@ import { ProfileModule } from './profile/profile.module';
     SubmitterModule,
 
     ProfileModule,
+
+    BillingModule,
   ],
   controllers: [AppController],
   providers: [
@@ -72,7 +77,7 @@ import { ProfileModule } from './profile/profile.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard, // Applies rate limiting globally across all routes
-    }
+    },
   ],
 })
 export class AppModule {}

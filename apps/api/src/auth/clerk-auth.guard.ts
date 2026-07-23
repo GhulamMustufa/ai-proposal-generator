@@ -1,11 +1,16 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { verifyToken } from '@clerk/clerk-sdk-node';
 import { ConfigService } from '@nestjs/config';
 
 /**
  * ClerkAuthGuard
- * 
- * This NestJS Guard protects our routes by intercepting the HTTP request and verifying the JWT 
+ *
+ * This NestJS Guard protects our routes by intercepting the HTTP request and verifying the JWT
  * token provided in the Authorization header. It ensures only authenticated users can access the route.
  */
 @Injectable()
@@ -17,7 +22,9 @@ export class ClerkAuthGuard implements CanActivate {
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Missing or invalid Authorization header');
+      throw new UnauthorizedException(
+        'Missing or invalid Authorization header',
+      );
     }
 
     const token = authHeader.split(' ')[1];
@@ -36,8 +43,8 @@ export class ClerkAuthGuard implements CanActivate {
     try {
       // Verify the JWT with Clerk's SDK using our secret key
       const decoded = await verifyToken(token, { secretKey, issuer: null });
-      
-      // Attach the decoded user payload to the request. 
+
+      // Attach the decoded user payload to the request.
       // Controllers can now access it via @Req() req -> req.user.id
       request.user = { id: decoded.sub };
       return true;

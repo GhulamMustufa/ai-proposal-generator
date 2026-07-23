@@ -1,18 +1,22 @@
 /**
  * Google Dork Queries for automated Job Sourcing.
  * Optimized for Serper.dev API limits (2,500 free searches/month).
- * 
+ *
  * Strategy: Execute these 41 queries twice daily (2,460 searches/month).
  * By heavily utilizing the 'OR' operator, one query scrapes multiple platforms and tech stacks.
  */
 
 // Core Keyword Groups for modularity and easy updates
-const TECH = '("React Native" OR "React" OR "Next.js" OR "Node.js" OR "TypeScript" OR "AI")';
-const ROLES = '("software engineer" OR "software developer" OR "frontend" OR "backend" OR "full stack" OR "fullstack")';
+const TECH =
+  '("React Native" OR "React" OR "Next.js" OR "Node.js" OR "TypeScript" OR "AI")';
+const ROLES =
+  '("software engineer" OR "software developer" OR "frontend" OR "backend" OR "full stack" OR "fullstack")';
 const KEYWORDS = `(${TECH} OR ${ROLES})`;
 
-const TERMS = '("remote" OR "contract" OR "freelance" OR "part time" OR "full time")';
-const HIRING = '("hiring" OR "looking for" OR "recruiting" OR "open role" OR "join our team")';
+const TERMS =
+  '("remote" OR "contract" OR "freelance" OR "part time" OR "full time")';
+const HIRING =
+  '("hiring" OR "looking for" OR "recruiting" OR "open role" OR "join our team")';
 
 export const DORK_QUERIES = [
   // 1. HACKER NEWS (High Quality Startup Jobs)
@@ -142,5 +146,5 @@ export const DORK_QUERIES = [
   `("Emirates NBD" OR "Mashreq" OR "First Abu Dhabi Bank" OR "FAB" OR "ADCB" OR "Wio Bank" OR "Careem" OR "Tabby" OR "Ziina") ${KEYWORDS} ("UAE" OR "Dubai" OR "Abu Dhabi")`,
 
   // 41. TARGETED: UAE Enterprise, AI & E-Commerce
-  `("Network International" OR "Checkout.com" OR "G42" OR "Presight AI" OR "Inception AI" OR "Etisalat" OR "Noon") ${KEYWORDS} ("UAE" OR "Dubai" OR "Abu Dhabi")`
+  `("Network International" OR "Checkout.com" OR "G42" OR "Presight AI" OR "Inception AI" OR "Etisalat" OR "Noon") ${KEYWORDS} ("UAE" OR "Dubai" OR "Abu Dhabi")`,
 ];

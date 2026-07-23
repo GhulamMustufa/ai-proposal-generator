@@ -1,4 +1,10 @@
-import { Injectable, Inject, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { DB_CONNECTION } from '../db/db.module';
 import { userProfiles, jobs, applications } from '../db/schema';
 import { eq } from 'drizzle-orm';
@@ -14,25 +20,35 @@ export class ResumeService {
 
   constructor(
     @Inject(DB_CONNECTION) private readonly db: any,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {
     this.openai = new OpenAI({ apiKey: configService.get('OPENAI_API_KEY') });
-    
+
     // Cloudinary reads process.env.CLOUDINARY_URL automatically if configured like this
     const cloudinaryUrl = configService.get('CLOUDINARY_URL');
     if (cloudinaryUrl) {
-      cloudinary.config(true); 
+      cloudinary.config(true);
     }
   }
 
   async generateResume(userId: string, jobId: string): Promise<string> {
-    this.logger.log(`Generating tailored resume for user ${userId} and job ${jobId}`);
+    this.logger.log(
+      `Generating tailored resume for user ${userId} and job ${jobId}`,
+    );
 
     // 1. Fetch Job and User Profile
-    const [job] = await this.db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
+    const [job] = await this.db
+      .select()
+      .from(jobs)
+      .where(eq(jobs.id, jobId))
+      .limit(1);
     if (!job) throw new NotFoundException('Job not found');
 
-    const [profile] = await this.db.select().from(userProfiles).where(eq(userProfiles.userId, userId)).limit(1);
+    const [profile] = await this.db
+      .select()
+      .from(userProfiles)
+      .where(eq(userProfiles.userId, userId))
+      .limit(1);
     if (!profile || !profile.resumeText) {
       throw new BadRequestException('User does not have a base resume on file');
     }
@@ -63,7 +79,10 @@ export class ResumeService {
     return pdfUrl;
   }
 
-  private async tailorResumeWithAI(profile: typeof userProfiles.$inferSelect, job: typeof jobs.$inferSelect) {
+  private async tailorResumeWithAI(
+    profile: typeof userProfiles.$inferSelect,
+    job: typeof jobs.$inferSelect,
+  ) {
     const prompt = `
 You are an expert resume writer.
 Rewrite the user's base resume to be highly tailored for the following job description.
@@ -187,7 +206,9 @@ Output MUST be exactly in this JSON format:
         <p>${data.summary || ''}</p>
 
         <div class="section-title">Experience</div>
-        ${(data.experience || []).map((exp: any) => `
+        ${(data.experience || [])
+          .map(
+            (exp: any) => `
           <div class="exp-header">
             <span class="job-title">${exp.title}</span>, <span class="company">${exp.company}</span>
             <span class="dates">${exp.dates}</span>
@@ -195,7 +216,9 @@ Output MUST be exactly in this JSON format:
           <ul>
             ${(exp.bullets || []).map((bullet: string) => `<li>${bullet}</li>`).join('')}
           </ul>
-        `).join('')}
+        `,
+          )
+          .join('')}
         
         <div class="section-title">Technical Skills</div>
         <p>${(data.skills || []).join(' • ')}</p>
@@ -206,44 +229,52 @@ Output MUST be exactly in this JSON format:
 
   private async renderPdfBuffer(resumeData: any): Promise<Buffer> {
     const html = this.generateHtmlTemplate(resumeData);
-    
+
     // Launch headless Chromium via Puppeteer
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
-    
+
     try {
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'load' });
-      
+
       const pdfUint8Array = await page.pdf({
         format: 'A4',
         printBackground: true,
-        margin: { top: '0.75in', right: '0.75in', bottom: '0.75in', left: '0.75in' }
+        margin: {
+          top: '0.75in',
+          right: '0.75in',
+          bottom: '0.75in',
+          left: '0.75in',
+        },
       });
-      
+
       return Buffer.from(pdfUint8Array);
     } finally {
       await browser.close();
     }
   }
 
-  private uploadToCloudinary(buffer: Buffer, publicId: string): Promise<string> {
+  private uploadToCloudinary(
+    buffer: Buffer,
+    publicId: string,
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
       // Cloudinary upload stream for raw buffers (like PDF)
       const stream = cloudinary.uploader.upload_stream(
-        { 
-          folder: 'ai-resumes', 
-          public_id: publicId, 
-          format: 'pdf', 
-          resource_type: 'raw' // 'raw' is appropriate for standard PDF downloads
+        {
+          folder: 'ai-resumes',
+          public_id: publicId,
+          format: 'pdf',
+          resource_type: 'raw', // 'raw' is appropriate for standard PDF downloads
         },
         (error, result) => {
           if (error) return reject(error);
           if (!result) return reject(new Error('No result from Cloudinary'));
           resolve(result.secure_url);
-        }
+        },
       );
       stream.end(buffer);
     });

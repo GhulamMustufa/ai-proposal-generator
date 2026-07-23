@@ -1,4 +1,14 @@
-import { Controller, Post, Param, Logger, Req, UnauthorizedException, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Param,
+  Logger,
+  Req,
+  UnauthorizedException,
+  HttpException,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
@@ -7,7 +17,7 @@ import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 @UseGuards(ClerkAuthGuard)
 export class IngestionController {
   private readonly logger = new Logger(IngestionController.name);
-  
+
   // Track last triggered time per user (in-memory)
   private lastTriggerTime = new Map<string, number>();
 
@@ -25,21 +35,41 @@ export class IngestionController {
     const cooldownMs = 30 * 60 * 1000; // 30 minutes
 
     if (now - lastSync < cooldownMs) {
-      const remainingMinutes = Math.ceil((cooldownMs - (now - lastSync)) / 60000);
-      throw new HttpException(`Rate limit exceeded. Please wait ${remainingMinutes} minutes before syncing again.`, HttpStatus.TOO_MANY_REQUESTS);
+      const remainingMinutes = Math.ceil(
+        (cooldownMs - (now - lastSync)) / 60000,
+      );
+      throw new HttpException(
+        `Rate limit exceeded. Please wait ${remainingMinutes} minutes before syncing again.`,
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
 
     this.logger.log(`Manual full sync requested by user: ${userId}`);
-    
+
     // List of all active ingestion jobs
     const sources = [
-      'scrape-remotive', 'scrape-wwr', 'scrape-remoteok', 
-      'scrape-upwork', 'scrape-freelancer', 'scrape-workingnomads', 
-      'scrape-himalayas', 'scrape-jobicy', 'scrape-arbeitnow', 
-      'scrape-remoteco', 'scrape-dribbble', 'scrape-relocateme', 
-      'scrape-ats-greenhouse', 'scrape-ats-lever', 'scrape-ats-smartrecruiters',
-      'scrape-ats-workable', 'scrape-ats-breezy', 'scrape-ats-ashby',
-      'scrape-dorks', 'scrape-jobcity', 'scrape-hackernews', 'scrape-braintrust'
+      'scrape-remotive',
+      'scrape-wwr',
+      'scrape-remoteok',
+      'scrape-upwork',
+      'scrape-freelancer',
+      'scrape-workingnomads',
+      'scrape-himalayas',
+      'scrape-jobicy',
+      'scrape-arbeitnow',
+      'scrape-remoteco',
+      'scrape-dribbble',
+      'scrape-relocateme',
+      'scrape-ats-greenhouse',
+      'scrape-ats-lever',
+      'scrape-ats-smartrecruiters',
+      'scrape-ats-workable',
+      'scrape-ats-breezy',
+      'scrape-ats-ashby',
+      'scrape-dorks',
+      'scrape-jobcity',
+      'scrape-hackernews',
+      'scrape-braintrust',
     ];
 
     // Dispatch all jobs to the queue
@@ -59,10 +89,10 @@ export class IngestionController {
   @Post('trigger/:jobName')
   async triggerJob(@Param('jobName') jobName: string) {
     this.logger.log(`Manual trigger requested for job: ${jobName}`);
-    
+
     // Add the job to the queue for immediate execution
     const job = await this.ingestionQueue.add(jobName, { manual: true });
-    
+
     return {
       success: true,
       message: `Successfully enqueued job: ${jobName}`,

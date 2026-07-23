@@ -16,9 +16,11 @@ export class DorkIngestionService {
 
   async scrapeGoogleDorks(): Promise<string[]> {
     this.logger.log('Starting Google Dork Ingestion via Serper.dev...');
-    
+
     if (!process.env.SERPER_API_KEY) {
-      this.logger.error('SERPER_API_KEY is not set in the environment variables.');
+      this.logger.error(
+        'SERPER_API_KEY is not set in the environment variables.',
+      );
       return [];
     }
 
@@ -26,11 +28,13 @@ export class DorkIngestionService {
 
     for (let i = 0; i < DORK_QUERIES.length; i++) {
       const query = DORK_QUERIES[i];
-      this.logger.log(`Executing Dork Query ${i + 1}/${DORK_QUERIES.length}: ${query}`);
+      this.logger.log(
+        `Executing Dork Query ${i + 1}/${DORK_QUERIES.length}: ${query}`,
+      );
 
       try {
         const url = 'https://google.serper.dev/search';
-        
+
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -39,24 +43,33 @@ export class DorkIngestionService {
           },
           body: JSON.stringify({
             q: query,
-            tbs: 'qdr:d' // past 24 hours
+            tbs: 'qdr:d', // past 24 hours
           }),
-          signal: AbortSignal.timeout(30000)
+          signal: AbortSignal.timeout(30000),
         });
 
         if (!response.ok) {
-          this.logger.warn(`Serper.dev responded with status ${response.status} for query ${i + 1}`);
+          this.logger.warn(
+            `Serper.dev responded with status ${response.status} for query ${i + 1}`,
+          );
           continue;
         }
 
         const data = await response.json();
         const organicResults = data.organic_results || [];
-        
-        this.logger.log(`Found ${organicResults.length} organic results for query ${i + 1}`);
+
+        this.logger.log(
+          `Found ${organicResults.length} organic results for query ${i + 1}`,
+        );
 
         for (const result of organicResults) {
-          const externalId = 'dork_' + crypto.createHash('md5').update(result.link || '').digest('hex');
-          
+          const externalId =
+            'dork_' +
+            crypto
+              .createHash('md5')
+              .update(result.link || '')
+              .digest('hex');
+
           const prompt = `
 You are an expert technical recruiter AI.
 Is this Google search snippet a legitimate freelance, contract, or full-time tech job posting? 
@@ -88,37 +101,46 @@ Return exactly this JSON:
             if (!outputStr) continue;
 
             const validation = JSON.parse(outputStr);
-            
+
             if (validation.isJob && validation.title) {
               const platformName = validation.platform || 'Google Dork';
-              
-              const inserted = await this.db.insert(jobs).values({
-                platform: platformName.toLowerCase().replace(/[^a-z0-9]/g, ''),
-                externalId,
-                title: validation.title,
-                company: validation.company,
-                description: `Sourced via Google Dork.\\n\\nSnippet: ${result.snippet}\\nApply at: ${result.link}`,
-                url: result.link,
-              }).onConflictDoNothing().returning({ id: jobs.id });
-              
+
+              const inserted = await this.db
+                .insert(jobs)
+                .values({
+                  platform: platformName
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]/g, ''),
+                  externalId,
+                  title: validation.title,
+                  company: validation.company,
+                  description: `Sourced via Google Dork.\\n\\nSnippet: ${result.snippet}\\nApply at: ${result.link}`,
+                  url: result.link,
+                })
+                .onConflictDoNothing()
+                .returning({ id: jobs.id });
+
               if (inserted.length > 0) {
                 newJobIds.push(inserted[0].id);
                 this.logger.debug(`Saved new Dork Job: ${validation.title}`);
               }
             } else {
-               this.logger.debug(`Filtered out non-job result: ${result.title}`);
+              this.logger.debug(`Filtered out non-job result: ${result.title}`);
             }
-
           } catch (aiError) {
-             this.logger.error(`AI validation failed for result: ${result.link}`);
+            this.logger.error(
+              `AI validation failed for result: ${result.link}`,
+            );
           }
         }
       } catch (error) {
         this.logger.error(`Failed to execute Dork Query ${i + 1}`, error);
       }
     }
-    
-    this.logger.log(`Ingested ${newJobIds.length} total jobs from Google Dorks.`);
+
+    this.logger.log(
+      `Ingested ${newJobIds.length} total jobs from Google Dorks.`,
+    );
     return newJobIds;
   }
 }

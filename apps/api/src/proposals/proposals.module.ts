@@ -13,6 +13,6 @@ import { DbModule } from '../db/db.module';
     }),
   ],
   controllers: [ProposalsController],
-  providers: [ProposalsService, ProposalsProcessor]
+  providers: [ProposalsService, ProposalsProcessor],
 })
 export class ProposalsModule {}

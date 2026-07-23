@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { toast } from "@/lib/toast";
 
 type JobCardProps = {
@@ -10,9 +11,11 @@ type JobCardProps = {
 
 export function JobCard({ job }: JobCardProps) {
   const { getToken, userId } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [generationType, setGenerationType] = useState<'proposal' | 'cold_email'>('proposal');
+  const [generatedProposal, setGeneratedProposal] = useState<string | null>(null);
 
   const isElite = job.matchScore >= 90;
   const isGood = job.matchScore >= 80 && job.matchScore < 90;
@@ -50,6 +53,13 @@ export function JobCard({ job }: JobCardProps) {
         })
       });
 
+      if (res.status === 403) {
+        alert("You have reached your free generation limit! Please upgrade to Pro.");
+        router.push("/pricing");
+        setLoading(false);
+        return;
+      }
+
       if (!res.ok) {
         throw new Error("Failed to enqueue job");
       }
@@ -66,6 +76,9 @@ export function JobCard({ job }: JobCardProps) {
             if (data.status === 'generated') {
               setLoading(false);
               setGenerated(true);
+              if (data.generatedText) {
+                setGeneratedProposal(data.generatedText);
+              }
               toast.success("Your AI draft has been generated!");
               eventSource.close();
             } else if (data.status === 'error') {
@@ -156,7 +169,7 @@ export function JobCard({ job }: JobCardProps) {
               View Job
             </a>
             
-            {!loading && !generated && (
+            {!loading && !generated && !job.hasApplication && (
               <div className="flex items-center justify-center gap-1 mb-2 p-1 bg-slate-100 dark:bg-black/40 rounded-xl border border-slate-200 dark:border-white/5">
                 <button
                   onClick={() => setGenerationType('proposal')}
@@ -181,9 +194,11 @@ export function JobCard({ job }: JobCardProps) {
                 </svg>
                 AI Generating...
               </div>
-            ) : generated ? (
-              <div className="inline-flex items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 px-6 py-2.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30">
-                Generated ✨
+            ) : generated || job.hasApplication ? (
+              <div className="flex flex-col items-stretch gap-2">
+                <div className="inline-flex items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 px-6 py-2.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30">
+                  Generated ✨
+                </div>
               </div>
             ) : (
               <button 
@@ -197,6 +212,44 @@ export function JobCard({ job }: JobCardProps) {
         </div>
         
       </div>
+
+      {/* Render Generated Proposal if exists */}
+      {generatedProposal && (
+        <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              ✨ Generated {generationType === 'proposal' ? 'Proposal' : 'Cold Email'}
+            </h4>
+            <button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(generatedProposal);
+                  toast.success('Copied to clipboard!');
+                } catch (err) {
+                  // Fallback for missing clipboard API or insecure context
+                  const textArea = document.createElement("textarea");
+                  textArea.value = generatedProposal;
+                  document.body.appendChild(textArea);
+                  textArea.select();
+                  try {
+                    document.execCommand("copy");
+                    toast.success('Copied to clipboard!');
+                  } catch (e) {
+                    toast.error('Failed to copy. Please copy manually.');
+                  }
+                  textArea.remove();
+                }
+              }}
+              className="text-xs px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors font-medium text-slate-700 dark:text-slate-300"
+            >
+              Copy Text
+            </button>
+          </div>
+          <div className="bg-slate-50 dark:bg-[#0A0A0B]/50 border border-slate-200 dark:border-white/5 rounded-xl p-4 md:p-6 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+            {generatedProposal}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

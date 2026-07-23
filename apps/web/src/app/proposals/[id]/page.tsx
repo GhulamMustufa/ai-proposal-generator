@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { toast } from "@/lib/toast";
 
-export default function ProposalEditorPage({ params }: { params: { id: string } }) {
+export default function ProposalEditorPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const { getToken } = useAuth();
   const router = useRouter();
   
@@ -21,8 +22,8 @@ export default function ProposalEditorPage({ params }: { params: { id: string } 
         const token = await getToken();
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
         
-        const res = await fetch(`${apiUrl}/api/proposals/${params.id}/get`, {
-          method: "POST",
+        const res = await fetch(`${apiUrl}/api/proposals/${id}`, {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`
@@ -46,7 +47,7 @@ export default function ProposalEditorPage({ params }: { params: { id: string } 
     }
     
     loadProposal();
-  }, [params.id, getToken]);
+  }, [id, getToken]);
 
   async function handleSave() {
     setSaving(true);
@@ -54,8 +55,8 @@ export default function ProposalEditorPage({ params }: { params: { id: string } 
       const token = await getToken();
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
       
-      const res = await fetch(`${apiUrl}/api/proposals/${params.id}`, {
-        method: "POST",
+      const res = await fetch(`${apiUrl}/api/proposals/${id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
@@ -78,8 +79,8 @@ export default function ProposalEditorPage({ params }: { params: { id: string } 
       const token = await getToken();
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
       
-      const res = await fetch(`${apiUrl}/api/proposals/${params.id}/pdf`, {
-        method: "POST",
+      const res = await fetch(`${apiUrl}/api/proposals/${id}/pdf`, {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -91,7 +92,7 @@ export default function ProposalEditorPage({ params }: { params: { id: string } 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Proposal-${params.id}.pdf`;
+      a.download = `Proposal-${id}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -119,15 +120,15 @@ export default function ProposalEditorPage({ params }: { params: { id: string } 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Interactive Editor</h1>
-          <p className="mt-1 text-sm text-slate-400">Refine your AI-generated proposal before sending.</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Interactive Editor</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Refine your AI-generated proposal before sending.</p>
         </div>
         
         <div className="flex items-center gap-3">
           <button 
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center justify-center rounded-xl bg-white/5 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-white/10 border border-white/10"
+            className="inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5 px-6 py-2.5 text-sm font-medium text-slate-700 dark:text-white transition hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10"
           >
             {saving ? "Saving..." : "Save Changes"}
           </button>
@@ -144,34 +145,34 @@ export default function ProposalEditorPage({ params }: { params: { id: string } 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-1 overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-black/40 rounded-t-xl">
+          <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-1 overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-black/40 rounded-t-xl">
               <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">Proposal Content</span>
             </div>
             <textarea 
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="w-full min-h-[500px] p-6 bg-transparent text-slate-300 resize-y focus:outline-none focus:ring-0 text-sm leading-relaxed"
+              className="w-full min-h-[500px] p-6 bg-transparent text-slate-800 dark:text-slate-300 resize-y focus:outline-none focus:ring-0 text-sm leading-relaxed"
               placeholder="Your proposal content goes here..."
             />
           </div>
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
-            <h3 className="text-sm font-semibold text-white mb-4">Job Details</h3>
+          <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-6 shadow-sm">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Job Details</h3>
             <div className="space-y-3">
               <div>
                 <p className="text-xs text-slate-500 mb-1">Title</p>
-                <p className="text-sm font-medium text-slate-300">{proposal.jobTitle || "Confidential Role"}</p>
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-300">{proposal.jobTitle || "Confidential Role"}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-500 mb-1">Generated At</p>
-                <p className="text-sm font-medium text-slate-300">{new Date(proposal.createdAt).toLocaleString()}</p>
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-300">{new Date(proposal.createdAt).toLocaleString()}</p>
               </div>
               {proposal.jobLink && (
                 <div className="pt-2">
-                  <a href={proposal.jobLink} target="_blank" rel="noreferrer" className="text-sm text-indigo-400 hover:text-indigo-300 transition">
+                  <a href={proposal.jobLink} target="_blank" rel="noreferrer" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition">
                     View original listing &rarr;
                   </a>
                 </div>

@@ -4,7 +4,7 @@ import { Redis } from 'ioredis';
 
 /**
  * RedisService
- * 
+ *
  * This service encapsulates our ioredis connection and provides methods for caching,
  * idempotency, and rate limiting. Using a central service makes it easily injectable.
  */
@@ -43,7 +43,11 @@ export class RedisService implements OnModuleDestroy {
    * @param windowSeconds The time window in seconds
    * @returns true if allowed, false if the rate limit is exceeded
    */
-  async checkRateLimit(key: string, limit: number, windowSeconds: number): Promise<boolean> {
+  async checkRateLimit(
+    key: string,
+    limit: number,
+    windowSeconds: number,
+  ): Promise<boolean> {
     const current = await this.redis.incr(key);
     if (current === 1) {
       await this.redis.expire(key, windowSeconds);

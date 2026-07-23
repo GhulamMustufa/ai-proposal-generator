@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { toast } from "@/lib/toast";
 
 const STATUS_STYLES = {
@@ -24,13 +25,18 @@ export function StatusBadge({
 }) {
   const [status, setStatus] = useState<Status>(initialStatus);
   const [updating, setUpdating] = useState(false);
+  const { getToken } = useAuth();
 
   async function handleChange(newStatus: Status) {
     setUpdating(true);
     try {
+      const token = await getToken();
       const res = await fetch(`${apiUrl}/api/proposals/${proposalId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) throw new Error();

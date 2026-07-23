@@ -7,7 +7,7 @@ import { TARGET_COMPANIES } from '../workers/target-companies.config';
 
 /**
  * MatcherService
- * 
+ *
  * Fetches user profiles and uses OpenAI to score them against new jobs.
  * Saves the resulting match score and reasoning to the Drizzle database.
  */
@@ -28,8 +28,12 @@ export class MatcherService {
     this.logger.log(`Starting AI matching evaluation for job ${jobId}`);
 
     // Fetch the target job
-    const [job] = await this.db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
-    
+    const [job] = await this.db
+      .select()
+      .from(jobs)
+      .where(eq(jobs.id, jobId))
+      .limit(1);
+
     if (!job) {
       this.logger.warn(`Job ${jobId} not found in DB`);
       return;
@@ -37,21 +41,27 @@ export class MatcherService {
 
     // Fetch all active users with parsed skills
     const usersWithSkills = await this.db
-      .select({ userId: userProfiles.userId, skills: userProfiles.skills, jobFilters: userProfiles.jobFilters })
+      .select({
+        userId: userProfiles.userId,
+        skills: userProfiles.skills,
+        jobFilters: userProfiles.jobFilters,
+      })
       .from(userProfiles)
       .where(isNotNull(userProfiles.skills));
 
-    this.logger.log(`Evaluating job against ${usersWithSkills.length} users with skills...`);
+    this.logger.log(
+      `Evaluating job against ${usersWithSkills.length} users with skills...`,
+    );
 
     // Process all users sequentially as per the user's instructions
     for (const user of usersWithSkills) {
       try {
         const userSkills = Array.isArray(user.skills) ? user.skills : [];
         const jobText = `${job.title} ${job.description}`.toLowerCase();
-        
+
         // Cost-Reduction: Only send to OpenAI if at least 3 of the user's skills are found in the job description
         let hasKeywordMatch = true;
-        
+
         if (userSkills.length > 0) {
           const matchedSkills = userSkills.filter((skill: any) => {
             const skillStr = String(skill).toLowerCase();
@@ -61,38 +71,55 @@ export class MatcherService {
             pattern = pattern.replace(/\\\.(js)/g, '(?:\\.js|js|\\sjs)');
             // Allow spaces or dashes to be interchangeable
             pattern = pattern.replace(/[- ]/g, '[- ]?');
-            
+
             const regex = new RegExp(`\\b${pattern}\\b`, 'i');
             return regex.test(jobText);
           });
-          
+
           if (matchedSkills.length < 3) {
             hasKeywordMatch = false;
-            this.logger.debug(`Job ${job.id} filtered out. Only matched ${matchedSkills.length} skills (Requires at least 3). Skipping OpenAI.`);
-            
+            this.logger.debug(
+              `Job ${job.id} filtered out. Only matched ${matchedSkills.length} skills (Requires at least 3). Skipping OpenAI.`,
+            );
+
             await this.db.insert(aiMatches).values({
               userId: user.userId,
               jobId: job.id,
               matchScore: 0,
-              matchReasoning: 'Filtered out by keyword check. Job description does not contain at least 3 of your core skills.',
+              matchReasoning:
+                'Filtered out by keyword check. Job description does not contain at least 3 of your core skills.',
             });
             continue; // Move to the next user
           }
         }
 
-        await this.evaluateUserForJob(user.userId, user.skills, user.jobFilters, job);
+        await this.evaluateUserForJob(
+          user.userId,
+          user.skills,
+          user.jobFilters,
+          job,
+        );
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
-        this.logger.error(`Failed to evaluate user ${user.userId} for job ${job.id}: ${msg}`);
+        this.logger.error(
+          `Failed to evaluate user ${user.userId} for job ${job.id}: ${msg}`,
+        );
       }
     }
 
     this.logger.log(`Completed matching evaluation for job ${jobId}`);
   }
 
-  private async evaluateUserForJob(userId: string, skills: any, jobFilters: any, job: typeof jobs.$inferSelect) {
-    const skillsText = Array.isArray(skills) ? skills.join(', ') : JSON.stringify(skills);
-    
+  private async evaluateUserForJob(
+    userId: string,
+    skills: any,
+    jobFilters: any,
+    job: typeof jobs.$inferSelect,
+  ) {
+    const skillsText = Array.isArray(skills)
+      ? skills.join(', ')
+      : JSON.stringify(skills);
+
     // Convert user preferences into preferred criteria for the AI (instead of strict constraints)
     let filterConstraints = '';
     if (jobFilters) {
@@ -139,8 +166,11 @@ Output MUST be exactly in this JSON format:
     if (!outputStr) throw new Error('OpenAI returned empty response');
 
     const result = JSON.parse(outputStr);
-    
-    if (typeof result.match_score !== 'number' || typeof result.match_reasoning !== 'string') {
+
+    if (
+      typeof result.match_score !== 'number' ||
+      typeof result.match_reasoning !== 'string'
+    ) {
       throw new Error(`Invalid JSON schema returned by OpenAI: ${outputStr}`);
     }
 
@@ -151,13 +181,16 @@ Output MUST be exactly in this JSON format:
     if (finalScore >= 75) {
       const companyStr = job.company?.toLowerCase() || '';
       const titleStr = job.title?.toLowerCase() || '';
-      const isTargetCompany = TARGET_COMPANIES.some(tc => 
-        companyStr.includes(tc.toLowerCase()) || titleStr.includes(tc.toLowerCase())
+      const isTargetCompany = TARGET_COMPANIES.some(
+        (tc) =>
+          companyStr.includes(tc.toLowerCase()) ||
+          titleStr.includes(tc.toLowerCase()),
       );
-      
+
       if (isTargetCompany) {
         finalScore = Math.min(100, finalScore + 15);
-        finalReasoning += ' [Target Company Boost applied due to strong skills match]';
+        finalReasoning +=
+          ' [Target Company Boost applied due to strong skills match]';
       }
     }
 
@@ -169,7 +202,9 @@ Output MUST be exactly in this JSON format:
       matchReasoning: finalReasoning,
     });
 
-    this.logger.debug(`Saved match score ${finalScore} for user ${userId} and job ${job.id}`);
+    this.logger.debug(
+      `Saved match score ${finalScore} for user ${userId} and job ${job.id}`,
+    );
   }
 
   /**
@@ -181,13 +216,22 @@ Output MUST be exactly in this JSON format:
 
     // Fetch user profile
     const [user] = await this.db
-      .select({ skills: userProfiles.skills, jobFilters: userProfiles.jobFilters })
+      .select({
+        skills: userProfiles.skills,
+        jobFilters: userProfiles.jobFilters,
+      })
       .from(userProfiles)
       .where(eq(userProfiles.userId, userId))
       .limit(1);
 
-    if (!user || !user.skills || (Array.isArray(user.skills) && user.skills.length === 0)) {
-      this.logger.warn(`User ${userId} has no skills configured. Skipping matching.`);
+    if (
+      !user ||
+      !user.skills ||
+      (Array.isArray(user.skills) && user.skills.length === 0)
+    ) {
+      this.logger.warn(
+        `User ${userId} has no skills configured. Skipping matching.`,
+      );
       return;
     }
 
@@ -197,26 +241,28 @@ Output MUST be exactly in this JSON format:
 
     // Fetch all jobs
     const allJobs = await this.db.select().from(jobs);
-    this.logger.log(`Re-evaluating ${allJobs.length} jobs for user ${userId}...`);
+    this.logger.log(
+      `Re-evaluating ${allJobs.length} jobs for user ${userId}...`,
+    );
 
     for (const job of allJobs) {
       try {
         const userSkills = Array.isArray(user.skills) ? user.skills : [];
         const jobText = `${job.title} ${job.description}`.toLowerCase();
-        
+
         let hasKeywordMatch = true;
-        
+
         if (userSkills.length > 0) {
           const matchedSkills = userSkills.filter((skill: any) => {
             const skillStr = String(skill).toLowerCase();
             let pattern = skillStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             pattern = pattern.replace(/\\\.(js)/g, '(?:\\.js|js|\\sjs)');
             pattern = pattern.replace(/[- ]/g, '[- ]?');
-            
+
             const regex = new RegExp(`\\b${pattern}\\b`, 'i');
             return regex.test(jobText);
           });
-          
+
           if (matchedSkills.length < 3) {
             hasKeywordMatch = false;
           }
@@ -227,15 +273,23 @@ Output MUST be exactly in this JSON format:
             userId,
             jobId: job.id,
             matchScore: 0,
-            matchReasoning: 'Filtered out by keyword check. Job description does not contain at least 3 of your core skills.',
+            matchReasoning:
+              'Filtered out by keyword check. Job description does not contain at least 3 of your core skills.',
           });
           continue;
         }
 
-        await this.evaluateUserForJob(userId, user.skills, user.jobFilters, job);
+        await this.evaluateUserForJob(
+          userId,
+          user.skills,
+          user.jobFilters,
+          job,
+        );
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
-        this.logger.error(`Failed to evaluate user ${userId} for job ${job.id}: ${msg}`);
+        this.logger.error(
+          `Failed to evaluate user ${userId} for job ${job.id}: ${msg}`,
+        );
       }
     }
 
