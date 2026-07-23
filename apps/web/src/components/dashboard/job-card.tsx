@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { toast } from "@/lib/toast";
+import { usePersonas } from "@/hooks/use-personas";
 
 type JobCardProps = {
   job: any;
@@ -16,6 +17,9 @@ export function JobCard({ job }: JobCardProps) {
   const [generated, setGenerated] = useState(false);
   const [generationType, setGenerationType] = useState<'proposal' | 'cold_email'>('proposal');
   const [generatedProposal, setGeneratedProposal] = useState<string | null>(null);
+  
+  const { personas, loading: loadingPersonas } = usePersonas();
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string>("");
 
   const isElite = job.matchScore >= 90;
   const isGood = job.matchScore >= 80 && job.matchScore < 90;
@@ -49,7 +53,8 @@ export function JobCard({ job }: JobCardProps) {
           jobTitle: job.title,
           jobDescription: job.description,
           company: job.company,
-          generationType
+          generationType,
+          personaId: selectedPersonaId || undefined,
         })
       });
 
@@ -175,6 +180,19 @@ export function JobCard({ job }: JobCardProps) {
               View Job
             </a>
             
+            {personas.length > 0 && !loading && !generated && !job.hasApplication && (
+              <select
+                value={selectedPersonaId}
+                onChange={(e) => setSelectedPersonaId(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 px-4 py-2 text-xs text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors mb-2"
+              >
+                <option value="">-- No Persona --</option>
+                {personas.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            )}
+
             {!loading && !generated && !job.hasApplication && (
               <div className="flex items-center justify-center gap-1 mb-2 p-1 bg-slate-100 dark:bg-black/40 rounded-xl border border-slate-200 dark:border-white/5">
                 <button

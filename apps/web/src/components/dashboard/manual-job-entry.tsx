@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { toast } from "@/lib/toast";
+import { usePersonas } from "@/hooks/use-personas";
 
 export function ManualJobEntry() {
   const { getToken, userId } = useAuth();
@@ -17,6 +18,9 @@ export function ManualJobEntry() {
   const [generated, setGenerated] = useState(false);
   const [generationType, setGenerationType] = useState<'proposal' | 'cold_email'>('proposal');
   const [generatedProposal, setGeneratedProposal] = useState<string | null>(null);
+
+  const { personas, loading: loadingPersonas } = usePersonas();
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string>("");
 
   async function handleGenerate(type: 'proposal' | 'cold_email') {
     if (!jobDescription.trim()) {
@@ -46,6 +50,7 @@ export function ManualJobEntry() {
           company: company.trim() || undefined,
           generationType: type,
           clientReferenceId,
+          personaId: selectedPersonaId || undefined,
         })
       });
 
@@ -158,6 +163,24 @@ export function ManualJobEntry() {
                 />
               </div>
             </div>
+
+            {personas.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Select Persona
+                </label>
+                <select
+                  value={selectedPersonaId}
+                  onChange={(e) => setSelectedPersonaId(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
+                >
+                  <option value="">-- No Persona (Generic) --</option>
+                  {personas.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">

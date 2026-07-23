@@ -8,6 +8,7 @@ import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/history", label: "History" },
+  { href: "/personas", label: "Personas" },
   { href: "/profile", label: "Profile" },
 ];
 

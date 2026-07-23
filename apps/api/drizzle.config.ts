@@ -1,8 +1,8 @@
 import { defineConfig } from 'drizzle-kit';
 import * as dotenv from 'dotenv';
 
-// Load the root .env.development file so Drizzle can read DATABASE_URL
-dotenv.config({ path: '.env.development' });
+// Load the root .env file so Drizzle can read DATABASE_URL
+dotenv.config({ path: '.env' });
 
 export default defineConfig({
   schema: __dirname + '/src/db/schema.ts',

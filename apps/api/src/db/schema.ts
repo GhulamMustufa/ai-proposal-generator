@@ -78,3 +78,16 @@ export const targetCompanies = pgTable('target_companies', {
   atsBoardToken: text('ats_board_token').notNull().unique(), // e.g. 'stripe' for greenhouse
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const personas = pgTable('personas', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id')
+    .references(() => users.id)
+    .notNull(),
+  name: text('name').notNull(), // e.g. "Senior React Developer"
+  skills: jsonb('skills'), // Array of strings
+  idealSalary: text('ideal_salary'),
+  yearsOfExperience: integer('years_of_experience'),
+  resumeText: text('resume_text'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});

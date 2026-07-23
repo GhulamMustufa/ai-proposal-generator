@@ -15,6 +15,7 @@ import { ResumeModule } from './resume/resume.module';
 import { SubmitterModule } from './submitter/submitter.module';
 import { ProfileModule } from './profile/profile.module';
 import { BillingModule } from './billing/billing.module';
+import { PersonasModule } from './personas/personas.module';
 /**
  * Root AppModule
  *
@@ -70,6 +71,7 @@ import { BillingModule } from './billing/billing.module';
     ProfileModule,
 
     BillingModule,
+    PersonasModule,
   ],
   controllers: [AppController],
   providers: [
