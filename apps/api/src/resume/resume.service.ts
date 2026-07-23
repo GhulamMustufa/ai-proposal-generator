@@ -6,8 +6,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DB_CONNECTION } from '../db/db.module';
-import { userProfiles, jobs, applications } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { userProfiles, personas, jobs, applications } from '../db/schema';
+import { eq, and } from 'drizzle-orm';
 import OpenAI from 'openai';
 import puppeteer from 'puppeteer';
 import { v2 as cloudinary } from 'cloudinary';
@@ -31,7 +31,7 @@ export class ResumeService {
     }
   }
 
-  async generateResume(userId: string, jobId: string): Promise<string> {
+  async generateResume(userId: string, jobId: string, personaId?: string): Promise<string> {
     this.logger.log(
       `Generating tailored resume for user ${userId} and job ${jobId}`,
     );
@@ -44,18 +44,36 @@ export class ResumeService {
       .limit(1);
     if (!job) throw new NotFoundException('Job not found');
 
-    const [profile] = await this.db
-      .select()
-      .from(userProfiles)
-      .where(eq(userProfiles.userId, userId))
-      .limit(1);
-    if (!profile || !profile.resumeText) {
-      throw new BadRequestException('User does not have a base resume on file');
+    let profileContext: any = null;
+    
+    if (personaId) {
+      const [persona] = await this.db
+        .select()
+        .from(personas)
+        .where(and(eq(personas.id, personaId), eq(personas.userId, userId)))
+        .limit(1);
+      
+      if (persona && persona.resumeText) {
+        profileContext = persona;
+      }
+    }
+
+    if (!profileContext) {
+      const [profile] = await this.db
+        .select()
+        .from(userProfiles)
+        .where(eq(userProfiles.userId, userId))
+        .limit(1);
+        
+      if (!profile || !profile.resumeText) {
+        throw new BadRequestException('User does not have a base resume on file');
+      }
+      profileContext = profile;
     }
 
     // 2. OpenAI Tailoring
     this.logger.log('Tailoring resume with OpenAI...');
-    const resumeData = await this.tailorResumeWithAI(profile, job);
+    const resumeData = await this.tailorResumeWithAI(profileContext, job);
 
     // 3. Generate PDF Buffer via Puppeteer
     this.logger.log('Rendering HTML to PDF buffer...');
@@ -80,7 +98,7 @@ export class ResumeService {
   }
 
   private async tailorResumeWithAI(
-    profile: typeof userProfiles.$inferSelect,
+    profile: any,
     job: typeof jobs.$inferSelect,
   ) {
     const prompt = `

@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "@/lib/toast";
 import { useAuth } from "@clerk/nextjs";
+import { usePersonas } from "@/hooks/use-personas";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -44,6 +45,8 @@ function JobCard({ job }: { job: Job }) {
   const { getToken } = useAuth();
   const [generating, setGenerating] = useState(false);
   const [proposal, setProposal] = useState("");
+  const { personas } = usePersonas();
+  const [selectedPersonaId, setSelectedPersonaId] = useState("");
 
   async function handleGenerate() {
     setGenerating(true);
@@ -61,6 +64,7 @@ function JobCard({ job }: { job: Job }) {
           job_description: job.description,
           job_title: job.title,
           job_link: job.link,
+          personaId: selectedPersonaId || undefined,
         }),
       });
 
@@ -92,7 +96,19 @@ function JobCard({ job }: { job: Job }) {
       <h3 className="text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{job.title}</h3>
       <p className="mt-2 line-clamp-3 text-sm text-slate-600 dark:text-slate-300">{job.description}</p>
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {personas.length > 0 && (
+          <select
+            value={selectedPersonaId}
+            onChange={(e) => setSelectedPersonaId(e.target.value)}
+            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-indigo-100 transition focus:ring-4 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:ring-indigo-500/20"
+          >
+            <option value="">-- Optional: Select Persona --</option>
+            {personas.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        )}
         <button
           type="button"
           onClick={handleGenerate}

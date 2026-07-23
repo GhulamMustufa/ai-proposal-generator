@@ -41,11 +41,27 @@ export const jobs = pgTable('jobs', {
   scrapedAt: timestamp('scraped_at').defaultNow().notNull(),
 });
 
+export const personas = pgTable('personas', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id')
+    .references(() => users.id)
+    .notNull(),
+  name: text('name').notNull(), // e.g. "Senior React Developer"
+  skills: jsonb('skills'), // Array of strings
+  idealSalary: text('ideal_salary'),
+  yearsOfExperience: integer('years_of_experience'),
+  resumeText: text('resume_text'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+
 export const aiMatches = pgTable('ai_matches', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: text('user_id')
     .references(() => users.id)
     .notNull(),
+  personaId: uuid('persona_id')
+    .references(() => personas.id), // Nullable for legacy matches, if any
   jobId: uuid('job_id')
     .references(() => jobs.id)
     .notNull(),
@@ -79,15 +95,3 @@ export const targetCompanies = pgTable('target_companies', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const personas = pgTable('personas', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: text('user_id')
-    .references(() => users.id)
-    .notNull(),
-  name: text('name').notNull(), // e.g. "Senior React Developer"
-  skills: jsonb('skills'), // Array of strings
-  idealSalary: text('ideal_salary'),
-  yearsOfExperience: integer('years_of_experience'),
-  resumeText: text('resume_text'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});

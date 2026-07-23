@@ -1,6 +1,6 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { DB_CONNECTION } from '../db/db.module';
-import { userProfiles, jobs, aiMatches } from '../db/schema';
+import { personas, jobs, aiMatches } from '../db/schema';
 import { eq, isNotNull } from 'drizzle-orm';
 import OpenAI from 'openai';
 import { TARGET_COMPANIES } from '../workers/target-companies.config';
@@ -8,7 +8,7 @@ import { TARGET_COMPANIES } from '../workers/target-companies.config';
 /**
  * MatcherService
  *
- * Fetches user profiles and uses OpenAI to score them against new jobs.
+ * Fetches user personas and uses OpenAI to score them against new jobs.
  * Saves the resulting match score and reasoning to the Drizzle database.
  */
 @Injectable()
@@ -21,7 +21,7 @@ export class MatcherService {
   }
 
   /**
-   * Evaluates all active users against a single incoming job.
+   * Evaluates all active personas against a single incoming job.
    * Processes sequentially to avoid OpenAI rate limits.
    */
   async evaluateJob(jobId: string) {
@@ -39,37 +39,36 @@ export class MatcherService {
       return;
     }
 
-    // Fetch all active users with parsed skills
-    const usersWithSkills = await this.db
+    // Fetch all active personas with parsed skills
+    const allPersonas = await this.db
       .select({
-        userId: userProfiles.userId,
-        skills: userProfiles.skills,
-        jobFilters: userProfiles.jobFilters,
+        personaId: personas.id,
+        userId: personas.userId,
+        name: personas.name,
+        skills: personas.skills,
+        idealSalary: personas.idealSalary,
+        yearsOfExperience: personas.yearsOfExperience,
+        resumeText: personas.resumeText,
       })
-      .from(userProfiles)
-      .where(isNotNull(userProfiles.skills));
+      .from(personas)
+      .where(isNotNull(personas.skills));
 
     this.logger.log(
-      `Evaluating job against ${usersWithSkills.length} users with skills...`,
+      `Evaluating job against ${allPersonas.length} personas with skills...`,
     );
 
-    // Process all users sequentially as per the user's instructions
-    for (const user of usersWithSkills) {
+    for (const persona of allPersonas) {
       try {
-        const userSkills = Array.isArray(user.skills) ? user.skills : [];
+        const personaSkills = Array.isArray(persona.skills) ? persona.skills : [];
         const jobText = `${job.title} ${job.description}`.toLowerCase();
 
-        // Cost-Reduction: Only send to OpenAI if at least 3 of the user's skills are found in the job description
         let hasKeywordMatch = true;
 
-        if (userSkills.length > 0) {
-          const matchedSkills = userSkills.filter((skill: any) => {
+        if (personaSkills.length > 0) {
+          const matchedSkills = personaSkills.filter((skill: any) => {
             const skillStr = String(skill).toLowerCase();
-            // Escape regex characters
             let pattern = skillStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            // Make .js suffixes interchangeable with 'js' and ' js'
             pattern = pattern.replace(/\\\.(js)/g, '(?:\\.js|js|\\sjs)');
-            // Allow spaces or dashes to be interchangeable
             pattern = pattern.replace(/[- ]/g, '[- ]?');
 
             const regex = new RegExp(`\\b${pattern}\\b`, 'i');
@@ -79,30 +78,26 @@ export class MatcherService {
           if (matchedSkills.length < 3) {
             hasKeywordMatch = false;
             this.logger.debug(
-              `Job ${job.id} filtered out. Only matched ${matchedSkills.length} skills (Requires at least 3). Skipping OpenAI.`,
+              `Job ${job.id} filtered out for persona ${persona.personaId}. Only matched ${matchedSkills.length} skills. Skipping OpenAI.`,
             );
 
             await this.db.insert(aiMatches).values({
-              userId: user.userId,
+              userId: persona.userId,
+              personaId: persona.personaId,
               jobId: job.id,
               matchScore: 0,
               matchReasoning:
                 'Filtered out by keyword check. Job description does not contain at least 3 of your core skills.',
             });
-            continue; // Move to the next user
+            continue;
           }
         }
 
-        await this.evaluateUserForJob(
-          user.userId,
-          user.skills,
-          user.jobFilters,
-          job,
-        );
+        await this.evaluatePersonaForJob(persona, job);
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         this.logger.error(
-          `Failed to evaluate user ${user.userId} for job ${job.id}: ${msg}`,
+          `Failed to evaluate persona ${persona.personaId} for job ${job.id}: ${msg}`,
         );
       }
     }
@@ -110,56 +105,53 @@ export class MatcherService {
     this.logger.log(`Completed matching evaluation for job ${jobId}`);
   }
 
-  private async evaluateUserForJob(
-    userId: string,
-    skills: any,
-    jobFilters: any,
+  private async evaluatePersonaForJob(
+    persona: any,
     job: typeof jobs.$inferSelect,
   ) {
-    const skillsText = Array.isArray(skills)
-      ? skills.join(', ')
-      : JSON.stringify(skills);
-
-    // Convert user preferences into preferred criteria for the AI (instead of strict constraints)
-    let filterConstraints = '';
-    if (jobFilters) {
-      filterConstraints = `
-USER PREFERENCES (BONUS POINTS):
-The user has provided preferences for the jobs they want (e.g., equity, specific salary). 
-Treat these as "Nice to Haves". If the job mentions these, boost the match_score higher!
-Do NOT penalize or reject the job (do not give a 0) if a preference is simply not mentioned. Most job descriptions hide these details.
-Only reduce the score slightly if the job explicitly contradicts a preference (e.g., states a salary significantly lower than requested).
-
-USER'S PREFERENCES:
-${JSON.stringify(jobFilters, null, 2)}
-      `;
-    }
+    const skillsText = Array.isArray(persona.skills)
+      ? persona.skills.join(', ')
+      : JSON.stringify(persona.skills);
 
     const prompt = `
 You are an expert technical recruiter AI. 
-Evaluate how well the user's skills match the job description.
+Evaluate how well the user's Persona matches the job description.
 
-${filterConstraints}
+PERSONA DETAILS:
+Role Name: ${persona.name}
+Years of Experience: ${persona.yearsOfExperience || 'Not specified'}
+Ideal Salary: ${persona.idealSalary || 'Not specified'}
 
 USER SKILLS:
 ${skillsText}
+
+USER RESUME EXTRACT:
+${persona.resumeText || 'No resume text provided.'}
 
 JOB DESCRIPTION:
 Title: ${job.title}
 ${job.description}
 
+Analyze the Job Description against the Persona's skills, experience, and resume.
+Determine a match score from 0 to 100 based on how qualified this persona is for this job.
+
+CRITICAL INSTRUCTIONS:
+- Give a very high score (85-100) if the core skills, experience level, and role match closely.
+- Give a moderate score (50-84) if they meet the basic requirements but lack some desired skills.
+- Give a low score (0-49) if the persona is clearly unqualified, lacks core required skills, or if the seniority level is a complete mismatch.
+
 Output MUST be exactly in this JSON format:
 {
   "match_score": number (0 to 100),
-  "match_reasoning": "A concise 1-2 sentence explanation of why this score was given. If it was rejected due to a strict preference violation, state that clearly."
+  "match_reasoning": "A concise 1-2 sentence explanation of why this score was given. Be specific about matching or missing skills."
 }
 `;
 
     const response = await this.openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' }, // Guarantee JSON output
-      temperature: 0.1, // Keep it deterministic
+      response_format: { type: 'json_object' },
+      temperature: 0.1,
     });
 
     const outputStr = response.choices[0]?.message?.content;
@@ -177,7 +169,6 @@ Output MUST be exactly in this JSON format:
     let finalScore = result.match_score;
     let finalReasoning = result.match_reasoning;
 
-    // STRICT COMPANY BOOST: Only boost if the skills are already a strong match (>= 75)
     if (finalScore >= 75) {
       const companyStr = job.company?.toLowerCase() || '';
       const titleStr = job.title?.toLowerCase() || '';
@@ -194,66 +185,68 @@ Output MUST be exactly in this JSON format:
       }
     }
 
-    // Save into aiMatches table
     await this.db.insert(aiMatches).values({
-      userId,
+      userId: persona.userId,
+      personaId: persona.personaId,
       jobId: job.id,
       matchScore: finalScore,
       matchReasoning: finalReasoning,
     });
 
     this.logger.debug(
-      `Saved match score ${finalScore} for user ${userId} and job ${job.id}`,
+      `Saved match score ${finalScore} for persona ${persona.personaId} and job ${job.id}`,
     );
   }
 
   /**
-   * Re-evaluates a specific user against all existing jobs.
-   * Useful when a user updates their skills or job preferences.
+   * Re-evaluates a specific persona against all existing jobs.
    */
-  async reEvaluateUser(userId: string) {
-    this.logger.log(`Starting full re-evaluation for user ${userId}`);
+  async reEvaluatePersona(personaId: string) {
+    this.logger.log(`Starting full re-evaluation for persona ${personaId}`);
 
-    // Fetch user profile
-    const [user] = await this.db
+    const [persona] = await this.db
       .select({
-        skills: userProfiles.skills,
-        jobFilters: userProfiles.jobFilters,
+        personaId: personas.id,
+        userId: personas.userId,
+        name: personas.name,
+        skills: personas.skills,
+        idealSalary: personas.idealSalary,
+        yearsOfExperience: personas.yearsOfExperience,
+        resumeText: personas.resumeText,
       })
-      .from(userProfiles)
-      .where(eq(userProfiles.userId, userId))
+      .from(personas)
+      .where(eq(personas.id, personaId))
       .limit(1);
 
     if (
-      !user ||
-      !user.skills ||
-      (Array.isArray(user.skills) && user.skills.length === 0)
+      !persona ||
+      !persona.skills ||
+      (Array.isArray(persona.skills) && persona.skills.length === 0)
     ) {
       this.logger.warn(
-        `User ${userId} has no skills configured. Skipping matching.`,
+        `Persona ${personaId} has no skills configured. Skipping matching.`,
       );
       return;
     }
 
-    // Delete existing matches to prevent duplicates
-    await this.db.delete(aiMatches).where(eq(aiMatches.userId, userId));
-    this.logger.log(`Deleted old matches for user ${userId}`);
+    // Delete existing matches for this persona
+    await this.db.delete(aiMatches).where(eq(aiMatches.personaId, personaId));
+    this.logger.log(`Deleted old matches for persona ${personaId}`);
 
-    // Fetch all jobs
     const allJobs = await this.db.select().from(jobs);
     this.logger.log(
-      `Re-evaluating ${allJobs.length} jobs for user ${userId}...`,
+      `Re-evaluating ${allJobs.length} jobs for persona ${personaId}...`,
     );
 
     for (const job of allJobs) {
       try {
-        const userSkills = Array.isArray(user.skills) ? user.skills : [];
+        const personaSkills = Array.isArray(persona.skills) ? persona.skills : [];
         const jobText = `${job.title} ${job.description}`.toLowerCase();
 
         let hasKeywordMatch = true;
 
-        if (userSkills.length > 0) {
-          const matchedSkills = userSkills.filter((skill: any) => {
+        if (personaSkills.length > 0) {
+          const matchedSkills = personaSkills.filter((skill: any) => {
             const skillStr = String(skill).toLowerCase();
             let pattern = skillStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             pattern = pattern.replace(/\\\.(js)/g, '(?:\\.js|js|\\sjs)');
@@ -270,7 +263,8 @@ Output MUST be exactly in this JSON format:
 
         if (!hasKeywordMatch) {
           await this.db.insert(aiMatches).values({
-            userId,
+            userId: persona.userId,
+            personaId: persona.personaId,
             jobId: job.id,
             matchScore: 0,
             matchReasoning:
@@ -279,20 +273,15 @@ Output MUST be exactly in this JSON format:
           continue;
         }
 
-        await this.evaluateUserForJob(
-          userId,
-          user.skills,
-          user.jobFilters,
-          job,
-        );
+        await this.evaluatePersonaForJob(persona, job);
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         this.logger.error(
-          `Failed to evaluate user ${userId} for job ${job.id}: ${msg}`,
+          `Failed to evaluate persona ${personaId} for job ${job.id}: ${msg}`,
         );
       }
     }
 
-    this.logger.log(`Completed full re-evaluation for user ${userId}`);
+    this.logger.log(`Completed full re-evaluation for persona ${personaId}`);
   }
 }

@@ -19,7 +19,7 @@ export class JobsService {
    * Fetches the matched jobs for a given user from the database.
    * Joins ai_matches with jobs and sorts by match_score descending.
    */
-  async fetchMatchedJobs(userId: string) {
+  async fetchMatchedJobs(userId: string, personaId?: string) {
     if (!userId) {
       throw new HttpException('User ID is required', HttpStatus.BAD_REQUEST);
     }
@@ -48,6 +48,7 @@ export class JobsService {
           and(
             eq(aiMatches.userId, userId),
             gte(aiMatches.createdAt, thirtyDaysAgo),
+            personaId ? eq(aiMatches.personaId, personaId) : undefined
           ),
         )
         .orderBy(desc(aiMatches.matchScore), desc(aiMatches.createdAt));

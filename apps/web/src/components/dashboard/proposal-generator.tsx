@@ -3,6 +3,8 @@
 import { FormEvent, useMemo, useState } from "react";
 import { toast } from "@/lib/toast";
 import { useAuth } from "@clerk/nextjs";
+import { usePersonas } from "@/hooks/use-personas";
+import { JobAnalyzerWidget } from "./job-analyzer-widget";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const MAX_VOICE_SAMPLES = 3;
@@ -41,6 +43,8 @@ export function ProposalGenerator() {
   const [generatedProposal, setGeneratedProposal] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [twoVariations, setTwoVariations] = useState(false);
+  const { personas } = usePersonas();
+  const [selectedPersonaId, setSelectedPersonaId] = useState("");
 
   const activeSamples = useMemo(
     () => voiceSamples.map((sample) => sample.trim()).filter(Boolean),
@@ -80,6 +84,7 @@ export function ProposalGenerator() {
           voice_samples: activeSamples,
           two_variations: twoVariations,
           stream: !twoVariations,
+          personaId: selectedPersonaId || undefined,
         }),
       });
 
@@ -145,22 +150,46 @@ export function ProposalGenerator() {
       >
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">1. Job Input</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">1. Persona Selection</h2>
+          </div>
+          {personas.length > 0 ? (
+            <select
+              value={selectedPersonaId}
+              onChange={(e) => setSelectedPersonaId(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-indigo-100 transition focus:ring-4 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:ring-indigo-500/20"
+            >
+              <option value="">-- Optional: Select a Persona (Uses default profile if none) --</option>
+              {personas.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          ) : (
+            <p className="text-sm text-slate-500">No personas found. Fallback to base profile will be used.</p>
+          )}
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">2. Job Input</h2>
             <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">
               Core Context
             </span>
           </div>
-          <textarea
-            value={jobDescription}
-            onChange={(event) => setJobDescription(event.target.value)}
-            rows={8}
-            placeholder="Paste the job description or URL text..."
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-indigo-100 transition placeholder:text-slate-400 focus:ring-4 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:ring-indigo-500/20"
-          />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <textarea
+              value={jobDescription}
+              onChange={(event) => setJobDescription(event.target.value)}
+              rows={12}
+              placeholder="Paste the job description or URL text..."
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-indigo-100 transition placeholder:text-slate-400 focus:ring-4 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:ring-indigo-500/20"
+            />
+            <JobAnalyzerWidget jobDescription={jobDescription} />
+          </div>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">2. Voice Samples</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">3. Voice Samples</h2>
           <p className="text-sm text-slate-600 dark:text-slate-300">Add up to {MAX_VOICE_SAMPLES} past proposal samples.</p>
           <div className="space-y-3">
             {voiceSamples.map((sample, index) => (
@@ -181,7 +210,7 @@ export function ProposalGenerator() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">3. Generate</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">4. Generate</h2>
           <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
             <input
               type="checkbox"
@@ -203,7 +232,7 @@ export function ProposalGenerator() {
 
       <section className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/90 p-8 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/80">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">4. Output</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">5. Output</h2>
           <CopyButton text={generatedProposal} />
         </div>
         <div className="relative min-h-48 whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-800 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-100">

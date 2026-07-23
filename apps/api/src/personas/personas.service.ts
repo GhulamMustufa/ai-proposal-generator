@@ -29,6 +29,16 @@ export class PersonasService {
   }
 
   async findAll(userId: string) {
+    // JIT user provisioning (handles E2E tests and webhook race conditions)
+    try {
+      await this.db
+        .insert(require('../db/schema').users)
+        .values({ id: userId, email: `${userId}@placeholder.local` })
+        .onConflictDoNothing();
+    } catch (e) {
+      // ignore
+    }
+
     return this.db
       .select()
       .from(personas)

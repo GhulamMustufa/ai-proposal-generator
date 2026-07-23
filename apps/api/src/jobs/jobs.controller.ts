@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, UseGuards, Req, Query } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 
@@ -13,8 +13,8 @@ export class JobsController {
 
   @Get()
   @UseGuards(ClerkAuthGuard) // Protects the endpoint requiring a valid Clerk JWT
-  async getJobs(@Req() req: any) {
+  async getJobs(@Req() req: any, @Query('personaId') personaId?: string) {
     const userId = req.user.id;
-    return this.jobsService.fetchMatchedJobs(userId);
+    return this.jobsService.fetchMatchedJobs(userId, personaId);
   }
 }

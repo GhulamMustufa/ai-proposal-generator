@@ -20,15 +20,16 @@ export class ResumeController {
    * stores it in Cloudinary, and returns the URL.
    */
   @Post('generate')
-  async generateResume(@Body() body: { jobId?: string }, @Req() req: any) {
+  async generateResume(@Body() body: { jobId?: string; personaId?: string }, @Req() req: any) {
     const userId = req.user?.id;
     const jobId = body.jobId;
+    const personaId = body.personaId;
 
     if (!jobId) {
       throw new BadRequestException('jobId is required');
     }
 
-    const pdfUrl = await this.resumeService.generateResume(userId, jobId);
+    const pdfUrl = await this.resumeService.generateResume(userId, jobId, personaId);
 
     return { pdfUrl };
   }

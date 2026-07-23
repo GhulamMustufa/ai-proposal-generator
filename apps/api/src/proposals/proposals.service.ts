@@ -3,7 +3,7 @@ import { Response } from 'express';
 import { RedisService } from '../redis/redis.service';
 import { DB_CONNECTION } from '../db/db.module';
 import { eq, and, gte, sql } from 'drizzle-orm';
-import { users, userProfiles, applications } from '../db/schema';
+import { users, userProfiles, personas, applications } from '../db/schema';
 import { resolveJobDescription } from '../utils/job-extractor';
 import OpenAI from 'openai';
 import { createHash } from 'node:crypto';
@@ -148,6 +148,7 @@ export class ProposalsService {
     jobDescription: string,
     generationType: 'proposal' | 'cold_email' = 'proposal',
   ) {
+    // We don't have personaId here, so fallback to userProfiles for background generation for now
     const [profileRecord] = await this.db
       .select()
       .from(userProfiles)
@@ -246,21 +247,47 @@ export class ProposalsService {
       userRecord.subscriptionStatus === 'pro' ? 'pro' : 'free';
     const planLimits = PLAN_LIMITS[plan];
 
-    const [profileRecord] = await this.db
-      .select()
-      .from(userProfiles)
-      .where(eq(userProfiles.userId, userId))
-      .limit(1);
+    const personaId = body.personaId;
     let profileText: string | undefined;
-    if (profileRecord) {
-      const parts: string[] = [];
-      if (profileRecord.contactDetails)
-        parts.push(`Contact: ${JSON.stringify(profileRecord.contactDetails)}`);
-      if (profileRecord.skills)
-        parts.push(`Skills: ${JSON.stringify(profileRecord.skills)}`);
-      if (profileRecord.resumeText)
-        parts.push(`Resume: ${profileRecord.resumeText}`);
-      if (parts.length) profileText = parts.join('\n');
+    let profileRecordForCache: any = null;
+
+    if (personaId) {
+      const [personaRecord] = await this.db
+        .select()
+        .from(personas)
+        .where(and(eq(personas.id, personaId), eq(personas.userId, userId)))
+        .limit(1);
+      
+      if (personaRecord) {
+        profileRecordForCache = personaRecord;
+        const parts: string[] = [];
+        if (personaRecord.skills)
+          parts.push(`Skills: ${JSON.stringify(personaRecord.skills)}`);
+        if (personaRecord.resumeText)
+          parts.push(`Resume: ${personaRecord.resumeText}`);
+        if (parts.length) profileText = parts.join('\n');
+      }
+    }
+
+    // Fallback to user profile if no personaId provided or persona not found
+    if (!profileText) {
+      const [profileRecord] = await this.db
+        .select()
+        .from(userProfiles)
+        .where(eq(userProfiles.userId, userId))
+        .limit(1);
+      
+      if (profileRecord) {
+        profileRecordForCache = profileRecord;
+        const parts: string[] = [];
+        if (profileRecord.contactDetails)
+          parts.push(`Contact: ${JSON.stringify(profileRecord.contactDetails)}`);
+        if (profileRecord.skills)
+          parts.push(`Skills: ${JSON.stringify(profileRecord.skills)}`);
+        if (profileRecord.resumeText)
+          parts.push(`Resume: ${profileRecord.resumeText}`);
+        if (parts.length) profileText = parts.join('\n');
+      }
     }
 
     // 2. Rate Limiting via Redis
@@ -355,7 +382,7 @@ export class ProposalsService {
         return res.json({
           generated_proposal: idemCache.generated_proposal,
           proposal_id: idemCache.proposal_id,
-          user_profile: profileRecord,
+          user_profile: profileRecordForCache,
           cached: true,
           cache_type: 'idempotency',
         });
@@ -370,7 +397,7 @@ export class ProposalsService {
       return res.json({
         generated_proposal: hashCache.generated_proposal,
         proposal_id: hashCache.proposal_id,
-        user_profile: profileRecord,
+        user_profile: profileRecordForCache,
         cached: true,
         cache_type: 'request_hash',
       });
@@ -574,7 +601,7 @@ export class ProposalsService {
       return res.json({
         generated_proposal: generatedProposal,
         proposal_id: savedApp.id,
-        user_profile: profileRecord,
+        user_profile: profileRecordForCache,
         cached: false,
         meta: { model: MODEL, plan },
       });
