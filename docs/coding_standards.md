@@ -270,3 +270,19 @@ count++;
 - For long-running tasks (like Web Scraping or interacting with OpenAI), **never** process them synchronously during an HTTP request.
 - Always use **BullMQ** to send the task to a background worker.
 - Return a `202 Accepted` immediately, and use **Server-Sent Events (SSE)** via NestJS `@Sse()` to stream status updates to the Next.js client.
+
+---
+
+# 16. Senior Engineering Best Practices
+
+## 16.1 Next.js 15 (App Router)
+- **Suspense & Streaming:** Wrap slow asynchronous Server Components in `<Suspense>` boundaries. This ensures the rest of the page loads instantly while the heavy data (like fetching matches) streams in.
+- **Server Actions vs APIs:** Use Next.js Server Actions (`"use server"`) for simple client-to-server mutations (like form submissions). Use NestJS REST APIs for heavy business logic, cross-platform access, and webhooks.
+- **Tailwind Class Merging:** When passing dynamic Tailwind classes as props to UI components, always use a utility like `clsx` combined with `tailwind-merge` (commonly aliased as `cn()`) to prevent cascading CSS conflicts.
+- **Environment Safety:** Never expose secrets. Only prefix variables with `NEXT_PUBLIC_` if they absolutely must be read by the browser (e.g., Clerk Publishable Key).
+
+## 16.2 NestJS Backend
+- **Strict Payload Validation:** Configure the global `ValidationPipe` with `whitelist: true` and `forbidNonWhitelisted: true`. This automatically strips malicious or unexpected properties from incoming JSON payloads before they reach your controllers.
+- **Boot-Time Env Validation:** Validate your environment variables (using Zod or Joi) during the NestJS `ConfigModule` initialization. If `OPENAI_API_KEY` is missing, the server should crash *immediately on boot*, not hours later when a user clicks generate.
+- **Database Transactions:** When performing multi-step database writes (e.g., inserting a user AND creating their default persona), wrap them in a Drizzle ORM transaction (`db.transaction()`). If one step fails, the entire operation rolls back, preventing orphaned data.
+- **Stateless Services:** NestJS services are singletons by default. **Never** store request-specific data (like a `userId`) in a class-level variable, as it will leak across different users' concurrent requests.
