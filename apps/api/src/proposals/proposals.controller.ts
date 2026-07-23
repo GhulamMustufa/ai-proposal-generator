@@ -82,7 +82,7 @@ export class ProposalsController {
 
   @Post('enqueue')
   @UseGuards(ClerkAuthGuard)
-  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // Limit: 5 requests per hour (3,600,000ms) to protect OpenAI credits
+  @Throttle({ default: { limit: 50, ttl: 3600000 } }) // Limit: 50 requests per hour to protect OpenAI credits
   async enqueueProposal(@Req() req: any, @Body() body: any) {
     const userId = req.user.id;
     const { jobId, jobTitle, jobDescription, company, generationType, clientReferenceId } = body;

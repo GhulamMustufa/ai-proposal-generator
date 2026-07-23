@@ -60,6 +60,12 @@ export function JobCard({ job }: JobCardProps) {
         return;
       }
 
+      if (res.status === 429) {
+        toast.error("You are generating too fast. Please wait a moment.");
+        setLoading(false);
+        return;
+      }
+
       if (!res.ok) {
         throw new Error("Failed to enqueue job");
       }
@@ -221,23 +227,35 @@ export function JobCard({ job }: JobCardProps) {
               ✨ Generated {generationType === 'proposal' ? 'Proposal' : 'Cold Email'}
             </h4>
             <button
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(generatedProposal);
-                  toast.success('Copied to clipboard!');
-                } catch (err) {
-                  // Fallback for missing clipboard API or insecure context
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!generatedProposal) return;
+                
+                const fallbackCopy = () => {
                   const textArea = document.createElement("textarea");
                   textArea.value = generatedProposal;
+                  textArea.style.position = "fixed";
+                  textArea.style.left = "-999999px";
+                  textArea.style.top = "-999999px";
                   document.body.appendChild(textArea);
+                  textArea.focus();
                   textArea.select();
                   try {
                     document.execCommand("copy");
                     toast.success('Copied to clipboard!');
-                  } catch (e) {
+                  } catch (err) {
                     toast.error('Failed to copy. Please copy manually.');
                   }
                   textArea.remove();
+                };
+
+                if (navigator.clipboard && window.isSecureContext) {
+                  navigator.clipboard.writeText(generatedProposal)
+                    .then(() => toast.success('Copied to clipboard!'))
+                    .catch(() => fallbackCopy());
+                } else {
+                  fallbackCopy();
                 }
               }}
               className="text-xs px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors font-medium text-slate-700 dark:text-slate-300"

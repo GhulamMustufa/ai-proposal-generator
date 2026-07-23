@@ -56,6 +56,12 @@ export function ManualJobEntry() {
         return;
       }
 
+      if (res.status === 429) {
+        toast.error("You are generating too fast. Please wait a moment.");
+        setLoading(false);
+        return;
+      }
+
       if (!res.ok) {
         throw new Error("Failed to enqueue job");
       }
@@ -207,23 +213,35 @@ export function ManualJobEntry() {
                   Create Another
                 </button>
                 <button
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(generatedProposal);
-                      toast.success('Copied to clipboard!');
-                    } catch (err) {
-                      // Fallback for missing clipboard API or insecure context
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!generatedProposal) return;
+                    
+                    const fallbackCopy = () => {
                       const textArea = document.createElement("textarea");
                       textArea.value = generatedProposal;
+                      textArea.style.position = "fixed";
+                      textArea.style.left = "-999999px";
+                      textArea.style.top = "-999999px";
                       document.body.appendChild(textArea);
+                      textArea.focus();
                       textArea.select();
                       try {
                         document.execCommand("copy");
                         toast.success('Copied to clipboard!');
-                      } catch (e) {
+                      } catch (err) {
                         toast.error('Failed to copy. Please copy manually.');
                       }
                       textArea.remove();
+                    };
+
+                    if (navigator.clipboard && window.isSecureContext) {
+                      navigator.clipboard.writeText(generatedProposal)
+                        .then(() => toast.success('Copied to clipboard!'))
+                        .catch(() => fallbackCopy());
+                    } else {
+                      fallbackCopy();
                     }
                   }}
                   className="text-xs px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 hover:bg-indigo-500/20 dark:hover:bg-indigo-500/30 transition-colors font-medium border border-indigo-500/20"
