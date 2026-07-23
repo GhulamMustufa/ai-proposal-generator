@@ -1,39 +1,31 @@
-# Product Requirements Document (PRD)
+# Product Vision & Feature Roadmap
 
-## 1. Product Vision
-Applying to jobs is fundamentally broken. It requires hours of manually tailoring resumes and fighting with application portals, leading to engineer burnout. Our platform solves this by providing an AI agent that finds high-match jobs daily, generates a perfectly formatted custom PDF resume, and autonomously submits the application (or assists via a Chrome Extension).
+The AI Proposal Generator is an automated recruitment engine designed for freelancers and job-seekers. It aims to completely eliminate the manual labor of hunting for jobs and writing cover letters.
 
-## 2. Target Audience
-- Mid-level to Senior Software Engineers.
-- Primarily focused on remote roles or major tech hubs.
+## Target Audience
+- **Freelancers**: Looking for contract work on platforms like Upwork, Freelancer, and WWR.
+- **Job Seekers**: Applying to remote tech companies using Greenhouse and Lever.
+- **Agencies**: B2B agencies that need to scale their cold-email outreach for lead generation.
 
-## 3. User Stories & Core Flows
+## Monetization Strategy (Freemium Model)
+- **Free Tier**: Users can sign up and generate up to 3 proposals/cold emails. This acts as a trial to prove the value of the AI.
+- **Pro Tier**: Managed via Lemon Squeezy. Paid users get unlimited generations, unlocking the full power of the platform.
 
-### 3.1 Onboarding & Profiling
-- **As a user**, I want to upload my base resume PDF so the system can parse my skills, experience, and contact details automatically.
-- **As a user**, I want to review and edit my parsed JSON profile to ensure accuracy before the AI uses it.
+## Future Feature Roadmap (Upcoming)
 
-### 3.2 The Daily Digest
-- **As a user**, I want to receive an email every morning with the top 5 jobs that match my profile >85%.
-- **As a user**, I want to log into my dashboard and view a Kanban board of my matches (New, Approved, Applied, Rejected).
+When instructed by the user, AI agents should refer to these planned features for context during implementation:
 
-### 3.3 The One-Click Apply (Tier 1 ATS)
-- **As a user**, when I see a great match on Greenhouse or Lever, I want to click "Approve & Submit".
-- **As the system**, upon click, I will generate a tailored PDF resume and spin up a headless browser to submit the application entirely in the background.
+1. **The "Auto-Scrape & Match" Engine**
+   - A nightly cron job that scrapes public job boards, scores jobs based on the user's saved JSON profile, and generates a daily email digest of the top 5 matches.
 
-### 3.4 The Manual Assist (Tier 3 ATS)
-- **As a user**, when I browse LinkedIn or Workday manually, I want to click a Chrome Extension button to instantly generate a tailored cover letter and auto-fill the form fields.
+2. **Interactive "Swipe" Dashboard**
+   - A gamified UI where users can review their daily matches. Swipe right (or press `Enter`) to instantly generate a proposal; swipe left (or press `Backspace`) to discard the job.
 
-## 4. MVP Scope Boundaries
+3. **Dynamic PDF Resume Tailoring**
+   - The AI will not only write a cover letter but will actively rewrite the bullet points on the user's master resume to match the job description's keywords. It will output a beautifully formatted, downloadable PDF ready to submit.
 
-### INCLUDED (6-8 Week Sprint):
-- Ingestion Scrapers for 11 platforms (YC, Wellfound, Remotive, etc.).
-- Playwright Bots for 10 platforms (Greenhouse, Lever, Ashby, etc.).
-- Complex PDF rendering (`@react-pdf/renderer`).
-- Upgraded Manifest V3 Chrome Extension.
+4. **Chrome Extension Integration**
+   - A browser extension that allows users to generate proposals directly inside the text boxes of websites like LinkedIn, Indeed, or Upwork without switching tabs.
 
-### EXCLUDED (Phase 2 Roadmap):
-- Analytics and A/B Testing of resume performance.
-- Interview Prep Module (Mock interviews).
-- Cold Outreach Generator (finding recruiters on LinkedIn).
-- Proxy Networks for evading captchas (we rely on the Chrome Extension fallback instead).
+5. **Multi-Persona Management**
+   - Allowing agencies or multi-disciplinary freelancers to save multiple profiles (e.g., "React Developer" vs "UI Designer") and select which persona the AI should adopt when generating a pitch.

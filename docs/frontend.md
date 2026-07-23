@@ -1,38 +1,30 @@
-# Frontend Development Guide (`apps/web`)
+# Frontend Documentation
 
-## 1. Tech Stack
-- Next.js 15 (App Router)
-- React 18+ (Server Components by default)
-- Tailwind CSS v3+
-- `shadcn/ui` (Radix UI primitives)
-- Lucide React (Icons)
+The frontend (`apps/web`) is built with **Next.js (App Router)** and prioritizes a highly aesthetic, premium, and responsive user experience.
 
-## 2. Directory Structure
-```text
-apps/web/
-  src/
-    app/              # Next.js App Router (pages, layouts, API proxies)
-    components/
-      ui/             # shadcn reusable primitives (buttons, inputs)
-      layout/         # Navbar, Sidebar, Footers
-      features/       # Complex components mapped to business logic
-    hooks/            # Custom React hooks (e.g., useUser, useJobs)
-    lib/              # Utility functions (cn, formatters)
-    types/            # Frontend-specific types (or imported from packages/shared)
-```
+## Design Philosophy & Aesthetics
+As an AI SaaS targeting professionals, the UI must feel "expensive" and dynamic.
+- **Glassmorphism**: Use translucent backgrounds (`bg-black/40`), heavy blurring (`backdrop-blur-md`), and subtle inner borders (`border-white/10`).
+- **Animations**: Implement micro-interactions on hover (scale, glow effects, opacity shifts). Loading states should use pulsing gradients or skeleton loaders.
+- **Colors**: Avoid plain HTML colors. Use highly curated palettes (e.g., Indigo, Emerald, Slate). Rely heavily on dark mode defaults for a modern "hacker/developer" vibe.
+- **Icons**: Use crisp, modern icons (e.g., Lucide React).
 
-## 3. Data Fetching
-- **Server Components:** Prefer fetching data directly in Server Components using native `fetch` (with appropriate Next.js caching/revalidation strategies) or Supabase server-side clients.
-- **Client Components:** For highly interactive data (like polling a queue status), use React Query (`@tanstack/react-query`) or SWR.
+## Key Components
 
-## 4. Styling Conventions
-- Utility-first CSS using Tailwind.
-- Avoid writing custom CSS in `.css` files unless absolutely necessary (e.g., specific animations).
-- Use the `cn()` utility (clsx + tailwind-merge) for dynamic class names:
-  ```tsx
-  <div className={cn("base-classes", isTrue && "conditional-classes")} />
-  ```
+### `JobCard` (`src/components/dashboard/job-card.tsx`)
+- Renders an individual scraped job.
+- **Core Logic**: Manages local state for generating a proposal vs. a cold email. Uses the `EventSource` API to listen to the NestJS backend for real-time completion.
+- **Error Handling**: Gracefully handles `429 Too Many Requests` (Rate Limiting) and `403 Forbidden` (Paywall) with `react-hot-toast` notifications.
 
-## 5. Security & Env Variables
-- Never expose API keys prefixed with `NEXT_PUBLIC_` unless they are explicitly meant for the browser (e.g., Supabase Anon Key).
-- All requests to `apps/api` should securely pass the user's Supabase session token in the Authorization header.
+### `ManualJobEntry` (`src/components/dashboard/manual-job-entry.tsx`)
+- Allows users to paste a job description from anywhere on the internet.
+- **Core Logic**: Generates a local `clientReferenceId` via `crypto.randomUUID()` before calling the backend. It uses this UUID to filter the incoming SSE stream, ensuring the generated text is injected into the correct component instance.
+
+## State Management
+- Prefer localized React state (`useState`, `useReducer`) over global state managers (like Redux) where possible.
+- Use Next.js Server Components for initial data fetching to reduce client bundle size, passing the data as props to Client Components (`"use client"`) that handle the interactivity.
+
+## Authentication
+- Clerk handles all authentication via `<ClerkProvider>` in `layout.tsx`.
+- The Next.js `middleware.ts` automatically protects `/dashboard` and redirects unauthenticated users to the sign-in page.
+- Client components use `useAuth()` to retrieve the `getToken()` function, which is then passed as a Bearer token to the NestJS backend.

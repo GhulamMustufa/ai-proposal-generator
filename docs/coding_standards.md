@@ -248,3 +248,25 @@ count++;
 // Retry counter incremented to ensure we don't spam the API during a rate limit
 count++;
 ```
+
+---
+
+# 14. Error Handling & Edge Cases
+
+## 14.1 Backend (NestJS)
+- Never throw generic `Error` objects directly to the client unless caught and mapped.
+- Always log errors using the `Logger` service before throwing them.
+- Use NestJS built-in exceptions (`HttpException`, `UnauthorizedException`) for correct status codes.
+
+## 14.2 Frontend (Next.js)
+- Wrap API calls in `try/catch` blocks.
+- Display user-friendly error messages using `react-hot-toast`.
+- Handle potential `null` or `undefined` values safely using optional chaining (`?.`) and nullish coalescing (`??`).
+
+---
+
+# 15. Asynchronous Programming & SSE
+
+- For long-running tasks (like Web Scraping or interacting with OpenAI), **never** process them synchronously during an HTTP request.
+- Always use **BullMQ** to send the task to a background worker.
+- Return a `202 Accepted` immediately, and use **Server-Sent Events (SSE)** via NestJS `@Sse()` to stream status updates to the Next.js client.
