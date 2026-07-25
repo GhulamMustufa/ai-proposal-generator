@@ -8,6 +8,9 @@ import { ListView } from "@/components/dashboard/list-view";
 import { SyncButton } from "@/components/dashboard/sync-button";
 import { PersonaFilter } from "@/components/dashboard/persona-filter";
 
+// Global cache to prevent refetching jobs when switching back to a persona
+const jobsCache: Record<string, any[]> = {};
+
 export default function DashboardPage() {
   const { userId, getToken } = useAuth();
   const router = useRouter();
@@ -25,6 +28,15 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchJobs = async (personaId?: string) => {
+    if (!personaId) return;
+
+    // Check cache first for instantaneous loading
+    if (jobsCache[personaId]) {
+      setJobs(jobsCache[personaId]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const token = await getToken();
@@ -32,9 +44,7 @@ export default function DashboardPage() {
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
       const url = new URL(`${apiUrl}/api/jobs`);
-      if (personaId) {
-        url.searchParams.append("personaId", personaId);
-      }
+      url.searchParams.append("personaId", personaId);
       url.searchParams.append("statuses", "pending,accepted,rejected,generated");
 
       const res = await fetch(url.toString(), {
@@ -46,6 +56,9 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error("Failed to fetch jobs");
 
       const data = await res.json();
+      
+      // Save to cache and state
+      jobsCache[personaId] = data;
       setJobs(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -127,11 +140,23 @@ export default function DashboardPage() {
           <PersonaFilter />
         </div>
 
-        <div className="relative min-h-[600px] w-full max-w-4xl mx-auto flex items-center justify-center">
+        <div className="relative min-h-[600px] w-full max-w-4xl mx-auto">
           {loading ? (
-            <div className="flex flex-col items-center gap-4 py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600"></div>
-              <p className="text-sm font-medium text-slate-500">Loading matches...</p>
+            <div className="w-full space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="animate-pulse flex flex-col md:flex-row gap-4 p-6 rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02]">
+                  <div className="flex-1 space-y-4">
+                    <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/4"></div>
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                    <div className="flex gap-2 pt-2">
+                      <div className="h-6 w-16 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                      <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                    </div>
+                  </div>
+                  <div className="w-full md:w-32 h-10 bg-slate-200 dark:bg-slate-700 rounded-xl mt-auto md:mt-0"></div>
+                </div>
+              ))}
             </div>
           ) : error ? (
             <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">{error}</div>
@@ -151,12 +176,21 @@ export default function DashboardPage() {
               </Link>
             </div>
           ) : jobs.length === 0 ? (
-            <div className="text-center rounded-2xl border border-slate-200 border-dashed bg-white/50 p-12 dark:border-white/10 dark:bg-black/20 w-full">
-              <p className="text-slate-500">No jobs found for this persona. Try syncing latest jobs.</p>
+            <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-slate-200 border-dashed bg-white/50 py-24 px-12 dark:border-white/10 dark:bg-black/20 w-full">
+              <div className="h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center mb-6">
+                <svg className="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium text-slate-900 dark:text-white mb-2">No Jobs Found Yet</h3>
+              <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-8">
+                Your AI hasn't found any matching jobs for this Persona yet. Click the button below to start scanning Upwork for high-quality leads.
+              </p>
+              <SyncButton />
             </div>
           ) : (
             <div className="w-full">
-              <ListView jobs={jobs} />
+              <ListView jobs={jobs} updateJobStatus={updateJobStatus} />
             </div>
           )}
         </div>

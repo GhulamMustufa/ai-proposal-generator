@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { PersonaForm } from "@/components/personas/persona-form";
 import { toast } from "@/lib/toast";
+import { BUILT_IN_PERSONAS } from "@/lib/built-in-personas";
 
 export default function PersonasPage() {
   const { getToken } = useAuth();
@@ -76,6 +77,15 @@ export default function PersonasPage() {
         </button>
       </div>
 
+      <div className="mb-8 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 flex gap-3 text-blue-800 dark:text-blue-300">
+        <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p className="text-sm leading-relaxed">
+          <strong>Note:</strong> Whether you create a new schema from scratch or use a built-in template below, the AI will use your selected schema to automatically filter and score job matches. Be sure to customize your resume text for the best personalized AI proposals!
+        </p>
+      </div>
+
       {showForm && (
         <div className="mb-8">
           <PersonaForm 
@@ -90,7 +100,22 @@ export default function PersonasPage() {
       )}
 
       {loading ? (
-        <div className="text-center text-slate-500 py-12 animate-pulse">Loading personas...</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/[0.02] p-6 shadow-sm">
+              <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-2/3 mb-5"></div>
+              <div className="flex gap-2 mb-6">
+                <div className="h-5 w-16 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                <div className="h-5 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                <div className="h-5 w-12 bg-slate-200 dark:bg-slate-700 rounded"></div>
+              </div>
+              <div className="space-y-3 mb-6">
+                <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : personas.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-slate-300 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-white/[0.02]">
           <p className="text-slate-500 dark:text-slate-400">You haven't created any personas yet.</p>
@@ -142,6 +167,54 @@ export default function PersonasPage() {
           ))}
         </div>
       )}
+
+      {/* Built-in Templates Section */}
+      <div className="mt-16">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Template Library</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Need a starting point? Select a template below to quickly create a highly optimized persona schema.
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {BUILT_IN_PERSONAS.map(template => (
+            <div 
+              key={template.id} 
+              className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/[0.01] p-6 hover:bg-white dark:hover:bg-white/[0.03] hover:border-indigo-500/30 hover:shadow-lg transition cursor-pointer flex flex-col justify-between"
+              onClick={() => {
+                // Remove the template ID so it creates a NEW persona when saved
+                const { id, ...templateData } = template;
+                setEditingPersona(templateData);
+                setShowForm(true);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            >
+              <div>
+                <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">{template.name}</h3>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {template.skills.slice(0, 4).map(s => (
+                    <span key={s} className="text-[10px] px-2 py-0.5 bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300 rounded">
+                      {s}
+                    </span>
+                  ))}
+                  {template.skills.length > 4 && (
+                    <span className="text-[10px] px-2 py-0.5 text-slate-500">
+                      +{template.skills.length - 4} more
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="mt-6 flex items-center justify-between text-xs text-slate-500">
+                <span>{template.yearsOfExperience} yrs exp</span>
+                <span className="font-medium text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Use Template &rarr;
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

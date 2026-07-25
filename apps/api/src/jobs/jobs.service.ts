@@ -38,6 +38,7 @@ export class JobsService {
           platform: jobs.platform,
           matchScore: aiMatches.matchScore,
           matchReasoning: aiMatches.matchReasoning,
+          status: aiMatches.status,
           scrapedAt: jobs.scrapedAt,
           createdAt: aiMatches.createdAt,
           hasApplication: sql<boolean>`EXISTS (SELECT 1 FROM applications WHERE applications.job_id = ${jobs.id} AND applications.user_id = ${userId})`.mapWith(Boolean),
@@ -48,6 +49,7 @@ export class JobsService {
           and(
             eq(aiMatches.userId, userId),
             gte(aiMatches.createdAt, thirtyDaysAgo),
+            gte(aiMatches.matchScore, 50),
             statuses && statuses.length > 0 ? inArray(aiMatches.status, statuses) : undefined,
             personaId ? eq(aiMatches.personaId, personaId) : undefined
           ),

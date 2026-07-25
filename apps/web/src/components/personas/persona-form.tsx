@@ -4,6 +4,8 @@ import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { TagsInput } from "./tags-input";
+import { SUGGESTED_SKILLS, SUGGESTED_COMPANIES } from "@/lib/constants";
 
 type Persona = {
   id: string;
@@ -12,6 +14,7 @@ type Persona = {
   idealSalary: string;
   yearsOfExperience: number;
   resumeText: string;
+  dreamCompanies?: string[];
 };
 
 type PersonaFormProps = {
@@ -25,10 +28,11 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
   const router = useRouter();
   
   const [name, setName] = useState(initialData?.name || "");
-  const [skillsStr, setSkillsStr] = useState(initialData?.skills?.join(", ") || "");
+  const [skills, setSkills] = useState<string[]>(initialData?.skills || []);
   const [idealSalary, setIdealSalary] = useState(initialData?.idealSalary || "");
   const [yearsOfExperience, setYearsOfExperience] = useState<number | "">(initialData?.yearsOfExperience || "");
   const [resumeText, setResumeText] = useState(initialData?.resumeText || "");
+  const [dreamCompanies, setDreamCompanies] = useState<string[]>(initialData?.dreamCompanies || []);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -45,10 +49,11 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
       
       const payload = {
         name: name.trim(),
-        skills: skillsStr.split(",").map(s => s.trim()).filter(Boolean),
+        skills,
         idealSalary: idealSalary.trim() || undefined,
         yearsOfExperience: typeof yearsOfExperience === 'number' ? yearsOfExperience : undefined,
         resumeText: resumeText.trim() || undefined,
+        dreamCompanies,
       };
 
       const res = await fetch(
@@ -99,18 +104,33 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
 
       <div>
         <label htmlFor="persona-skills" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-          Skills (comma separated)
+          Skills
         </label>
-        <input
-          id="persona-skills"
-          type="text"
-          value={skillsStr}
-          onChange={e => setSkillsStr(e.target.value)}
+        <TagsInput
+          value={skills}
+          onChange={setSkills}
+          suggestions={SUGGESTED_SKILLS}
           placeholder="e.g. React, TypeScript, Node.js"
-          className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          theme="amber"
         />
         <p className="mt-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-          CRITICAL: The AI automatically rejects jobs that don't mention at least 3 of these skills. List your core technologies.
+          CRITICAL: The AI automatically rejects jobs that don't mention at least 5 of these skills. List your core technologies.
+        </p>
+      </div>
+
+      <div>
+        <label htmlFor="persona-dream-companies" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+          Target Companies
+        </label>
+        <TagsInput 
+          value={dreamCompanies} 
+          onChange={setDreamCompanies} 
+          suggestions={SUGGESTED_COMPANIES}
+          placeholder="e.g. Stripe, Vercel, OpenAI"
+          theme="indigo"
+        />
+        <p className="mt-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
+          Jobs matching any of these target companies will get a massive score boost. Supports regex intelligently.
         </p>
       </div>
 

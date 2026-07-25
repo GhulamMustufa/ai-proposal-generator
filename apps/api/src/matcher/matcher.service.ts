@@ -75,7 +75,7 @@ export class MatcherService {
             return regex.test(jobText);
           });
 
-          if (matchedSkills.length < 3) {
+          if (matchedSkills.length < 5) {
             hasKeywordMatch = false;
             this.logger.debug(
               `Job ${job.id} filtered out for persona ${persona.personaId}. Only matched ${matchedSkills.length} skills. Skipping OpenAI.`,
@@ -87,7 +87,7 @@ export class MatcherService {
               jobId: job.id,
               matchScore: 0,
               matchReasoning:
-                'Filtered out by keyword check. Job description does not contain at least 3 of your core skills.',
+                'Filtered out by keyword check. Job description does not contain at least 5 of your core skills.',
             });
             continue;
           }
@@ -172,11 +172,23 @@ Output MUST be exactly in this JSON format:
     if (finalScore >= 75) {
       const companyStr = job.company?.toLowerCase() || '';
       const titleStr = job.title?.toLowerCase() || '';
-      const isTargetCompany = TARGET_COMPANIES.some(
-        (tc) =>
-          companyStr.includes(tc.toLowerCase()) ||
-          titleStr.includes(tc.toLowerCase()),
-      );
+      
+      const dreamCompanies = Array.isArray(persona.dreamCompanies) ? persona.dreamCompanies : [];
+      let isTargetCompany = false;
+      
+      for (const tc of dreamCompanies) {
+        if (!tc || typeof tc !== 'string') continue;
+        const tcStr = tc.toLowerCase();
+        // Use word boundary regex to avoid matching "Pineapple" when searching for "Apple"
+        let pattern = tcStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        pattern = pattern.replace(/[- ]/g, '[- ]?');
+        const regex = new RegExp(`\\b${pattern}\\b`, 'i');
+        
+        if (regex.test(companyStr) || regex.test(titleStr)) {
+          isTargetCompany = true;
+          break;
+        }
+      }
 
       if (isTargetCompany) {
         finalScore = Math.min(100, finalScore + 15);
@@ -256,7 +268,7 @@ Output MUST be exactly in this JSON format:
             return regex.test(jobText);
           });
 
-          if (matchedSkills.length < 3) {
+          if (matchedSkills.length < 5) {
             hasKeywordMatch = false;
           }
         }
@@ -268,7 +280,7 @@ Output MUST be exactly in this JSON format:
             jobId: job.id,
             matchScore: 0,
             matchReasoning:
-              'Filtered out by keyword check. Job description does not contain at least 3 of your core skills.',
+              'Filtered out by keyword check. Job description does not contain at least 5 of your core skills.',
           });
           continue;
         }

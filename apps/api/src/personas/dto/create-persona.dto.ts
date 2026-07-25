@@ -11,6 +11,11 @@ export class CreatePersonaDto {
   skills?: string[];
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  dreamCompanies?: string[];
+
+  @IsOptional()
   @IsString()
   idealSalary?: string;
 

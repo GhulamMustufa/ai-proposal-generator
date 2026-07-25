@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/lib/toast";
-import { usePersonas } from "@/hooks/use-personas";
 
 type JobCardProps = {
   job: any;
+  updateJobStatus: (id: string, status: string) => void;
 };
 
-export function JobCard({ job }: JobCardProps) {
+export function JobCard({ job, updateJobStatus }: JobCardProps) {
   const { getToken, userId } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -18,11 +18,11 @@ export function JobCard({ job }: JobCardProps) {
   const [generationType, setGenerationType] = useState<'proposal' | 'cold_email'>('proposal');
   const [generatedProposal, setGeneratedProposal] = useState<string | null>(null);
   
-  const { personas, loading: loadingPersonas } = usePersonas();
-  const [selectedPersonaId, setSelectedPersonaId] = useState<string>("");
+  const searchParams = useSearchParams();
+  const activePersonaId = searchParams.get("personaId");
 
-  const isElite = job.matchScore >= 90;
-  const isGood = job.matchScore >= 80 && job.matchScore < 90;
+  const isElite = job.matchScore >= 85;
+  const isGood = job.matchScore >= 70 && job.matchScore < 85;
   
   const scoreColor = isElite 
     ? "text-emerald-600 dark:text-emerald-400" 
@@ -54,7 +54,7 @@ export function JobCard({ job }: JobCardProps) {
           jobDescription: job.description,
           company: job.company,
           generationType,
-          personaId: selectedPersonaId || undefined,
+          personaId: activePersonaId || undefined,
         })
       });
 
@@ -117,9 +117,9 @@ export function JobCard({ job }: JobCardProps) {
 
   return (
     <div 
-      className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-6 transition-all duration-300 hover:border-slate-300 dark:hover:border-white/10 hover:bg-slate-50 dark:hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-indigo-500/5"
+      className="group relative rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-6 transition-all duration-300 hover:border-slate-300 dark:hover:border-white/10 hover:bg-slate-50 dark:hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-indigo-500/5"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-100/50 dark:from-white/[0.03] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-100/50 dark:from-white/[0.03] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 rounded-2xl" />
       
       <div className="relative flex flex-col md:flex-row md:items-start md:justify-between gap-6">
         
@@ -180,18 +180,7 @@ export function JobCard({ job }: JobCardProps) {
               View Job
             </a>
             
-            {personas.length > 0 && !loading && !generated && !job.hasApplication && (
-              <select
-                value={selectedPersonaId}
-                onChange={(e) => setSelectedPersonaId(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 px-4 py-2 text-xs text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors mb-2"
-              >
-                <option value="">-- No Persona --</option>
-                {personas.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            )}
+
 
             {!loading && !generated && !job.hasApplication && (
               <div className="flex items-center justify-center gap-1 mb-2 p-1 bg-slate-100 dark:bg-black/40 rounded-xl border border-slate-200 dark:border-white/5">
@@ -227,11 +216,31 @@ export function JobCard({ job }: JobCardProps) {
             ) : (
               <button 
                 onClick={handleGenerate}
-                className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-400 shadow-lg shadow-indigo-500/25"
+                className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-400 shadow-lg shadow-indigo-500/25 w-full"
               >
                 Generate ✨
               </button>
             )}
+
+            {/* Status Actions */}
+            <div className="flex items-center gap-2 mt-2">
+              {job.status !== 'accepted' && (
+                <button
+                  onClick={() => updateJobStatus(job.id, 'accepted')}
+                  className="flex-1 inline-flex items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-400 transition hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/20"
+                >
+                  ⭐ Save
+                </button>
+              )}
+              {job.status !== 'rejected' && (
+                <button
+                  onClick={() => updateJobStatus(job.id, 'rejected')}
+                  className="flex-1 inline-flex items-center justify-center rounded-lg bg-rose-50 dark:bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-700 dark:text-rose-400 transition hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/20"
+                >
+                  🗑️ Hide
+                </button>
+              )}
+            </div>
           </div>
         </div>
         
