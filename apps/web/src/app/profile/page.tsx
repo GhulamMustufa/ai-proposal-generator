@@ -78,7 +78,8 @@ export default function ProfilePage() {
     if (isLoaded) {
       fetchProfile();
     }
-  }, [isLoaded, isSignedIn, getToken]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, isSignedIn]);
 
   function handleRegionToggle(region: string) {
     setFilters(prev => {

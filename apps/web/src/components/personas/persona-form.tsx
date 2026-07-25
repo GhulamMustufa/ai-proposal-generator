@@ -92,6 +92,9 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
           required
           className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
+        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+          The AI uses this title as the main context for evaluating job fit.
+        </p>
       </div>
 
       <div>
@@ -106,6 +109,9 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
           placeholder="e.g. React, TypeScript, Node.js"
           className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
+        <p className="mt-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+          CRITICAL: The AI automatically rejects jobs that don't mention at least 3 of these skills. List your core technologies.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -113,42 +119,65 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
           <label htmlFor="persona-ideal-salary" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
             Ideal Salary
           </label>
-          <input
+          <select
             id="persona-ideal-salary"
-            type="text"
             value={idealSalary}
             onChange={e => setIdealSalary(e.target.value)}
-            placeholder="e.g. $120,000/yr"
             className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
+          >
+            <option value="">Select Salary Range</option>
+            <option value="<$50,000/yr">&lt;$50,000/yr</option>
+            <option value="$50,000 - $75,000/yr">$50,000 - $75,000/yr</option>
+            <option value="$75,000 - $100,000/yr">$75,000 - $100,000/yr</option>
+            <option value="$100,000 - $150,000/yr">$100,000 - $150,000/yr</option>
+            <option value="$150,000 - $200,000/yr">$150,000 - $200,000/yr</option>
+            <option value="$200,000+/yr">$200,000+/yr</option>
+          </select>
+          <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+            Helps the AI score budget fit.
+          </p>
         </div>
         <div>
           <label htmlFor="persona-experience" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
             Years of Experience
           </label>
-          <input
+          <select
             id="persona-experience"
-            type="number"
             value={yearsOfExperience}
             onChange={e => setYearsOfExperience(e.target.value === "" ? "" : Number(e.target.value))}
-            placeholder="e.g. 5"
             className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
+          >
+            <option value="">Select Experience</option>
+            <option value={0}>Less than 1 year</option>
+            <option value={1}>1 year</option>
+            <option value={2}>2 years</option>
+            <option value={3}>3 years</option>
+            <option value={4}>4 years</option>
+            <option value={5}>5+ years</option>
+            <option value={10}>10+ years</option>
+            <option value={15}>15+ years</option>
+          </select>
+          <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+            Helps the AI avoid jobs where you are overqualified or underqualified.
+          </p>
         </div>
       </div>
 
       <div>
         <label htmlFor="persona-resume" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-          Resume Details / Base Cover Letter
+          Professional Bio / Background
         </label>
         <textarea
           id="persona-resume"
           value={resumeText}
           onChange={e => setResumeText(e.target.value)}
-          placeholder="Paste your base resume or generic cover letter here..."
+          placeholder="Paste a short bio, your background story, or a base resume..."
           rows={6}
           className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-y"
         />
+        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+          The AI uses this to judge deep role fit, and relies on it heavily to write your highly personalized proposals.
+        </p>
       </div>
 
       <div className="flex justify-end gap-3 pt-2">

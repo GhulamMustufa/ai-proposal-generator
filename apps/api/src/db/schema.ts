@@ -67,6 +67,7 @@ export const aiMatches = pgTable('ai_matches', {
     .notNull(),
   matchScore: integer('match_score').notNull(),
   matchReasoning: text('match_reasoning'),
+  status: text('status').default('pending').notNull(), // 'pending', 'rejected', 'accepted'
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

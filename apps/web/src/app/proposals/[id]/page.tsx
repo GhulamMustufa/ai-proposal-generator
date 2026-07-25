@@ -47,7 +47,8 @@ export default function ProposalEditorPage({ params }: { params: Promise<{ id: s
     }
     
     loadProposal();
-  }, [id, getToken]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   async function handleSave() {
     setSaving(true);
