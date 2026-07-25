@@ -25,7 +25,8 @@ export const userProfiles = pgTable('user_profiles', {
     .notNull(),
   contactDetails: jsonb('contact_details'), // { firstName, lastName, phone, linkedin }
   skills: jsonb('skills'), // Array of strings
-  jobFilters: jsonb('job_filters'), // Advanced job filtering preferences
+  apiKeys: jsonb('api_keys'), // { openai: string, anthropic: string }
+  defaultPersonaId: uuid('default_persona_id'),
   resumeText: text('resume_text'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -49,6 +50,7 @@ export const personas = pgTable('personas', {
   name: text('name').notNull(), // e.g. "Senior React Developer"
   skills: jsonb('skills'), // Array of strings
   dreamCompanies: jsonb('dream_companies'), // Array of strings (target companies)
+  jobFilters: jsonb('job_filters'), // Advanced job filtering preferences
   idealSalary: text('ideal_salary'),
   yearsOfExperience: integer('years_of_experience'),
   resumeText: text('resume_text'),

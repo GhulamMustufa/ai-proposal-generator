@@ -13,17 +13,17 @@ export class ProfileController {
     return this.profileService.getProfile(userId);
   }
 
-  @Put('filters')
+  @Put('api-keys')
   @UseGuards(ClerkAuthGuard)
-  async updateJobFilters(@Req() req: any, @Body() body: any) {
+  async updateApiKeys(@Req() req: any, @Body() body: any) {
     const userId = req.user.id;
-    return this.profileService.updateJobFilters(userId, body.jobFilters);
+    return this.profileService.updateApiKeys(userId, body.apiKeys);
   }
 
-  @Put('skills')
+  @Put('default-persona')
   @UseGuards(ClerkAuthGuard)
-  async updateSkills(@Req() req: any, @Body() body: any) {
+  async updateDefaultPersona(@Req() req: any, @Body() body: any) {
     const userId = req.user.id;
-    return this.profileService.updateSkills(userId, body.skills);
+    return this.profileService.updateDefaultPersona(userId, body.defaultPersonaId);
   }
 }

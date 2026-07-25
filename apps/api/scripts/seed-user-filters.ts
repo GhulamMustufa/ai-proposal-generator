@@ -53,22 +53,23 @@ async function run() {
     ]
   };
 
-  // Check if profile exists
-  const profiles = await db.select().from(userProfiles).where(eq(userProfiles.userId, user.id));
+  // Check if persona exists
+  const userPersonas = await db.select().from(require('../src/db/schema').personas).where(eq(require('../src/db/schema').personas.userId, user.id));
   
-  if (profiles.length > 0) {
-    await db.update(userProfiles)
+  if (userPersonas.length > 0) {
+    await db.update(require('../src/db/schema').personas)
       .set({ jobFilters: filters })
-      .where(eq(userProfiles.userId, user.id));
-    console.log('Updated existing profile with filters!');
+      .where(eq(require('../src/db/schema').personas.userId, user.id));
+    console.log('Updated existing persona with filters!');
   } else {
     // We should also set dummy skills so it passes the pre-filter length check
-    await db.insert(userProfiles).values({
+    await db.insert(require('../src/db/schema').personas).values({
       userId: user.id,
+      name: "Default Persona",
       jobFilters: filters,
       skills: ["React", "Node", "TypeScript", "Next.js", "AI", "PostgreSQL", "JavaScript", "Frontend", "Backend", "Fullstack"]
     });
-    console.log('Created new profile with filters and dummy skills!');
+    console.log('Created new persona with filters and dummy skills!');
   }
 
   process.exit(0);

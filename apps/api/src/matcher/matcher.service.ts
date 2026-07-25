@@ -49,6 +49,8 @@ export class MatcherService {
         idealSalary: personas.idealSalary,
         yearsOfExperience: personas.yearsOfExperience,
         resumeText: personas.resumeText,
+        jobFilters: personas.jobFilters,
+        dreamCompanies: personas.dreamCompanies,
       })
       .from(personas)
       .where(isNotNull(personas.skills));
@@ -127,6 +129,9 @@ ${skillsText}
 
 USER RESUME EXTRACT:
 ${persona.resumeText || 'No resume text provided.'}
+
+JOB FILTERS (STRICT REQUIREMENTS):
+${persona.jobFilters ? JSON.stringify(persona.jobFilters, null, 2) : 'No strict filters specified.'}
 
 JOB DESCRIPTION:
 Title: ${job.title}
@@ -225,6 +230,8 @@ Output MUST be exactly in this JSON format:
         idealSalary: personas.idealSalary,
         yearsOfExperience: personas.yearsOfExperience,
         resumeText: personas.resumeText,
+        jobFilters: personas.jobFilters,
+        dreamCompanies: personas.dreamCompanies,
       })
       .from(personas)
       .where(eq(personas.id, personaId))

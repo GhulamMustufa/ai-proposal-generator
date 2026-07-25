@@ -15,6 +15,7 @@ type Persona = {
   yearsOfExperience: number;
   resumeText: string;
   dreamCompanies?: string[];
+  jobFilters?: any;
 };
 
 type PersonaFormProps = {
@@ -22,6 +23,12 @@ type PersonaFormProps = {
   onSuccess?: () => void;
   onCancel?: () => void;
 };
+
+const REGIONS = ["Remote Worldwide", "United States", "Europe", "Middle East", "Asia"];
+const EMPLOYMENT_TYPES = ["Full-Time (W2)", "Contract", "Freelance/1099", "Part-Time"];
+const EXPERIENCE_LEVELS = ["Junior (0-2y)", "Mid-Level (3-5y)", "Senior (6-9y)", "Staff/Lead (10y+)"];
+const COMPANY_SIZES = ["Early-stage Startup (1-50)", "Mid-size (51-500)", "Enterprise (500+)"];
+const INDUSTRIES = ["FinTech / Crypto", "Healthcare / MedTech", "E-Commerce", "AI / Machine Learning", "SaaS / B2B", "Developer Tools"];
 
 export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormProps) {
   const { getToken } = useAuth();
@@ -33,7 +40,28 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
   const [yearsOfExperience, setYearsOfExperience] = useState<number | "">(initialData?.yearsOfExperience || "");
   const [resumeText, setResumeText] = useState(initialData?.resumeText || "");
   const [dreamCompanies, setDreamCompanies] = useState<string[]>(initialData?.dreamCompanies || []);
+  const [jobFilters, setJobFilters] = useState<any>(initialData?.jobFilters || {
+    targetRegions: [],
+    employmentTypes: [],
+    experienceLevels: [],
+    companySizes: [],
+    industries: [],
+    salaryFloor: "",
+  });
   const [loading, setLoading] = useState(false);
+
+  function handleFilterToggle(field: string, value: string) {
+    setJobFilters((prev: any) => {
+      const current = prev[field] || [];
+      const isSelected = current.includes(value);
+      return {
+        ...prev,
+        [field]: isSelected 
+          ? current.filter((item: string) => item !== value)
+          : [...current, value]
+      };
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,6 +82,7 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
         yearsOfExperience: typeof yearsOfExperience === 'number' ? yearsOfExperience : undefined,
         resumeText: resumeText.trim() || undefined,
         dreamCompanies,
+        jobFilters,
       };
 
       const res = await fetch(
@@ -180,6 +209,143 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
           <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
             Helps the AI avoid jobs where you are overqualified or underqualified.
           </p>
+        </div>
+      </div>
+
+      <div className="pt-4 pb-2">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-white/10 pb-2">Job Match Filters</h3>
+        
+        {/* Target Regions */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Target Regions</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {REGIONS.map(region => (
+              <label key={region} onClick={() => handleFilterToggle('targetRegions', region)} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border transition-all ${
+                jobFilters.targetRegions?.includes(region) 
+                  ? "border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/10" 
+                  : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5"
+              }`}>
+                <div className={`w-4 h-4 rounded flex items-center justify-center border ${
+                  jobFilters.targetRegions?.includes(region) ? "bg-emerald-500 border-emerald-500" : "border-slate-300 dark:border-white/20"
+                }`}>
+                  {jobFilters.targetRegions?.includes(region) && (
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  )}
+                </div>
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{region}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Employment Types */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Employment Types</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            {EMPLOYMENT_TYPES.map(type => (
+              <label key={type} onClick={() => handleFilterToggle('employmentTypes', type)} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border transition-all ${
+                jobFilters.employmentTypes?.includes(type) 
+                  ? "border-indigo-500/50 bg-indigo-50 dark:bg-indigo-500/10" 
+                  : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5"
+              }`}>
+                <div className={`w-4 h-4 rounded flex items-center justify-center border ${
+                  jobFilters.employmentTypes?.includes(type) ? "bg-indigo-500 border-indigo-500" : "border-slate-300 dark:border-white/20"
+                }`}>
+                  {jobFilters.employmentTypes?.includes(type) && (
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  )}
+                </div>
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{type}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Experience Levels */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Experience Levels</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {EXPERIENCE_LEVELS.map(level => (
+              <label key={level} onClick={() => handleFilterToggle('experienceLevels', level)} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border transition-all ${
+                jobFilters.experienceLevels?.includes(level) 
+                  ? "border-amber-500/50 bg-amber-50 dark:bg-amber-500/10" 
+                  : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5"
+              }`}>
+                <div className={`w-4 h-4 rounded flex items-center justify-center border ${
+                  jobFilters.experienceLevels?.includes(level) ? "bg-amber-500 border-amber-500" : "border-slate-300 dark:border-white/20"
+                }`}>
+                  {jobFilters.experienceLevels?.includes(level) && (
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  )}
+                </div>
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{level}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Company Sizes */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Company Sizes</label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {COMPANY_SIZES.map(size => (
+              <label key={size} onClick={() => handleFilterToggle('companySizes', size)} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border transition-all ${
+                jobFilters.companySizes?.includes(size) 
+                  ? "border-sky-500/50 bg-sky-50 dark:bg-sky-500/10" 
+                  : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5"
+              }`}>
+                <div className={`w-4 h-4 rounded flex items-center justify-center border ${
+                  jobFilters.companySizes?.includes(size) ? "bg-sky-500 border-sky-500" : "border-slate-300 dark:border-white/20"
+                }`}>
+                  {jobFilters.companySizes?.includes(size) && (
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  )}
+                </div>
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{size}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Industries */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Industries</label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {INDUSTRIES.map(ind => (
+              <label key={ind} onClick={() => handleFilterToggle('industries', ind)} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border transition-all ${
+                jobFilters.industries?.includes(ind) 
+                  ? "border-fuchsia-500/50 bg-fuchsia-50 dark:bg-fuchsia-500/10" 
+                  : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5"
+              }`}>
+                <div className={`w-4 h-4 rounded flex items-center justify-center border ${
+                  jobFilters.industries?.includes(ind) ? "bg-fuchsia-500 border-fuchsia-500" : "border-slate-300 dark:border-white/20"
+                }`}>
+                  {jobFilters.industries?.includes(ind) && (
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  )}
+                </div>
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{ind}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Salary Floor */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Compensation Floor</label>
+          <select
+            value={jobFilters.salaryFloor || ""}
+            onChange={(e) => setJobFilters((prev: any) => ({ ...prev, salaryFloor: e.target.value }))}
+            className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-3.5 text-sm text-slate-900 dark:text-white outline-none transition focus:border-indigo-500/50 focus:bg-slate-100 dark:focus:bg-white/10 focus:ring-1 focus:ring-indigo-500/50"
+          >
+            <option value="">No minimum requirement</option>
+            <option value="$50k / year ($25/hr)">$50,000+ / year ($25/hr)</option>
+            <option value="$75k / year ($35/hr)">$75,000+ / year ($35/hr)</option>
+            <option value="$100k / year ($50/hr)">$100,000+ / year ($50/hr)</option>
+            <option value="$125k / year ($60/hr)">$125,000+ / year ($60/hr)</option>
+            <option value="$150k / year ($75/hr)">$150,000+ / year ($75/hr)</option>
+            <option value="$200k / year ($100/hr)">$200,000+ / year ($100/hr)</option>
+          </select>
         </div>
       </div>
 

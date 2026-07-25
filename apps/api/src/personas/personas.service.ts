@@ -20,6 +20,8 @@ export class PersonasService {
         userId,
         name: createPersonaDto.name,
         skills: createPersonaDto.skills || [],
+        dreamCompanies: createPersonaDto.dreamCompanies || [],
+        jobFilters: createPersonaDto.jobFilters || {},
         idealSalary: createPersonaDto.idealSalary,
         yearsOfExperience: createPersonaDto.yearsOfExperience,
         resumeText: createPersonaDto.resumeText,

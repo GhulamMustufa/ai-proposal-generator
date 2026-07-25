@@ -37,88 +37,80 @@ export class ProfileService {
   }
 
   /**
-   * Updates or creates the user's job filters in their profile.
+   * Updates or creates the user's API keys in their profile.
    */
-  async updateJobFilters(userId: string, jobFilters: any) {
+  async updateApiKeys(userId: string, apiKeys: any) {
     try {
-      // Check if profile exists
       const existing = await this.db
         .select()
         .from(userProfiles)
         .where(eq(userProfiles.userId, userId))
         .limit(1);
 
-      // JIT user provisioning (handles E2E tests and webhook race conditions)
       try {
         await this.db
           .insert(require('../db/schema').users)
           .values({ id: userId, email: `${userId}@placeholder.local` })
           .onConflictDoNothing();
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
 
       if (existing.length > 0) {
         await this.db
           .update(userProfiles)
-          .set({ jobFilters, updatedAt: new Date() }) // Drizzle may complain if updatedAt doesn't exist, we'll see
+          .set({ apiKeys, updatedAt: new Date() })
           .where(eq(userProfiles.userId, userId));
       } else {
         await this.db.insert(userProfiles).values({
           userId,
-          jobFilters,
+          apiKeys,
         });
       }
 
-      return { success: true, jobFilters };
+      return { success: true, apiKeys };
     } catch (error) {
-      this.logger.error(`Failed to update job filters: ${error}`);
+      this.logger.error(`Failed to update API keys: ${error}`);
       throw new HttpException(
-        'Failed to update job filters',
+        'Failed to update API keys',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
   /**
-   * Updates the user's core skills array.
+   * Updates the user's default persona.
    */
-  async updateSkills(userId: string, skills: string[]) {
+  async updateDefaultPersona(userId: string, defaultPersonaId: string) {
     try {
-      // Check if profile exists
       const existing = await this.db
         .select()
         .from(userProfiles)
         .where(eq(userProfiles.userId, userId))
         .limit(1);
 
-      // JIT user provisioning (handles E2E tests and webhook race conditions)
       try {
         await this.db
           .insert(require('../db/schema').users)
           .values({ id: userId, email: `${userId}@placeholder.local` })
           .onConflictDoNothing();
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
 
       if (existing.length > 0) {
         await this.db
           .update(userProfiles)
-          .set({ skills, updatedAt: new Date() })
+          .set({ defaultPersonaId, updatedAt: new Date() })
           .where(eq(userProfiles.userId, userId));
       } else {
         await this.db.insert(userProfiles).values({
           userId,
-          skills,
+          defaultPersonaId,
         });
       }
 
-      return { success: true, skills };
+      return { success: true, defaultPersonaId };
     } catch (error) {
-      this.logger.error(`Failed to update skills: ${error}`);
+      this.logger.error(`Failed to update default persona: ${error}`);
       throw new HttpException(
-        'Failed to update skills',
+        'Failed to update default persona',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

@@ -26,4 +26,7 @@ export class CreatePersonaDto {
   @IsOptional()
   @IsString()
   resumeText?: string;
+
+  @IsOptional()
+  jobFilters?: Record<string, any>;
 }
