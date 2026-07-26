@@ -53,6 +53,7 @@ export const personas = pgTable('personas', {
   jobFilters: jsonb('job_filters'), // Advanced job filtering preferences
   yearsOfExperience: integer('years_of_experience'),
   resumeText: text('resume_text'),
+  lastSyncedAt: timestamp('last_synced_at').defaultNow().notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

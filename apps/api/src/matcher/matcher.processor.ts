@@ -14,17 +14,17 @@ export class MatcherProcessor extends WorkerHost {
 
   async process(job: Job<any, any, string>): Promise<any> {
     switch (job.name) {
-      case 'match-job':
+      case 'sync-persona':
         this.logger.log(
-          `Received new job ${job.data.jobId} for matching. Evaluating...`,
+          `Received sync request for persona ${job.data.personaId}. Fetching new jobs...`,
         );
-        await this.matcherService.evaluateJob(job.data.jobId);
+        await this.matcherService.syncPersonaJobs(job.data.personaId);
         break;
       case 'match-persona':
         this.logger.log(
           `Received persona ${job.data.personaId} for full re-evaluation.`,
         );
-        await this.matcherService.reEvaluatePersona(job.data.personaId);
+        await this.matcherService.syncPersonaJobs(job.data.personaId, true);
         break;
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);

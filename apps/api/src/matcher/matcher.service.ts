@@ -20,91 +20,6 @@ export class MatcherService {
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   }
 
-  /**
-   * Evaluates all active personas against a single incoming job.
-   * Processes sequentially to avoid OpenAI rate limits.
-   */
-  async evaluateJob(jobId: string) {
-    this.logger.log(`Starting AI matching evaluation for job ${jobId}`);
-
-    // Fetch the target job
-    const [job] = await this.db
-      .select()
-      .from(jobs)
-      .where(eq(jobs.id, jobId))
-      .limit(1);
-
-    if (!job) {
-      this.logger.warn(`Job ${jobId} not found in DB`);
-      return;
-    }
-
-    // Fetch all active personas with parsed skills
-    const allPersonas = await this.db
-      .select({
-        personaId: personas.id,
-        userId: personas.userId,
-        name: personas.name,
-        skills: personas.skills,
-        yearsOfExperience: personas.yearsOfExperience,
-        resumeText: personas.resumeText,
-        jobFilters: personas.jobFilters,
-        dreamCompanies: personas.dreamCompanies,
-      })
-      .from(personas)
-      .where(isNotNull(personas.skills));
-
-    this.logger.log(
-      `Evaluating job against ${allPersonas.length} personas with skills...`,
-    );
-
-    for (const persona of allPersonas) {
-      try {
-        const personaSkills = Array.isArray(persona.skills) ? persona.skills : [];
-        const jobText = `${job.title} ${job.description}`.toLowerCase();
-
-        let hasKeywordMatch = true;
-
-        if (personaSkills.length > 0) {
-          const matchedSkills = personaSkills.filter((skill: any) => {
-            const skillStr = String(skill).toLowerCase();
-            let pattern = skillStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            pattern = pattern.replace(/\\\.(js)/g, '(?:\\.js|js|\\sjs)');
-            pattern = pattern.replace(/[- ]/g, '[- ]?');
-
-            const regex = new RegExp(`\\b${pattern}\\b`, 'i');
-            return regex.test(jobText);
-          });
-
-          if (matchedSkills.length < 5) {
-            hasKeywordMatch = false;
-            this.logger.debug(
-              `Job ${job.id} filtered out for persona ${persona.personaId}. Only matched ${matchedSkills.length} skills. Skipping OpenAI.`,
-            );
-
-            await this.db.insert(aiMatches).values({
-              userId: persona.userId,
-              personaId: persona.personaId,
-              jobId: job.id,
-              matchScore: 0,
-              matchReasoning:
-                'Filtered out by keyword check. Job description does not contain at least 5 of your core skills.',
-            });
-            continue;
-          }
-        }
-
-        await this.evaluatePersonaForJob(persona, job);
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        this.logger.error(
-          `Failed to evaluate persona ${persona.personaId} for job ${job.id}: ${msg}`,
-        );
-      }
-    }
-
-    this.logger.log(`Completed matching evaluation for job ${jobId}`);
-  }
 
   private async evaluatePersonaForJob(
     persona: any,
@@ -214,10 +129,12 @@ Output MUST be exactly in this JSON format:
   }
 
   /**
-   * Re-evaluates a specific persona against all existing jobs.
+   * Syncs new jobs for a specific persona.
+   * If fullBackfill is true, it deletes old matches and evaluates all jobs.
+   * Otherwise, it only evaluates jobs scraped after the persona's lastSyncedAt.
    */
-  async reEvaluatePersona(personaId: string) {
-    this.logger.log(`Starting full re-evaluation for persona ${personaId}`);
+  async syncPersonaJobs(personaId: string, fullBackfill: boolean = false) {
+    this.logger.log(`Starting sync for persona ${personaId} (fullBackfill=${fullBackfill})`);
 
     const [persona] = await this.db
       .select({
@@ -229,6 +146,7 @@ Output MUST be exactly in this JSON format:
         resumeText: personas.resumeText,
         jobFilters: personas.jobFilters,
         dreamCompanies: personas.dreamCompanies,
+        lastSyncedAt: personas.lastSyncedAt,
       })
       .from(personas)
       .where(eq(personas.id, personaId))
@@ -245,16 +163,24 @@ Output MUST be exactly in this JSON format:
       return;
     }
 
-    // Delete existing matches for this persona
-    await this.db.delete(aiMatches).where(eq(aiMatches.personaId, personaId));
-    this.logger.log(`Deleted old matches for persona ${personaId}`);
+    let jobsToEvaluate: any[] = [];
 
-    const allJobs = await this.db.select().from(jobs);
+    if (fullBackfill) {
+      // Delete existing matches for this persona
+      await this.db.delete(aiMatches).where(eq(aiMatches.personaId, personaId));
+      this.logger.log(`Deleted old matches for persona ${personaId}`);
+      jobsToEvaluate = await this.db.select().from(jobs);
+    } else {
+      // Find jobs that have not been matched yet
+      // Alternatively, we can use a simpler query: find jobs where scrapedAt > persona.lastSyncedAt
+      const { gt } = require('drizzle-orm');
+      jobsToEvaluate = await this.db.select().from(jobs).where(gt(jobs.scrapedAt, persona.lastSyncedAt));
+    }
     this.logger.log(
-      `Re-evaluating ${allJobs.length} jobs for persona ${personaId}...`,
+      `Re-evaluating ${jobsToEvaluate.length} jobs for persona ${personaId}...`,
     );
 
-    for (const job of allJobs) {
+    for (const job of jobsToEvaluate) {
       try {
         const personaSkills = Array.isArray(persona.skills) ? persona.skills : [];
         const jobText = `${job.title} ${job.description}`.toLowerCase();
@@ -297,7 +223,10 @@ Output MUST be exactly in this JSON format:
         );
       }
     }
+    
+    // Update lastSyncedAt
+    await this.db.update(personas).set({ lastSyncedAt: new Date() }).where(eq(personas.id, personaId));
 
-    this.logger.log(`Completed full re-evaluation for persona ${personaId}`);
+    this.logger.log(`Completed sync for persona ${personaId}`);
   }
 }

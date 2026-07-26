@@ -47,4 +47,9 @@ export class PersonasController {
   remove(@Req() req: any, @Param('id') id: string) {
     return this.personasService.remove(req.user.id, id);
   }
+
+  @Post(':id/sync')
+  syncJobs(@Req() req: any, @Param('id') id: string) {
+    return this.personasService.syncJobs(req.user.id, id);
+  }
 }

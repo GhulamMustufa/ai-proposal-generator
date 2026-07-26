@@ -94,4 +94,14 @@ export class PersonasService {
     }
     return deleted;
   }
+
+  async syncJobs(userId: string, id: string) {
+    // Verify persona exists and belongs to user
+    const persona = await this.findOne(userId, id);
+    
+    this.logger.log(`Dispatching sync job for persona: ${persona.id}`);
+    await this.matcherQueue.add('sync-persona', { personaId: persona.id });
+    
+    return { status: 'sync_queued', personaId: persona.id };
+  }
 }

@@ -7,6 +7,7 @@ export type Persona = {
   skills: string[];
   yearsOfExperience: number;
   resumeText: string;
+  lastSyncedAt?: string;
 };
 
 // Global cache to prevent N+1 API calls when usePersonas is used in multiple components

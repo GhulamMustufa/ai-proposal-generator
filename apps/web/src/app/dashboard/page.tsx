@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ListView } from "@/components/dashboard/list-view";
 import { SyncButton } from "@/components/dashboard/sync-button";
 import { PersonaFilter } from "@/components/dashboard/persona-filter";
+import { usePersonas } from "@/hooks/use-personas";
 
 // Global cache to prevent refetching jobs when switching back to a persona
 const jobsCache: Record<string, any[]> = {};
@@ -16,6 +17,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activePersonaId = searchParams.get("personaId");
+  const { personas } = usePersonas();
 
   useEffect(() => {
     if (!userId) {
@@ -73,7 +75,33 @@ export default function DashboardPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchJobs(activePersonaId || undefined);
-  }, [activePersonaId]);
+    
+    // Auto-sync check
+    if (activePersonaId && personas.length > 0) {
+      const activePersona = personas.find(p => p.id === activePersonaId);
+      if (activePersona && activePersona.lastSyncedAt) {
+        const lastSynced = new Date(activePersona.lastSyncedAt).getTime();
+        const now = new Date().getTime();
+        const hoursDiff = (now - lastSynced) / (1000 * 60 * 60);
+        
+        if (hoursDiff > 6) {
+          // Trigger auto-sync silently
+          getToken().then(token => {
+            if (token) {
+              const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+              fetch(`${apiUrl}/api/personas/${activePersonaId}/sync`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`
+                }
+              }).catch(console.error);
+            }
+          });
+        }
+      }
+    }
+  }, [activePersonaId, personas]);
 
   const updateJobStatus = async (jobId: string, status: string) => {
     setJobs((prev) => prev.map((j) => j.id === jobId ? { ...j, status } : j));
@@ -109,7 +137,7 @@ export default function DashboardPage() {
             <h1 className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
               Your Match Dashboard
             </h1>
-            <SyncButton />
+            <SyncButton activePersonaId={activePersonaId || undefined} />
           </div>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
             We have scanned thousands of jobs across 14+ platforms. These roles have successfully bypassed your strict AI pre-filters. Review your highest probability matches below.

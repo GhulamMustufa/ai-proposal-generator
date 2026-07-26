@@ -5,7 +5,7 @@ import { useAuth } from "@clerk/nextjs";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-export function SyncButton() {
+export function SyncButton({ activePersonaId }: { activePersonaId?: string }) {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
@@ -20,7 +20,8 @@ export function SyncButton() {
         throw new Error("Authentication token not found.");
       }
 
-      const res = await fetch(`${apiUrl}/api/ingestion/trigger-all`, {
+      // 1. Trigger global scrapers (runs in background)
+      await fetch(`${apiUrl}/api/ingestion/trigger-all`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -28,13 +29,22 @@ export function SyncButton() {
         },
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to trigger sync. Please try again.");
+      // 2. Trigger on-demand sync for the active persona (if any)
+      if (activePersonaId) {
+        const syncRes = await fetch(`${apiUrl}/api/personas/${activePersonaId}/sync`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (!syncRes.ok) {
+           throw new Error("Failed to sync jobs for persona.");
+        }
       }
 
-      setMessage({ text: data.message, type: "success" });
+      setMessage({ text: "Sync triggered! AI is matching new jobs in the background.", type: "success" });
     } catch (error: any) {
       setMessage({ text: error.message, type: "error" });
     } finally {
