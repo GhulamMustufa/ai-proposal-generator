@@ -51,7 +51,6 @@ export const personas = pgTable('personas', {
   skills: jsonb('skills'), // Array of strings
   dreamCompanies: jsonb('dream_companies'), // Array of strings (target companies)
   jobFilters: jsonb('job_filters'), // Advanced job filtering preferences
-  idealSalary: text('ideal_salary'),
   yearsOfExperience: integer('years_of_experience'),
   resumeText: text('resume_text'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

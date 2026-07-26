@@ -5,7 +5,6 @@ export type Persona = {
   id: string;
   name: string;
   skills: string[];
-  idealSalary: string;
   yearsOfExperience: number;
   resumeText: string;
 };

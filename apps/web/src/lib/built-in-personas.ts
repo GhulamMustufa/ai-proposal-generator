@@ -2,7 +2,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-frontend-react',
     name: 'Senior Frontend Developer (React/Next.js)',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 5,
     skills: [
       'React', 'Next.js', 'TypeScript', 'JavaScript', 'HTML5', 'CSS3', 'Tailwind CSS',
@@ -16,7 +15,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-backend-node',
     name: 'Backend Engineer (Node.js/NestJS)',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 5,
     skills: [
       'Node.js', 'TypeScript', 'NestJS', 'Express', 'PostgreSQL', 'MongoDB', 'Redis',
@@ -30,7 +28,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-fullstack-ts',
     name: 'Full Stack Engineer (TypeScript Ecosystem)',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 4,
     skills: [
       'TypeScript', 'React', 'Node.js', 'Next.js', 'NestJS', 'PostgreSQL', 'Tailwind CSS',
@@ -43,7 +40,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-python-django',
     name: 'Python Backend Developer (Django/FastAPI)',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 4,
     skills: [
       'Python', 'Django', 'FastAPI', 'Flask', 'PostgreSQL', 'Celery', 'Redis',
@@ -57,7 +53,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-devops',
     name: 'DevOps / Site Reliability Engineer',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 5,
     skills: [
       'AWS', 'Kubernetes', 'Docker', 'Terraform', 'Ansible', 'Linux', 'Bash',
@@ -71,7 +66,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-data-engineer',
     name: 'Data Engineer',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 4,
     skills: [
       'Python', 'SQL', 'Apache Spark', 'Apache Airflow', 'Snowflake', 'BigQuery',
@@ -85,7 +79,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-ml-engineer',
     name: 'Machine Learning Engineer',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 4,
     skills: [
       'Python', 'PyTorch', 'TensorFlow', 'Scikit-Learn', 'Pandas', 'NumPy',
@@ -100,7 +93,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-mobile-react-native',
     name: 'Mobile Developer (React Native)',
-    idealSalary: '$75,000 - $100,000/yr',
     yearsOfExperience: 3,
     skills: [
       'React Native', 'React', 'TypeScript', 'JavaScript', 'Expo', 'Redux',
@@ -115,7 +107,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-mobile-ios',
     name: 'iOS Developer (Swift/SwiftUI)',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 4,
     skills: [
       'Swift', 'SwiftUI', 'Objective-C', 'iOS', 'Xcode', 'Combine',
@@ -130,7 +121,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-mobile-android',
     name: 'Android Developer (Kotlin/Compose)',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 4,
     skills: [
       'Kotlin', 'Java', 'Android SDK', 'Jetpack Compose', 'Coroutines',
@@ -145,7 +135,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-ui-ux-designer',
     name: 'UI/UX Designer',
-    idealSalary: '$75,000 - $100,000/yr',
     yearsOfExperience: 4,
     skills: [
       'UI Design', 'UX Design', 'Figma', 'Sketch', 'Adobe XD', 'Prototyping',
@@ -161,7 +150,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-product-manager',
     name: 'Product Manager',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 5,
     skills: [
       'Product Management', 'Agile', 'Scrum', 'Jira', 'Confluence', 'Roadmapping',
@@ -176,7 +164,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-golang',
     name: 'Backend Engineer (Go)',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 4,
     skills: [
       'Go (Golang)', 'gRPC', 'Protobuf', 'Microservices', 'PostgreSQL', 'Redis',
@@ -190,7 +177,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-rust',
     name: 'Systems Engineer (Rust)',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 3,
     skills: [
       'Rust', 'C++', 'C', 'Systems Programming', 'WebAssembly', 'Tokio',
@@ -204,7 +190,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-qa-automation',
     name: 'QA Automation Engineer',
-    idealSalary: '$75,000 - $100,000/yr',
     yearsOfExperience: 4,
     skills: [
       'QA Automation', 'Cypress', 'Selenium', 'Playwright', 'JavaScript', 'TypeScript',
@@ -218,7 +203,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-blockchain',
     name: 'Blockchain/Web3 Developer',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 3,
     skills: [
       'Solidity', 'Smart Contracts', 'Web3.js', 'Ethers.js', 'Ethereum', 'Hardhat',
@@ -232,7 +216,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-ruby-rails',
     name: 'Ruby on Rails Developer',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 5,
     skills: [
       'Ruby', 'Ruby on Rails', 'PostgreSQL', 'Redis', 'Sidekiq', 'Hotwire',
@@ -246,7 +229,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-php-laravel',
     name: 'PHP/Laravel Developer',
-    idealSalary: '$75,000 - $100,000/yr',
     yearsOfExperience: 4,
     skills: [
       'PHP', 'Laravel', 'MySQL', 'PostgreSQL', 'Redis', 'Vue.js', 'React',
@@ -260,7 +242,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-data-scientist',
     name: 'Data Scientist',
-    idealSalary: '$100,000 - $150,000/yr',
     yearsOfExperience: 4,
     skills: [
       'Python', 'R', 'SQL', 'Machine Learning', 'Statistical Analysis', 'Pandas',
@@ -275,7 +256,6 @@ export const BUILT_IN_PERSONAS = [
   {
     id: 'template-marketing-seo',
     name: 'Digital Marketing / SEO',
-    idealSalary: '$50,000 - $75,000/yr',
     yearsOfExperience: 4,
     skills: [
       'SEO', 'Content Marketing', 'Google Analytics', 'Google Ads', 'Facebook Ads',

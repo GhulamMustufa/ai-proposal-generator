@@ -1,4 +1,6 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { CreatePersonaDto } from './dto/create-persona.dto';
 import { UpdatePersonaDto } from './dto/update-persona.dto';
 import { DB_CONNECTION } from '../db/db.module';
@@ -8,9 +10,12 @@ import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 
 @Injectable()
 export class PersonasService {
+  private readonly logger = new Logger(PersonasService.name);
+
   constructor(
     @Inject(DB_CONNECTION)
     private readonly db: NeonHttpDatabase<any>,
+    @InjectQueue('matcher-queue') private readonly matcherQueue: Queue,
   ) {}
 
   async create(userId: string, createPersonaDto: CreatePersonaDto) {
@@ -22,11 +27,14 @@ export class PersonasService {
         skills: createPersonaDto.skills || [],
         dreamCompanies: createPersonaDto.dreamCompanies || [],
         jobFilters: createPersonaDto.jobFilters || {},
-        idealSalary: createPersonaDto.idealSalary,
         yearsOfExperience: createPersonaDto.yearsOfExperience,
         resumeText: createPersonaDto.resumeText,
       })
       .returning();
+
+    this.logger.log(`Persona created: ${persona.id}. Dispatching backfill job...`);
+    await this.matcherQueue.add('match-persona', { personaId: persona.id });
+    
     return persona;
   }
 

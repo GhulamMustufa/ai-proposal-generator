@@ -46,7 +46,6 @@ export class MatcherService {
         userId: personas.userId,
         name: personas.name,
         skills: personas.skills,
-        idealSalary: personas.idealSalary,
         yearsOfExperience: personas.yearsOfExperience,
         resumeText: personas.resumeText,
         jobFilters: personas.jobFilters,
@@ -122,7 +121,6 @@ Evaluate how well the user's Persona matches the job description.
 PERSONA DETAILS:
 Role Name: ${persona.name}
 Years of Experience: ${persona.yearsOfExperience || 'Not specified'}
-Ideal Salary: ${persona.idealSalary || 'Not specified'}
 
 USER SKILLS:
 ${skillsText}
@@ -227,7 +225,6 @@ Output MUST be exactly in this JSON format:
         userId: personas.userId,
         name: personas.name,
         skills: personas.skills,
-        idealSalary: personas.idealSalary,
         yearsOfExperience: personas.yearsOfExperience,
         resumeText: personas.resumeText,
         jobFilters: personas.jobFilters,

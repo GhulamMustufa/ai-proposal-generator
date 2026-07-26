@@ -17,7 +17,8 @@ export function TagsInput({ value, onChange, suggestions, placeholder = "Type an
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const filteredSuggestions = suggestions.filter(
+  const uniqueSuggestions = Array.from(new Set(suggestions));
+  const filteredSuggestions = uniqueSuggestions.filter(
     (s) =>
       s.toLowerCase().includes(inputValue.toLowerCase()) &&
       !value.some((v) => v.toLowerCase() === s.toLowerCase())

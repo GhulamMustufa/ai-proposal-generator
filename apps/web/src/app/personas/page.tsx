@@ -142,7 +142,6 @@ export default function PersonasPage() {
               )}
 
               <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1 mb-6">
-                {p.idealSalary && <p>Salary: {p.idealSalary}</p>}
                 {p.yearsOfExperience && <p>Experience: {p.yearsOfExperience} yrs</p>}
               </div>
 

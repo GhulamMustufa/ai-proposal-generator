@@ -28,7 +28,10 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchJobs = async (personaId?: string) => {
-    if (!personaId) return;
+    if (!personaId) {
+      setLoading(false);
+      return;
+    }
 
     // Check cache first for instantaneous loading
     if (jobsCache[personaId]) {
