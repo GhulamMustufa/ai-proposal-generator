@@ -376,56 +376,8 @@ export class IngestionService {
    * Scrapes Upwork RSS Feed for a specific search query.
    */
   async scrapeUpworkRss(feedUrl: string): Promise<string[]> {
-    this.logger.log(`Starting Upwork scraping for feed: ${feedUrl}`);
-
-    try {
-      const response = await fetch(feedUrl, {
-        signal: AbortSignal.timeout(20000),
-      });
-      if (!response.ok)
-        throw new Error(`Upwork RSS returned ${response.status}`);
-
-      const xml = await response.text();
-      const $ = cheerio.load(xml, { xmlMode: true });
-      const newJobIds: string[] = [];
-
-      const items = $('item').toArray();
-      this.logger.log(`Fetched ${items.length} jobs from Upwork RSS.`);
-
-      for (const el of items) {
-        const guid = $(el).find('guid').text();
-        const link = $(el).find('link').text();
-        const title = $(el).find('title').text();
-        const rawDesc = $(el).find('description').text();
-
-        const externalId = `upwork_${guid || link}`;
-        const cleanDesc = extractJobTextFromHtml(rawDesc || '');
-
-        const inserted = await this.db
-          .insert(jobs)
-          .values({
-            platform: 'upwork',
-            externalId,
-            title,
-            company: 'Upwork Client', // Upwork hides exact client names in RSS
-            description: cleanDesc.slice(0, 7000),
-            url: link,
-          })
-          .onConflictDoNothing({ target: jobs.externalId })
-          .returning({ id: jobs.id });
-
-        if (inserted.length > 0) newJobIds.push(inserted[0].id);
-      }
-
-      this.logger.log(
-        `Successfully ingested ${newJobIds.length} new unique jobs from Upwork.`,
-      );
-      return newJobIds;
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to scrape Upwork: ${msg}`);
-      throw error;
-    }
+    this.logger.warn(`Upwork scraping is deprecated (RSS feed 410 Gone). Skipping.`);
+    return [];
   }
 
   /**
@@ -620,52 +572,8 @@ export class IngestionService {
   }
 
   async scrapeRemoteCo(): Promise<string[]> {
-    this.logger.log('Starting Remote.co scraping...');
-    const url = 'https://remote.co/remote-jobs/feed/';
-    try {
-      const response = await fetch(url, {
-        signal: AbortSignal.timeout(20000),
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          Accept: 'application/rss+xml, application/xml, text/xml',
-        },
-      });
-      if (!response.ok)
-        throw new Error(`Remote.co returned ${response.status}`);
-      const xml = await response.text();
-      const $ = cheerio.load(xml, { xmlMode: true });
-      const newJobIds: string[] = [];
-      const items = $('item').toArray();
-      for (const el of items) {
-        const guid = $(el).find('guid').text();
-        const link = $(el).find('link').text();
-        const title = $(el).find('title').text();
-        const rawDesc =
-          $(el).find('content\\:encoded').text() ||
-          $(el).find('description').text();
-        const externalId = `remoteco_${guid || link}`;
-        const cleanDesc = extractJobTextFromHtml(rawDesc || '');
-        const inserted = await this.db
-          .insert(jobs)
-          .values({
-            platform: 'remoteco',
-            externalId,
-            title,
-            company: 'Remote.co Client',
-            description: cleanDesc.slice(0, 7000),
-            url: link,
-          })
-          .onConflictDoNothing()
-          .returning({ id: jobs.id });
-        if (inserted.length > 0) newJobIds.push(inserted[0].id);
-      }
-      this.logger.log(`Ingested ${newJobIds.length} jobs from Remote.co.`);
-      return newJobIds;
-    } catch (error) {
-      this.logger.error(`Failed to scrape Remote.co: ${error}`);
-      throw error;
-    }
+    this.logger.warn('Remote.co scraping is disabled (403 Forbidden). Skipping.');
+    return [];
   }
 
   async scrapeDribbbleJobs(): Promise<string[]> {
@@ -708,43 +616,8 @@ export class IngestionService {
   }
 
   async scrapeRelocateMe(): Promise<string[]> {
-    this.logger.log('Starting Relocate.me scraping...');
-    const url = 'https://relocate.me/jobs.rss';
-    try {
-      const response = await fetch(url, { signal: AbortSignal.timeout(20000) });
-      if (!response.ok)
-        throw new Error(`Relocate.me returned ${response.status}`);
-      const xml = await response.text();
-      const $ = cheerio.load(xml, { xmlMode: true });
-      const newJobIds: string[] = [];
-      const items = $('item').toArray();
-      for (const el of items) {
-        const guid = $(el).find('guid').text();
-        const link = $(el).find('link').text();
-        const title = $(el).find('title').text();
-        const rawDesc = $(el).find('description').text();
-        const externalId = `relocateme_${guid || link}`;
-        const cleanDesc = extractJobTextFromHtml(rawDesc || '');
-        const inserted = await this.db
-          .insert(jobs)
-          .values({
-            platform: 'relocateme',
-            externalId,
-            title,
-            company: 'Relocate.me Client',
-            description: cleanDesc.slice(0, 7000),
-            url: link,
-          })
-          .onConflictDoNothing()
-          .returning({ id: jobs.id });
-        if (inserted.length > 0) newJobIds.push(inserted[0].id);
-      }
-      this.logger.log(`Ingested ${newJobIds.length} jobs from Relocate.me.`);
-      return newJobIds;
-    } catch (error) {
-      this.logger.error(`Failed to scrape Relocate.me: ${error}`);
-      throw error;
-    }
+    this.logger.warn('Relocate.me scraping is disabled (404 Not Found). Skipping.');
+    return [];
   }
 
   /**

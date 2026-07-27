@@ -23,7 +23,7 @@ export class AtsIngestionService {
     const newJobIds: string[] = [];
 
     for (const company of companies) {
-      const url = `https://boards-api.greenhouse.io/v1/boards/${company.atsBoardToken}/jobs`;
+      const url = `https://boards-api.greenhouse.io/v1/boards/${company.atsBoardToken}/jobs?content=true`;
       try {
         const response = await fetch(url, {
           signal: AbortSignal.timeout(10000),
@@ -39,23 +39,11 @@ export class AtsIngestionService {
           }
 
           const externalId = `greenhouse_${company.atsBoardToken}_${job.id}`;
-
-          // Greenhouse requires fetching the individual job for the full description, but we can do it if needed.
-          // Or just save the URL for the frontend scraper
-          // For now, we will fetch the detail endpoint to get the description
-          let description = '';
-          try {
-            const detailRes = await fetch(
-              `https://boards-api.greenhouse.io/v1/boards/${company.atsBoardToken}/jobs/${job.id}`,
-            );
-            if (detailRes.ok) {
-              const detailData = await detailRes.json();
-              description = cleanDescription(
-                detailData.content ||
-                  decodeURIComponent(detailData.content || ''),
-              );
-            }
-          } catch (e) {}
+          
+          let description = job.content ? cleanDescription(
+                job.content ||
+                  decodeURIComponent(job.content || ''),
+              ) : '';
 
           if (!description)
             description = `Job title: ${job.title}. Apply at ${job.absolute_url}`;

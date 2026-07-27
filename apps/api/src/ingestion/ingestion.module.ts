@@ -85,18 +85,6 @@ export class IngestionModule implements OnApplicationBootstrap {
         },
       );
   
-      // Scrape Upwork RSS at 11am, 5pm, and 11pm everyday
-      await this.ingestionQueue.add(
-        'scrape-upwork',
-        {},
-        {
-          repeat: {
-            pattern: '0 11,17,23 * * *',
-          },
-          jobId: 'repeatable-upwork',
-        },
-      );
-  
       // Scrape Freelancer at 7am, 1pm, and 7pm everyday
       await this.ingestionQueue.add(
         'scrape-freelancer',
@@ -147,16 +135,6 @@ export class IngestionModule implements OnApplicationBootstrap {
         },
       );
   
-      // Scrape Remote.co at 4am, 10am, 4pm, 10pm
-      await this.ingestionQueue.add(
-        'scrape-remoteco',
-        {},
-        {
-          repeat: { pattern: '0 4,10,16,22 * * *' },
-          jobId: 'repeatable-remoteco',
-        },
-      );
-  
       // Scrape Dribbble at 5am, 11am, 5pm, 11pm
       await this.ingestionQueue.add(
         'scrape-dribbble',
@@ -164,16 +142,6 @@ export class IngestionModule implements OnApplicationBootstrap {
         {
           repeat: { pattern: '0 5,11,17,23 * * *' },
           jobId: 'repeatable-dribbble',
-        },
-      );
-  
-      // Scrape Relocate.me at 6am, 12pm, 6pm
-      await this.ingestionQueue.add(
-        'scrape-relocateme',
-        {},
-        {
-          repeat: { pattern: '0 6,12,18 * * *' },
-          jobId: 'repeatable-relocateme',
         },
       );
   
