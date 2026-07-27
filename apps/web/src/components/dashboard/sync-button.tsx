@@ -5,7 +5,7 @@ import { useAuth } from "@clerk/nextjs";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-export function SyncButton({ activePersonaId }: { activePersonaId?: string }) {
+export function SyncButton({ activePersonaId, onSyncStarted }: { activePersonaId?: string, onSyncStarted?: () => void }) {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
@@ -20,14 +20,10 @@ export function SyncButton({ activePersonaId }: { activePersonaId?: string }) {
         throw new Error("Authentication token not found.");
       }
 
-      // 1. Trigger global scrapers (runs in background)
-      await fetch(`${apiUrl}/api/ingestion/trigger-all`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // 1. Notify parent to start polling
+      if (onSyncStarted) {
+        onSyncStarted();
+      }
 
       // 2. Trigger on-demand sync for the active persona (if any)
       if (activePersonaId) {

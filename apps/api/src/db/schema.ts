@@ -5,6 +5,7 @@ import {
   jsonb,
   uuid,
   integer,
+  vector,
 } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
@@ -40,6 +41,7 @@ export const jobs = pgTable('jobs', {
   description: text('description'),
   url: text('url').notNull(),
   scrapedAt: timestamp('scraped_at').defaultNow().notNull(),
+  embedding: vector('embedding', { dimensions: 1536 }),
 });
 
 export const personas = pgTable('personas', {
@@ -55,6 +57,7 @@ export const personas = pgTable('personas', {
   resumeText: text('resume_text'),
   lastSyncedAt: timestamp('last_synced_at').defaultNow().notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  embedding: vector('embedding', { dimensions: 1536 }),
 });
 
 

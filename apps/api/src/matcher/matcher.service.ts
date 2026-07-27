@@ -147,6 +147,7 @@ Output MUST be exactly in this JSON format:
         jobFilters: personas.jobFilters,
         dreamCompanies: personas.dreamCompanies,
         lastSyncedAt: personas.lastSyncedAt,
+        embedding: personas.embedding,
       })
       .from(personas)
       .where(eq(personas.id, personaId))
@@ -169,59 +170,49 @@ Output MUST be exactly in this JSON format:
       // Delete existing matches for this persona
       await this.db.delete(aiMatches).where(eq(aiMatches.personaId, personaId));
       this.logger.log(`Deleted old matches for persona ${personaId}`);
-      jobsToEvaluate = await this.db.select().from(jobs);
-    } else {
-      // Find jobs that have not been matched yet
-      // Alternatively, we can use a simpler query: find jobs where scrapedAt > persona.lastSyncedAt
-      const { gt } = require('drizzle-orm');
-      jobsToEvaluate = await this.db.select().from(jobs).where(gt(jobs.scrapedAt, persona.lastSyncedAt));
     }
+
+    const { gt, and, asc } = require('drizzle-orm');
+    const { cosineDistance } = require('drizzle-orm');
+
+    let queryConditions = [isNotNull(jobs.embedding)];
+    if (!fullBackfill && persona.lastSyncedAt) {
+      queryConditions.push(gt(jobs.scrapedAt, persona.lastSyncedAt));
+    }
+
+    if (!persona.embedding) {
+      this.logger.warn(`Persona ${personaId} has no embedding. Skipping vector search.`);
+      return;
+    }
+
+    jobsToEvaluate = await this.db
+      .select()
+      .from(jobs)
+      .where(and(...queryConditions))
+      .orderBy(asc(cosineDistance(jobs.embedding, persona.embedding)))
+      .limit(50);
+
     this.logger.log(
-      `Re-evaluating ${jobsToEvaluate.length} jobs for persona ${personaId}...`,
+      `Re-evaluating Top ${jobsToEvaluate.length} matching jobs for persona ${personaId}...`,
     );
 
-    for (const job of jobsToEvaluate) {
-      try {
-        const personaSkills = Array.isArray(persona.skills) ? persona.skills : [];
-        const jobText = `${job.title} ${job.description}`.toLowerCase();
-
-        let hasKeywordMatch = true;
-
-        if (personaSkills.length > 0) {
-          const matchedSkills = personaSkills.filter((skill: any) => {
-            const skillStr = String(skill).toLowerCase();
-            let pattern = skillStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            pattern = pattern.replace(/\\\.(js)/g, '(?:\\.js|js|\\sjs)');
-            pattern = pattern.replace(/[- ]/g, '[- ]?');
-
-            const regex = new RegExp(`\\b${pattern}\\b`, 'i');
-            return regex.test(jobText);
-          });
-
-          if (matchedSkills.length < 5) {
-            hasKeywordMatch = false;
+    // Process in batches to massively speed up OpenAI evaluation while respecting rate limits
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < jobsToEvaluate.length; i += BATCH_SIZE) {
+      const batch = jobsToEvaluate.slice(i, i + BATCH_SIZE);
+      
+      await Promise.all(
+        batch.map(async (job) => {
+          try {
+            await this.evaluatePersonaForJob(persona, job);
+          } catch (error) {
+            const msg = error instanceof Error ? error.message : String(error);
+            this.logger.error(
+              `Failed to evaluate persona ${personaId} for job ${job.id}: ${msg}`,
+            );
           }
-        }
-
-        if (!hasKeywordMatch) {
-          await this.db.insert(aiMatches).values({
-            userId: persona.userId,
-            personaId: persona.personaId,
-            jobId: job.id,
-            matchScore: 0,
-            matchReasoning:
-              'Filtered out by keyword check. Job description does not contain at least 5 of your core skills.',
-          });
-          continue;
-        }
-
-        await this.evaluatePersonaForJob(persona, job);
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        this.logger.error(
-          `Failed to evaluate persona ${personaId} for job ${job.id}: ${msg}`,
-        );
-      }
+        })
+      );
     }
     
     // Update lastSyncedAt

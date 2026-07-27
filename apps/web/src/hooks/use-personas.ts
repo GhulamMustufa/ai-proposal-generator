@@ -14,6 +14,11 @@ export type Persona = {
 let cachedPersonas: Persona[] | null = null;
 let fetchPromise: Promise<Persona[]> | null = null;
 
+export function clearPersonasCache() {
+  cachedPersonas = null;
+  fetchPromise = null;
+}
+
 export function usePersonas() {
   const { getToken } = useAuth();
   const [personas, setPersonas] = useState<Persona[]>(cachedPersonas || []);
@@ -63,10 +68,5 @@ export function usePersonas() {
     };
   }, [getToken]);
 
-  const mutate = () => {
-    cachedPersonas = null;
-    fetchPromise = null;
-  };
-
-  return { personas, loading, mutate };
+  return { personas, loading, mutate: clearPersonasCache };
 }

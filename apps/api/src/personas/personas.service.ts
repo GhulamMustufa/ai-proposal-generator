@@ -7,6 +7,7 @@ import { DB_CONNECTION } from '../db/db.module';
 import { personas } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { generateEmbedding } from '../utils/embeddings';
 
 @Injectable()
 export class PersonasService {
@@ -19,6 +20,10 @@ export class PersonasService {
   ) {}
 
   async create(userId: string, createPersonaDto: CreatePersonaDto) {
+    const skillsText = createPersonaDto.skills?.join(', ') || '';
+    const textToEmbed = `${createPersonaDto.name} ${skillsText} ${createPersonaDto.resumeText || ''}`;
+    const embedding = await generateEmbedding(textToEmbed);
+
     const [persona] = await this.db
       .insert(personas)
       .values({
@@ -29,6 +34,7 @@ export class PersonasService {
         jobFilters: createPersonaDto.jobFilters || {},
         yearsOfExperience: createPersonaDto.yearsOfExperience,
         resumeText: createPersonaDto.resumeText,
+        embedding,
       })
       .returning();
 
@@ -69,10 +75,30 @@ export class PersonasService {
   }
 
   async update(userId: string, id: string, updatePersonaDto: UpdatePersonaDto) {
+    const persona = await this.findOne(userId, id);
+    
+    let embedding = persona.embedding;
+    
+    // Only re-embed if relevant fields changed
+    const needsNewEmbedding = 
+      updatePersonaDto.name !== undefined || 
+      updatePersonaDto.skills !== undefined || 
+      updatePersonaDto.resumeText !== undefined;
+      
+    if (needsNewEmbedding) {
+      const newName = updatePersonaDto.name ?? persona.name;
+      const newSkills = updatePersonaDto.skills ?? persona.skills;
+      const newResumeText = updatePersonaDto.resumeText ?? persona.resumeText;
+      const skillsText = Array.isArray(newSkills) ? newSkills.join(', ') : '';
+      const textToEmbed = `${newName} ${skillsText} ${newResumeText || ''}`;
+      embedding = await generateEmbedding(textToEmbed);
+    }
+
     const [updated] = await this.db
       .update(personas)
       .set({
         ...updatePersonaDto,
+        embedding,
       })
       .where(and(eq(personas.id, id), eq(personas.userId, userId)))
       .returning();
@@ -100,7 +126,11 @@ export class PersonasService {
     const persona = await this.findOne(userId, id);
     
     this.logger.log(`Dispatching sync job for persona: ${persona.id}`);
-    await this.matcherQueue.add('sync-persona', { personaId: persona.id });
+    await this.matcherQueue.add(
+      'sync-persona', 
+      { personaId: persona.id },
+      { jobId: `sync-persona-${persona.id}` } // BullMQ deduplication
+    );
     
     return { status: 'sync_queued', personaId: persona.id };
   }

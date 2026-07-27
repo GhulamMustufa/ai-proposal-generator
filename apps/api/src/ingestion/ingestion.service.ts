@@ -2,8 +2,9 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { DB_CONNECTION } from '../db/db.module';
 import { extractJobTextFromHtml } from '../utils/job-extractor';
 import { jobs, aiMatches } from '../db/schema';
-import { sql, lt } from 'drizzle-orm';
+import { sql, lt, inArray } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
+import { generateEmbeddings } from '../utils/embeddings';
 
 /**
  * IngestionService
@@ -99,12 +100,41 @@ export class IngestionService {
         .delete(aiMatches)
         .where(lt(aiMatches.createdAt, thirtyDaysAgo));
 
-      this.logger.log(
-        `Successfully deleted ${result.length} old jobs from database.`,
-      );
+      this.logger.log(`Deleted ${result.length} old jobs.`);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to clean up old jobs: ${msg}`);
+      this.logger.error(`Failed to cleanup old jobs: ${error}`);
+    }
+  }
+
+  /**
+   * Generates and stores embeddings for a list of job IDs.
+   * This is called after scraping to avoid embedding duplicates.
+   */
+  async embedJobs(jobIds: string[]): Promise<void> {
+    if (jobIds.length === 0) return;
+    
+    try {
+      this.logger.log(`Generating embeddings for ${jobIds.length} jobs...`);
+      const jobsToEmbed = await this.db.select({
+        id: jobs.id,
+        title: jobs.title,
+        description: jobs.description
+      }).from(jobs).where(inArray(jobs.id, jobIds));
+
+      if (jobsToEmbed.length === 0) return;
+
+      const texts = jobsToEmbed.map((j: any) => `${j.title} ${j.description}`);
+      const embeddings = await generateEmbeddings(texts);
+
+      // Update jobs with embeddings
+      for (let i = 0; i < jobsToEmbed.length; i++) {
+        await this.db.update(jobs)
+          .set({ embedding: embeddings[i] })
+          .where(sql`${jobs.id} = ${jobsToEmbed[i].id}`);
+      }
+      this.logger.log(`Successfully embedded ${jobsToEmbed.length} jobs.`);
+    } catch (error) {
+      this.logger.error(`Failed to embed jobs: ${error}`);
     }
   }
 

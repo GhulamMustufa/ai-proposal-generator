@@ -6,6 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { TagsInput } from "./tags-input";
 import { SUGGESTED_SKILLS, SUGGESTED_COMPANIES } from "@/lib/constants";
+import { clearPersonasCache } from "@/hooks/use-personas";
 
 type Persona = {
   id: string;
@@ -110,6 +111,7 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
         throw new Error("Failed to save persona");
       }
 
+      clearPersonasCache(); // Clear the global cache so Dashboard dropdown updates
       toast.success(`Persona ${initialData ? "updated" : "created"}!`);
       if (onSuccess) onSuccess();
       router.refresh();

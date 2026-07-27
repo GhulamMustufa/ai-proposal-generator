@@ -28,22 +28,23 @@ export default function DashboardPage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isPolling, setIsPolling] = useState(false);
 
-  const fetchJobs = async (personaId?: string) => {
+  const fetchJobs = async (personaId?: string, forceRefresh = false) => {
     if (!personaId) {
       setLoading(false);
       return;
     }
 
-    // Check cache first for instantaneous loading
-    if (jobsCache[personaId]) {
+    // Check cache first for instantaneous loading, unless forcing refresh (polling)
+    if (jobsCache[personaId] && !forceRefresh) {
       setJobs(jobsCache[personaId]);
       setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
+      if (!forceRefresh) setLoading(true);
       const token = await getToken();
       if (!token) return;
 
@@ -65,16 +66,53 @@ export default function DashboardPage() {
       // Save to cache and state
       jobsCache[personaId] = data;
       setJobs(data);
+      
+      return data; // Return data so polling logic can check it
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
-      setLoading(false);
+      if (!forceRefresh) setLoading(false);
     }
   };
 
+  // Setup Polling Effect
+  useEffect(() => {
+    if (!isPolling || !activePersonaId) return;
+
+    const currentJobsCount = jobs.length;
+    let pollAttempts = 0;
+    const maxAttempts = 6; // 30 seconds total at 5s interval
+
+    const intervalId = setInterval(async () => {
+      pollAttempts++;
+      const updatedJobs = await fetchJobs(activePersonaId, true);
+      
+      // Stop polling if we found new jobs, or if we timed out
+      if ((updatedJobs && updatedJobs.length > currentJobsCount) || pollAttempts >= maxAttempts) {
+        setIsPolling(false);
+        clearInterval(intervalId);
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [isPolling, activePersonaId, jobs.length]);
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    fetchJobs(activePersonaId || undefined);
+    fetchJobs(activePersonaId || undefined).then(data => {
+      // If we just landed on the dashboard and have 0 jobs, it might be because the backend is
+      // currently processing the newly created Persona in the background. Start polling automatically!
+      if (data && data.length === 0) {
+        const activePersona = personas.find(p => p.id === activePersonaId);
+        const lastSynced = activePersona?.lastSyncedAt ? new Date(activePersona.lastSyncedAt).getTime() : 0;
+        const secondsSinceSync = (new Date().getTime() - lastSynced) / 1000;
+        
+        // Only auto-poll if the persona has never been synced, or was synced in the last 60 seconds
+        if (!activePersona?.lastSyncedAt || secondsSinceSync < 60) {
+          setIsPolling(true);
+        }
+      }
+    });
     
     // Auto-sync check
     if (activePersonaId && personas.length > 0) {
@@ -95,7 +133,7 @@ export default function DashboardPage() {
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${token}`
                 }
-              }).catch(console.error);
+              }).then(() => setIsPolling(true)).catch(console.error);
             }
           });
         }
@@ -137,7 +175,10 @@ export default function DashboardPage() {
             <h1 className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
               Your Match Dashboard
             </h1>
-            <SyncButton activePersonaId={activePersonaId || undefined} />
+            <SyncButton 
+              activePersonaId={activePersonaId || undefined} 
+              onSyncStarted={() => setIsPolling(true)}
+            />
           </div>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
             We have scanned thousands of jobs across 14+ platforms. These roles have successfully bypassed your strict AI pre-filters. Review your highest probability matches below.
@@ -166,7 +207,14 @@ export default function DashboardPage() {
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-medium text-slate-900 dark:text-white">Highly Qualified Leads</h2>
+            <h2 className="text-xl font-medium text-slate-900 dark:text-white flex items-center gap-3">
+              Highly Qualified Leads
+              {jobs.length > 0 && !loading && (
+                <span className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-sm font-medium text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400">
+                  {jobs.length}
+                </span>
+              )}
+            </h2>
           </div>
           <PersonaFilter />
         </div>
@@ -207,18 +255,41 @@ export default function DashboardPage() {
               </Link>
             </div>
           ) : jobs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-slate-200 border-dashed bg-white/50 py-24 px-12 dark:border-white/10 dark:bg-black/20 w-full">
-              <div className="h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center mb-6">
-                <svg className="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
+            isPolling ? (
+              <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-indigo-200 border-dashed bg-indigo-50/50 py-24 px-12 dark:border-indigo-900/50 dark:bg-indigo-900/10 w-full relative overflow-hidden">
+                <div className="absolute inset-0 bg-grid-indigo-500/[0.025] dark:bg-grid-white/[0.02] bg-[length:32px_32px]" />
+                <div className="relative h-20 w-20 mb-6 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full border-4 border-indigo-500/30 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+                  <div className="absolute inset-2 rounded-full border-4 border-indigo-500/50 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite] animation-delay-500"></div>
+                  <div className="relative h-12 w-12 rounded-full bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/50">
+                    <svg className="w-6 h-6 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="text-2xl font-semibold text-slate-900 dark:text-white mb-3 relative animate-pulse">AI is scanning the database...</h3>
+                <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto relative text-base">
+                  Evaluating thousands of jobs against your persona. High-quality matches will appear here shortly.
+                </p>
               </div>
-              <h3 className="text-xl font-medium text-slate-900 dark:text-white mb-2">No Jobs Found Yet</h3>
-              <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-8">
-                Your AI hasn't found any matching jobs for this Persona yet. Click the button below to start scanning Upwork for high-quality leads.
-              </p>
-              <SyncButton />
-            </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-slate-200 border-dashed bg-white/50 py-24 px-12 dark:border-white/10 dark:bg-black/20 w-full">
+                <div className="h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center mb-6">
+                  <svg className="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-medium text-slate-900 dark:text-white mb-2">No Jobs Found Yet</h3>
+                <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-8">
+                  Your AI hasn't found any matching jobs for this Persona yet. Click the button below to start scanning for high-quality leads.
+                </p>
+                <SyncButton 
+                  activePersonaId={activePersonaId || undefined} 
+                  onSyncStarted={() => setIsPolling(true)}
+                />
+              </div>
+            )
           ) : (
             <div className="w-full">
               <ListView jobs={jobs} updateJobStatus={updateJobStatus} />

@@ -28,126 +28,93 @@ export class IngestionProcessor extends WorkerHost {
   async process(job: Job<any, any, string>): Promise<any> {
     this.logger.log(`Processing ingestion job ${job.id} of type ${job.name}`);
 
-    if (job.name === 'scrape-remotive') {
-      const newJobIds = await this.ingestionService.scrapeRemotive();
-
-
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-wwr') {
-      const newJobIds = await this.ingestionService.scrapeWWR();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-remoteok') {
-      const newJobIds = await this.ingestionService.scrapeRemoteOk();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-upwork') {
-      // Hardcoding a dummy Upwork RSS URL (e.g., searching for 'javascript' jobs)
-      // This can be retrieved from the database or job.data in the future
-      const feedUrl = 'https://www.upwork.com/ab/feed/jobs/rss?q=javascript';
-      const newJobIds = await this.ingestionService.scrapeUpworkRss(feedUrl);
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-freelancer') {
-      const newJobIds = await this.ingestionService.scrapeFreelancerCom();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-workingnomads') {
-      const newJobIds = await this.ingestionService.scrapeWorkingNomads();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-himalayas') {
-      const newJobIds = await this.ingestionService.scrapeHimalayas();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-jobicy') {
-      const newJobIds = await this.ingestionService.scrapeJobicy();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-arbeitnow') {
-      const newJobIds = await this.ingestionService.scrapeArbeitnow();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-remoteco') {
-      const newJobIds = await this.ingestionService.scrapeRemoteCo();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-dribbble') {
-      const newJobIds = await this.ingestionService.scrapeDribbbleJobs();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-relocateme') {
-      const newJobIds = await this.ingestionService.scrapeRelocateMe();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-ats-greenhouse') {
-      const newJobIds = await this.atsIngestionService.scrapeGreenhouse();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-ats-lever') {
-      const newJobIds = await this.atsIngestionService.scrapeLever();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-ats-smartrecruiters') {
-      const newJobIds = await this.atsIngestionService.scrapeSmartRecruiters();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-ats-workable') {
-      const newJobIds = await this.atsIngestionService.scrapeWorkable();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-ats-breezy') {
-      const newJobIds = await this.atsIngestionService.scrapeBreezy();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-ats-ashby') {
-      const newJobIds = await this.atsIngestionService.scrapeAshby();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-dorks') {
-      const newJobIds = await this.dorkIngestionService.scrapeGoogleDorks();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-jobcity') {
-      const newJobIds = await this.ingestionService.scrapeJobcity();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-hackernews') {
-      const newJobIds = await this.ingestionService.scrapeHackerNews();
-      return { insertedCount: newJobIds.length };
-    }
-
-    if (job.name === 'scrape-braintrust') {
-      const newJobIds = await this.graphqlIngestionService.scrapeBraintrust();
-      return { insertedCount: newJobIds.length };
-    }
-
     if (job.name === 'cleanup-old-jobs') {
       await this.ingestionService.cleanupOldJobs();
       return { status: 'cleaned up old jobs' };
     }
 
-    this.logger.warn(`Unknown job name: ${job.name}`);
+    let newJobIds: string[] = [];
+
+    try {
+      switch (job.name) {
+        case 'scrape-remotive':
+          newJobIds = await this.ingestionService.scrapeRemotive();
+          break;
+        case 'scrape-wwr':
+          newJobIds = await this.ingestionService.scrapeWWR();
+          break;
+        case 'scrape-remoteok':
+          newJobIds = await this.ingestionService.scrapeRemoteOk();
+          break;
+        case 'scrape-upwork':
+          newJobIds = await this.ingestionService.scrapeUpworkRss('https://www.upwork.com/ab/feed/jobs/rss?q=javascript');
+          break;
+        case 'scrape-freelancer':
+          newJobIds = await this.ingestionService.scrapeFreelancerCom();
+          break;
+        case 'scrape-workingnomads':
+          newJobIds = await this.ingestionService.scrapeWorkingNomads();
+          break;
+        case 'scrape-himalayas':
+          newJobIds = await this.ingestionService.scrapeHimalayas();
+          break;
+        case 'scrape-jobicy':
+          newJobIds = await this.ingestionService.scrapeJobicy();
+          break;
+        case 'scrape-arbeitnow':
+          newJobIds = await this.ingestionService.scrapeArbeitnow();
+          break;
+        case 'scrape-remoteco':
+          newJobIds = await this.ingestionService.scrapeRemoteCo();
+          break;
+        case 'scrape-dribbble':
+          newJobIds = await this.ingestionService.scrapeDribbbleJobs();
+          break;
+        case 'scrape-relocateme':
+          newJobIds = await this.ingestionService.scrapeRelocateMe();
+          break;
+        case 'scrape-ats-greenhouse':
+          newJobIds = await this.atsIngestionService.scrapeGreenhouse();
+          break;
+        case 'scrape-ats-lever':
+          newJobIds = await this.atsIngestionService.scrapeLever();
+          break;
+        case 'scrape-ats-smartrecruiters':
+          newJobIds = await this.atsIngestionService.scrapeSmartRecruiters();
+          break;
+        case 'scrape-ats-workable':
+          newJobIds = await this.atsIngestionService.scrapeWorkable();
+          break;
+        case 'scrape-ats-breezy':
+          newJobIds = await this.atsIngestionService.scrapeBreezy();
+          break;
+        case 'scrape-ats-ashby':
+          newJobIds = await this.atsIngestionService.scrapeAshby();
+          break;
+        case 'scrape-dorks':
+          newJobIds = await this.dorkIngestionService.scrapeGoogleDorks();
+          break;
+        case 'scrape-jobcity':
+          newJobIds = await this.ingestionService.scrapeJobcity();
+          break;
+        case 'scrape-hackernews':
+          newJobIds = await this.ingestionService.scrapeHackerNews();
+          break;
+        case 'scrape-braintrust':
+          newJobIds = await this.graphqlIngestionService.scrapeBraintrust();
+          break;
+        default:
+          this.logger.warn(`Unknown job name: ${job.name}`);
+      }
+    } catch (e) {
+      this.logger.error(`Error processing ${job.name}:`, e);
+      throw e;
+    }
+
+    if (newJobIds.length > 0) {
+      await this.ingestionService.embedJobs(newJobIds);
+    }
+
+    return { insertedCount: newJobIds.length };
   }
 }
