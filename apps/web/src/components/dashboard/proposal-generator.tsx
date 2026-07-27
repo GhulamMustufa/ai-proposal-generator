@@ -36,7 +36,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-export function ProposalGenerator() {
+export function ProposalGenerator({ initialPersonaId }: { initialPersonaId?: string }) {
   const { getToken } = useAuth();
   const [jobDescription, setJobDescription] = useState("");
   const [voiceSamples, setVoiceSamples] = useState<string[]>(["", "", ""]);
@@ -44,7 +44,12 @@ export function ProposalGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [twoVariations, setTwoVariations] = useState(false);
   const { personas } = usePersonas();
-  const [selectedPersonaId, setSelectedPersonaId] = useState("");
+  const [selectedPersonaId, setSelectedPersonaId] = useState(initialPersonaId || "");
+
+  // Update selected if initial changes (e.g. from nav)
+  useMemo(() => {
+    if (initialPersonaId && !selectedPersonaId) setSelectedPersonaId(initialPersonaId);
+  }, [initialPersonaId]);
 
   const activeSamples = useMemo(
     () => voiceSamples.map((sample) => sample.trim()).filter(Boolean),
@@ -152,6 +157,9 @@ export function ProposalGenerator() {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">1. Persona Selection</h2>
           </div>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Select a persona to inject your verified skills and resume background. The AI uses this to prevent hallucinating false credentials.
+          </p>
           {personas.length > 0 ? (
             <select
               value={selectedPersonaId}
@@ -190,7 +198,9 @@ export function ProposalGenerator() {
 
         <section className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">3. Voice Samples</h2>
-          <p className="text-sm text-slate-600 dark:text-slate-300">Add up to {MAX_VOICE_SAMPLES} past proposal samples.</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Paste 1-3 previous proposals that successfully got you hired. The AI will analyze them to mimic your sentence structure, vocabulary, and tone so the final output sounds exactly like you wrote it.
+          </p>
           <div className="space-y-3">
             {voiceSamples.map((sample, index) => (
               <textarea

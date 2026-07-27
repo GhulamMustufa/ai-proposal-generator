@@ -156,7 +156,7 @@ export default function DashboardPage() {
               </p>
             </div>
             <Link 
-              href="/proposal-generator" 
+              href={`/proposal-generator${activePersonaId ? `?personaId=${activePersonaId}` : ''}`}
               className="whitespace-nowrap inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-indigo-500 shadow-lg shadow-indigo-500/25 shrink-0"
             >
               Open Proposal Crafter ✨

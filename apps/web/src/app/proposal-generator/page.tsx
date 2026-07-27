@@ -3,8 +3,13 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ProposalGenerator } from "@/components/dashboard/proposal-generator";
 
-export default async function ProposalGeneratorPage() {
+export default async function ProposalGeneratorPage({
+  searchParams
+}: {
+  searchParams: Promise<{ personaId?: string }>
+}) {
   const { userId } = await auth();
+  const params = await searchParams;
 
   if (!userId) {
     redirect("/sign-in");
@@ -40,7 +45,7 @@ export default async function ProposalGeneratorPage() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-5xl px-6 py-12">
-        <ProposalGenerator />
+        <ProposalGenerator initialPersonaId={params.personaId} />
       </main>
     </div>
   );
