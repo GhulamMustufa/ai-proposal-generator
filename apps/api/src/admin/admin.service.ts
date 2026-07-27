@@ -60,6 +60,52 @@ export class AdminService {
     }));
   }
 
+  async getActiveJobs(queueName: string) {
+    let queue: Queue;
+    if (queueName === 'ingestion-queue' || queueName === 'ingestionQueue') queue = this.ingestionQueue;
+    else if (queueName === 'matcher-queue' || queueName === 'matcherQueue') queue = this.matcherQueue;
+    else throw new Error('Invalid queue name');
+
+    const activeJobs = await queue.getActive();
+    return activeJobs.map(j => ({
+      id: j.id,
+      name: j.name,
+      progress: j.progress,
+      timestamp: j.timestamp,
+      data: j.data
+    }));
+  }
+
+  async getCompletedJobs(queueName: string) {
+    let queue: Queue;
+    if (queueName === 'ingestion-queue' || queueName === 'ingestionQueue') queue = this.ingestionQueue;
+    else if (queueName === 'matcher-queue' || queueName === 'matcherQueue') queue = this.matcherQueue;
+    else throw new Error('Invalid queue name');
+
+    const completedJobs = await queue.getCompleted();
+    return completedJobs.map(j => ({
+      id: j.id,
+      name: j.name,
+      timestamp: j.finishedOn || j.timestamp,
+      returnvalue: j.returnvalue
+    })).sort((a, b) => b.timestamp - a.timestamp).slice(0, 50);
+  }
+
+  async getWaitingJobs(queueName: string) {
+    let queue: Queue;
+    if (queueName === 'ingestion-queue' || queueName === 'ingestionQueue') queue = this.ingestionQueue;
+    else if (queueName === 'matcher-queue' || queueName === 'matcherQueue') queue = this.matcherQueue;
+    else throw new Error('Invalid queue name');
+
+    const waitingJobs = await queue.getWaiting();
+    return waitingJobs.map(j => ({
+      id: j.id,
+      name: j.name,
+      timestamp: j.timestamp,
+      data: j.data
+    })).sort((a, b) => b.timestamp - a.timestamp).slice(0, 50);
+  }
+
   async triggerAllScrapers() {
     const sources = [
       'scrape-remotive', 'scrape-wwr', 'scrape-remoteok', 'scrape-upwork', 'scrape-freelancer',
@@ -73,6 +119,11 @@ export class AdminService {
       await this.ingestionQueue.add(source, { manual: true });
     }
     return { success: true, message: `Triggered ${sources.length} scrapers` };
+  }
+
+  async triggerScraper(scraperName: string) {
+    await this.ingestionQueue.add(scraperName, { manual: true });
+    return { success: true, message: `Triggered scraper: ${scraperName}` };
   }
 
   async clearQueues() {

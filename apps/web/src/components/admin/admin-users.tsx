@@ -2,7 +2,7 @@
 
 import { useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/lib/toast";
 
 export default function AdminUsers() {
   const { getToken } = useAuth();
