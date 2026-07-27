@@ -16,6 +16,7 @@ export const users = pgTable('users', {
   lemonsqueezySubscriptionId: text('lemonsqueezy_subscription_id'),
   generationsCount: integer('generations_count').default(0).notNull(),
   subscriptionStatus: text('subscription_status').default('free'), // 'free', 'pro'
+  role: text('role').default('user').notNull(), // 'user', 'admin'
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

@@ -16,6 +16,7 @@ import { SubmitterModule } from './submitter/submitter.module';
 import { ProfileModule } from './profile/profile.module';
 import { BillingModule } from './billing/billing.module';
 import { PersonasModule } from './personas/personas.module';
+import { AdminModule } from './admin/admin.module';
 /**
  * Root AppModule
  *
@@ -72,6 +73,7 @@ import { PersonasModule } from './personas/personas.module';
 
     BillingModule,
     PersonasModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
