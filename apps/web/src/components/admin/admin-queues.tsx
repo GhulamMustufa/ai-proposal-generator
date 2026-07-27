@@ -16,8 +16,9 @@ export default function AdminQueues() {
   const [failedJobs, setFailedJobs] = useState<any[] | null>(null);
   const [completedJobs, setCompletedJobs] = useState<any[] | null>(null);
   const [waitingJobs, setWaitingJobs] = useState<any[] | null>(null);
+  const [repeatableJobs, setRepeatableJobs] = useState<any[] | null>(null);
   const [loadingList, setLoadingList] = useState(false);
-  const [viewType, setViewType] = useState<'active' | 'failed' | 'completed' | 'waiting' | null>(null);
+  const [viewType, setViewType] = useState<'active' | 'failed' | 'completed' | 'waiting' | 'repeatable' | null>(null);
 
   async function fetchQueues() {
     try {
@@ -80,7 +81,7 @@ export default function AdminQueues() {
     }
   };
 
-  const fetchJobsList = async (queueName: string, type: 'active' | 'failed' | 'completed' | 'waiting') => {
+  const fetchJobsList = async (queueName: string, type: 'active' | 'failed' | 'completed' | 'waiting' | 'repeatable') => {
     setSelectedQueue(queueName);
     setViewType(type);
     setLoadingList(true);
@@ -94,12 +95,14 @@ export default function AdminQueues() {
         if (type === 'failed') setFailedJobs(await res.json());
         else if (type === 'active') setActiveJobs(await res.json());
         else if (type === 'completed') setCompletedJobs(await res.json());
-        else setWaitingJobs(await res.json());
+        else if (type === 'waiting') setWaitingJobs(await res.json());
+        else setRepeatableJobs(await res.json());
       } else {
         if (type === 'failed') setFailedJobs([]);
         else if (type === 'active') setActiveJobs([]);
         else if (type === 'completed') setCompletedJobs([]);
-        else setWaitingJobs([]);
+        else if (type === 'waiting') setWaitingJobs([]);
+        else setRepeatableJobs([]);
       }
     } catch (err) {
       console.error(err);
@@ -178,6 +181,15 @@ export default function AdminQueues() {
                 <div className="text-xs text-green-500 dark:text-green-400 uppercase font-bold mb-1">Completed (Click)</div>
                 <div className="text-3xl font-mono text-gray-900 dark:text-white">{counts.completed}</div>
               </div>
+              <div 
+                className="bg-gray-50 dark:bg-black/50 border border-gray-100 dark:border-transparent rounded-lg p-4 cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors col-span-2"
+                onClick={() => fetchJobsList(name, 'repeatable')}
+              >
+                <div className="text-xs text-indigo-500 dark:text-indigo-400 uppercase font-bold mb-1 flex items-center justify-between">
+                  <span>View Schedules / Cron Jobs</span>
+                  <span>→</span>
+                </div>
+              </div>
             </div>
           </div>
         ))}
@@ -223,6 +235,24 @@ export default function AdminQueues() {
                     </div>
                     <div className="text-sm font-medium text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/40 px-3 py-1 rounded-full">
                       Queued
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : viewType === 'repeatable' ? (
+            repeatableJobs?.length === 0 ? (
+              <p className="text-gray-500 dark:text-gray-400">No scheduled jobs found.</p>
+            ) : (
+              <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                {repeatableJobs?.map((job) => (
+                  <div key={job.key} className="bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-lg p-4 flex justify-between items-center">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">{job.name}</h4>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Cron: {job.pattern} • Next run: {new Date(job.next).toLocaleString()}</p>
+                    </div>
+                    <div className="text-sm font-medium text-indigo-700 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/40 px-3 py-1 rounded-full">
+                      Scheduled
                     </div>
                   </div>
                 ))}

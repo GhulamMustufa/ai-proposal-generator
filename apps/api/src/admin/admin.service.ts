@@ -106,6 +106,16 @@ export class AdminService {
     })).sort((a, b) => b.timestamp - a.timestamp).slice(0, 50);
   }
 
+  async getRepeatableJobs(queueName: string) {
+    let queue: Queue;
+    if (queueName === 'ingestion-queue' || queueName === 'ingestionQueue') queue = this.ingestionQueue;
+    else if (queueName === 'matcher-queue' || queueName === 'matcherQueue') queue = this.matcherQueue;
+    else throw new Error('Invalid queue name');
+
+    const repeatableJobs = await queue.getRepeatableJobs();
+    return repeatableJobs;
+  }
+
   async triggerAllScrapers() {
     const sources = [
       'scrape-remotive', 'scrape-wwr', 'scrape-remoteok', 'scrape-upwork', 'scrape-freelancer',

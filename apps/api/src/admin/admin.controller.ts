@@ -43,6 +43,11 @@ export class AdminController {
     return this.adminService.getWaitingJobs(queueName);
   }
 
+  @Get('queues/:queueName/repeatable')
+  async getRepeatableJobs(@Param('queueName') queueName: string) {
+    return this.adminService.getRepeatableJobs(queueName);
+  }
+
   @Post('scrapers/trigger')
   async triggerAllScrapers() {
     return this.adminService.triggerAllScrapers();
