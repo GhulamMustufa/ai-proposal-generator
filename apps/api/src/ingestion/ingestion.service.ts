@@ -825,4 +825,99 @@ export class IngestionService {
       return [];
     }
   }
+
+  async scrapeDevTo(): Promise<string[]> {
+    this.logger.log('Starting Dev.to Jobs scraping...');
+    const url = 'https://dev.to/api/listings?category=jobs';
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(20000) });
+      if (!response.ok) throw new Error(`Dev.to returned ${response.status}`);
+      const jobsList = await response.json();
+      
+      const newJobIds: string[] = [];
+      for (const job of jobsList) {
+        const title = job.title || 'Dev.to Job';
+        const externalId = `devto_${job.id}`;
+        const rawDesc = job.processed_html || job.body_markdown || '';
+        const cleanDesc = extractJobTextFromHtml(rawDesc);
+        // Sometimes organization is null, fallback to user
+        const companyName = job.organization?.name || job.user?.name || 'Dev.to Poster';
+        
+        if (!cleanDesc || cleanDesc.trim().length === 0) continue;
+
+        const inserted = await this.db
+          .insert(jobs)
+          .values({
+            platform: 'devto',
+            externalId,
+            title,
+            company: companyName,
+            description: cleanDesc.slice(0, 7000),
+            url: `https://dev.to/${job.organization?.slug || job.user?.username}/${job.slug}`,
+            source_raw: JSON.stringify(job),
+            publishedAt: new Date(), // Dev.to listings lack a created_at in listings API usually, using now
+          })
+          .onConflictDoNothing({ target: [jobs.platform, jobs.externalId] })
+          .returning({ id: jobs.id });
+
+        if (inserted.length > 0) newJobIds.push(inserted[0].id);
+      }
+      this.logger.log(`Ingested ${newJobIds.length} jobs from Dev.to.`);
+      return newJobIds;
+    } catch (error) {
+      this.logger.error(`Failed to scrape Dev.to: ${error instanceof Error ? error.message : String(error)}`);
+      return [];
+    }
+  }
+
+  async scrapeRemotePython(): Promise<string[]> {
+    this.logger.log('Starting RemotePython scraping...');
+    const url = 'https://www.remotepython.com/jobs/';
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(20000) });
+      if (!response.ok) throw new Error(`RemotePython returned ${response.status}`);
+      const html = await response.text();
+      const $ = cheerio.load(html);
+      
+      const newJobIds: string[] = [];
+      const items = $('.item').toArray();
+
+      for (const el of items) {
+        const titleEl = $(el).find('h3 a');
+        const title = titleEl.text().trim();
+        const link = titleEl.attr('href') || '';
+        const company = $(el).find('h5 span.color-black').text().trim() || 'RemotePython Company';
+        const rawDesc = $(el).find('p').first().text().trim();
+        
+        if (!title || !link) continue;
+        
+        const fullLink = link.startsWith('http') ? link : `https://www.remotepython.com${link}`;
+        // The external ID can be extracted from the URL, which looks like /jobs/hash/
+        const urlParts = link.split('/').filter(Boolean);
+        const externalId = `remotepython_${urlParts[urlParts.length - 1] || Date.now().toString()}`;
+
+        const inserted = await this.db
+          .insert(jobs)
+          .values({
+            platform: 'remotepython',
+            externalId,
+            title,
+            company,
+            description: rawDesc.slice(0, 7000), // Note: it's a short description on the list page
+            url: fullLink,
+            source_raw: JSON.stringify({ title, company, link }),
+            publishedAt: new Date(),
+          })
+          .onConflictDoNothing({ target: [jobs.platform, jobs.externalId] })
+          .returning({ id: jobs.id });
+
+        if (inserted.length > 0) newJobIds.push(inserted[0].id);
+      }
+      this.logger.log(`Ingested ${newJobIds.length} jobs from RemotePython.`);
+      return newJobIds;
+    } catch (error) {
+      this.logger.error(`Failed to scrape RemotePython: ${error instanceof Error ? error.message : String(error)}`);
+      return [];
+    }
+  }
 }

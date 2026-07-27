@@ -276,6 +276,26 @@ export class IngestionModule implements OnApplicationBootstrap {
         },
       );
 
+      // Scrape Dev.to every day at 11 AM and 11 PM
+      await this.ingestionQueue.add(
+        'scrape-devto',
+        {},
+        {
+          repeat: { pattern: '0 11,23 * * *' },
+          jobId: 'repeatable-devto',
+        },
+      );
+
+      // Scrape RemotePython every day at 12 AM and 12 PM
+      await this.ingestionQueue.add(
+        'scrape-remotepython',
+        {},
+        {
+          repeat: { pattern: '0 0,12 * * *' },
+          jobId: 'repeatable-remotepython',
+        },
+      );
+
       // Cleanup old jobs from database at 12:30 AM every day
       await this.ingestionQueue.add(
         'cleanup-old-jobs',

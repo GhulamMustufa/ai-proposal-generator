@@ -112,6 +112,12 @@ export class IngestionProcessor extends WorkerHost {
         case 'scrape-larajobs':
           newJobIds = await this.ingestionService.scrapeLaraJobs();
           break;
+        case 'scrape-devto':
+          newJobIds = await this.ingestionService.scrapeDevTo();
+          break;
+        case 'scrape-remotepython':
+          newJobIds = await this.ingestionService.scrapeRemotePython();
+          break;
         default:
           this.logger.warn(`Unknown job name: ${job.name}`);
       }

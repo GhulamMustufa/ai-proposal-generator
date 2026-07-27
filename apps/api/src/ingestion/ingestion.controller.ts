@@ -73,11 +73,15 @@ export class IngestionController {
       'scrape-pythonorg',
       'scrape-vuejobs',
       'scrape-larajobs',
+      'scrape-devto',
+      'scrape-remotepython',
     ];
 
     // Dispatch all jobs to the queue
     for (const source of sources) {
-      await this.ingestionQueue.add(source, { manual: true });
+      await this.ingestionQueue.add(source, { manual: true }, {
+        jobId: `manual-${source}`
+      });
     }
 
     // Update rate limit tracker
@@ -94,7 +98,9 @@ export class IngestionController {
     this.logger.log(`Manual trigger requested for job: ${jobName}`);
 
     // Add the job to the queue for immediate execution
-    const job = await this.ingestionQueue.add(jobName, { manual: true });
+    const job = await this.ingestionQueue.add(jobName, { manual: true }, {
+      jobId: `manual-${jobName}`
+    });
 
     return {
       success: true,

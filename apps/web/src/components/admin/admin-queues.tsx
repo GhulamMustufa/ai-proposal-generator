@@ -57,8 +57,10 @@ export default function AdminQueues() {
       } else {
         toast.error("Failed to trigger scrapers");
       }
+    } catch (e) {
+      toast.error("Error triggering all scrapers");
     } finally {
-      setTriggering(false);
+      setTimeout(() => setTriggering(false), 3000); // 3 second UI cooldown
     }
   };
 
@@ -325,7 +327,8 @@ export default function AdminQueues() {
             'scrape-workingnomads', 'scrape-himalayas', 'scrape-jobicy', 'scrape-arbeitnow', 'scrape-remoteco',
             'scrape-dribbble', 'scrape-relocateme', 'scrape-ats-greenhouse', 'scrape-ats-lever', 'scrape-ats-smartrecruiters',
             'scrape-ats-workable', 'scrape-ats-breezy', 'scrape-ats-ashby', 'scrape-dorks', 'scrape-jobcity',
-            'scrape-hackernews', 'scrape-braintrust', 'scrape-pythonorg', 'scrape-vuejobs', 'scrape-larajobs'
+            'scrape-hackernews', 'scrape-braintrust', 'scrape-pythonorg', 'scrape-vuejobs', 'scrape-larajobs',
+            'scrape-devto', 'scrape-remotepython'
           ].map((scraper) => (
             <button
               key={scraper}
@@ -348,7 +351,7 @@ export default function AdminQueues() {
                 } catch (e) {
                   toast.error("Error triggering scraper");
                 } finally {
-                  setTriggeringId(null);
+                  setTimeout(() => setTriggeringId(null), 2000); // 2 second UI cooldown
                 }
               }}
               className="bg-gray-100 dark:bg-white/10 hover:bg-purple-100 dark:hover:bg-purple-900/30 text-gray-700 dark:text-gray-300 hover:text-purple-700 dark:hover:text-purple-300 border border-gray-200 dark:border-white/10 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-center truncate disabled:opacity-50 disabled:cursor-wait"

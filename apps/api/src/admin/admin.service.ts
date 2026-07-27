@@ -122,17 +122,22 @@ export class AdminService {
       'scrape-workingnomads', 'scrape-himalayas', 'scrape-jobicy', 'scrape-arbeitnow', 'scrape-remoteco',
       'scrape-dribbble', 'scrape-relocateme', 'scrape-ats-greenhouse', 'scrape-ats-lever', 'scrape-ats-smartrecruiters',
       'scrape-ats-workable', 'scrape-ats-breezy', 'scrape-ats-ashby', 'scrape-dorks', 'scrape-jobcity',
-      'scrape-hackernews', 'scrape-braintrust', 'scrape-pythonorg', 'scrape-vuejobs', 'scrape-larajobs'
+      'scrape-hackernews', 'scrape-braintrust', 'scrape-pythonorg', 'scrape-vuejobs', 'scrape-larajobs',
+      'scrape-devto', 'scrape-remotepython'
     ];
 
     for (const source of sources) {
-      await this.ingestionQueue.add(source, { manual: true });
+      await this.ingestionQueue.add(source, { manual: true }, {
+        jobId: `manual-${source}`
+      });
     }
     return { success: true, message: `Triggered ${sources.length} scrapers` };
   }
 
   async triggerScraper(scraperName: string) {
-    await this.ingestionQueue.add(scraperName, { manual: true });
+    await this.ingestionQueue.add(scraperName, { manual: true }, {
+      jobId: `manual-${scraperName}`
+    });
     return { success: true, message: `Triggered scraper: ${scraperName}` };
   }
 
