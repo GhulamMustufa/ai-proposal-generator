@@ -29,8 +29,8 @@ export function PersonaFilter() {
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+      <label className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
         Showing matches for:
       </label>
       <select
@@ -44,7 +44,7 @@ export function PersonaFilter() {
           }
           router.push(`?${params.toString()}`, { scroll: false });
         }}
-        className="h-9 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-1.5 text-sm font-medium text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
+        className="h-10 sm:h-9 w-full sm:w-auto rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-1.5 text-sm font-medium text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
       >
         <option value="" disabled>Select a persona</option>
         {personas.map((p) => (

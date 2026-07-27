@@ -18,6 +18,11 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">Admin Console</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Manage queues, users, and scrape jobs across the platform.</p>
+      </div>
+      
       <div className="flex items-center gap-4 border-b border-gray-200 dark:border-white/10 pb-4 overflow-x-auto">
         {tabs.map((tab) => (
           <button

@@ -175,7 +175,7 @@ export default function Home() {
     <div className="space-y-20">
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-8 py-16 text-white shadow-xl sm:px-14 sm:py-20 dark:border-slate-700/60">
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-6 py-12 text-white shadow-xl sm:px-14 sm:py-20 dark:border-slate-700/60">
         <div className="pointer-events-none absolute -left-16 -top-8 h-72 w-72 rounded-full bg-fuchsia-500/20 blur-3xl" />
         <div className="pointer-events-none absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl" />
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-600/10 blur-3xl" />
@@ -193,15 +193,15 @@ export default function Home() {
           A hybrid automation engine. Playwright bots crush Greenhouse and Lever automatically in the background. Our Chrome Extension destroys Workday and Taleo forms in seconds.
         </p>
 
-        <div className="relative mt-8 flex flex-wrap items-center gap-3">
+        <div className="relative mt-8 flex flex-col sm:flex-row flex-wrap items-center gap-3">
           <SignUpButton mode="modal">
-            <button className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 active:scale-95">
+            <button className="w-full sm:w-auto rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 active:scale-95">
               Deploy your agent free →
             </button>
           </SignUpButton>
           <Link
             href="/dashboard"
-            className="rounded-xl border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+            className="w-full sm:w-auto rounded-xl border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20 text-center"
           >
             Open dashboard
           </Link>
@@ -358,11 +358,13 @@ export default function Home() {
               Our matching engine is actively processing thousands of remote tech roles. Join the beta to get access to the Playwright submission bots before public launch.
             </p>
           </div>
-          <SignUpButton mode="modal">
-            <button className="shrink-0 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 active:scale-95">
-              Request Beta Access →
-            </button>
-          </SignUpButton>
+          <div className="w-full sm:w-auto mt-4 sm:mt-0">
+            <SignUpButton mode="modal">
+              <button className="w-full sm:w-auto shrink-0 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 active:scale-95 text-center">
+                Request Beta Access →
+              </button>
+            </SignUpButton>
+          </div>
         </div>
       </section>
 
@@ -443,7 +445,7 @@ export default function Home() {
       </section>
 
       {/* ── Final CTA ──────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-8 py-16 text-center text-white sm:px-14">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-6 py-12 text-center text-white sm:px-14 sm:py-16">
         <div className="pointer-events-none absolute -left-10 top-0 h-64 w-64 rounded-full bg-fuchsia-500/20 blur-3xl" />
         <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-cyan-400/15 blur-3xl" />
         <h2 className="relative text-3xl font-bold tracking-tight sm:text-5xl">

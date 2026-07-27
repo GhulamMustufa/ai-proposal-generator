@@ -192,7 +192,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-xl bg-indigo-500 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-400 disabled:opacity-50 shadow-lg shadow-indigo-500/25"
+                  className="w-full sm:w-auto rounded-xl bg-indigo-500 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-400 disabled:opacity-50 shadow-lg shadow-indigo-500/25"
                 >
                   {saving ? "Saving..." : "Save Preferences"}
                 </button>
@@ -225,7 +225,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-xl bg-indigo-500 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-400 disabled:opacity-50 shadow-lg shadow-indigo-500/25"
+                  className="w-full sm:w-auto rounded-xl bg-indigo-500 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-400 disabled:opacity-50 shadow-lg shadow-indigo-500/25"
                 >
                   {saving ? "Saving..." : "Save Default Persona"}
                 </button>

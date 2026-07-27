@@ -175,7 +175,7 @@ export function JobCard({ job, updateJobStatus }: JobCardProps) {
               href={job.url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-white transition hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 mb-2"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-white transition hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 mb-2 w-full"
             >
               View Job
             </a>

@@ -233,7 +233,7 @@ export function ProposalGenerator({ initialPersonaId }: { initialPersonaId?: str
           <button
             type="submit"
             disabled={isGenerating}
-            className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="w-full sm:w-auto rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             {isGenerating ? "Generating..." : "Generate Premium Proposal"}
           </button>

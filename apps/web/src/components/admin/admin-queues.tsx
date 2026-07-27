@@ -133,20 +133,20 @@ export default function AdminQueues() {
 
   return (
     <div className="space-y-8">
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <button
           onClick={handleTriggerScrapers}
           disabled={triggering}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 shadow-[0_0_20px_rgba(147,51,234,0.3)]"
+          className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 shadow-[0_0_20px_rgba(147,51,234,0.3)]"
         >
           {triggering ? "Triggering..." : "Run All Scrapers"}
         </button>
         <button
           onClick={handleClearQueues}
           disabled={clearing}
-          className="bg-red-50 dark:bg-red-600/20 hover:bg-red-100 dark:hover:bg-red-600 border border-red-200 dark:border-red-500/50 text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-white px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
+          className="w-full sm:w-auto bg-red-50 dark:bg-red-600/20 hover:bg-red-100 dark:hover:bg-red-600 border border-red-200 dark:border-red-500/50 text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-white px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
         >
-          {clearing ? "Clearing..." : "Emergency Stop (Clear Queues)"}
+          {clearing ? "Clearing..." : "Emergency Stop"}
         </button>
       </div>
 
@@ -212,10 +212,10 @@ export default function AdminQueues() {
             ) : (
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                 {activeJobs?.map((job) => (
-                  <div key={job.id} className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-lg p-4 flex justify-between items-center">
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white">{job.name}</h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">ID: {job.id} • Started: {new Date(job.timestamp).toLocaleTimeString()}</p>
+                  <div key={job.id} className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+                    <div className="min-w-0 max-w-full">
+                      <h4 className="font-semibold text-gray-900 dark:text-white truncate">{job.name}</h4>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">ID: {job.id} • Started: {new Date(job.timestamp).toLocaleTimeString()}</p>
                     </div>
                     <div className="text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-3 py-1 rounded-full">
                       {job.progress ? (typeof job.progress === 'object' ? JSON.stringify(job.progress) : `${job.progress}%`) : 'Running...'}
@@ -230,10 +230,10 @@ export default function AdminQueues() {
             ) : (
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                 {waitingJobs?.map((job) => (
-                  <div key={job.id} className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-100 dark:border-yellow-900/30 rounded-lg p-4 flex justify-between items-center">
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white">{job.name}</h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">ID: {job.id} • Queued: {new Date(job.timestamp).toLocaleTimeString()}</p>
+                  <div key={job.id} className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-100 dark:border-yellow-900/30 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+                    <div className="min-w-0 max-w-full">
+                      <h4 className="font-semibold text-gray-900 dark:text-white truncate">{job.name}</h4>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">ID: {job.id} • Queued: {new Date(job.timestamp).toLocaleTimeString()}</p>
                     </div>
                     <div className="text-sm font-medium text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/40 px-3 py-1 rounded-full">
                       Queued
@@ -248,10 +248,10 @@ export default function AdminQueues() {
             ) : (
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                 {repeatableJobs?.map((job) => (
-                  <div key={job.key} className="bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-lg p-4 flex justify-between items-center">
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white">{job.name}</h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Cron: {job.pattern} • Next run: {new Date(job.next).toLocaleString()}</p>
+                  <div key={job.key} className="bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+                    <div className="min-w-0 max-w-full">
+                      <h4 className="font-semibold text-gray-900 dark:text-white truncate">{job.name}</h4>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">Cron: {job.pattern} • Next run: {new Date(job.next).toLocaleString()}</p>
                     </div>
                     <div className="text-sm font-medium text-indigo-700 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/40 px-3 py-1 rounded-full">
                       Scheduled
@@ -266,10 +266,10 @@ export default function AdminQueues() {
             ) : (
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                 {completedJobs?.map((job) => (
-                  <div key={job.id} className="bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 rounded-lg p-4 flex justify-between items-center">
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white">{job.name}</h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">ID: {job.id} • Completed: {new Date(job.timestamp).toLocaleString()}</p>
+                  <div key={job.id} className="bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+                    <div className="min-w-0 max-w-full">
+                      <h4 className="font-semibold text-gray-900 dark:text-white truncate">{job.name}</h4>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">ID: {job.id} • Completed: {new Date(job.timestamp).toLocaleString()}</p>
                     </div>
                     <div className="text-sm font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-3 py-1 rounded-full">
                       {job.returnvalue?.insertedCount !== undefined ? (
@@ -287,10 +287,12 @@ export default function AdminQueues() {
           ) : (
             <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
               {failedJobs?.map((job) => (
-                <div key={job.id} className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="font-mono text-sm font-bold text-red-800 dark:text-red-400">ID: {job.id}</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(job.timestamp).toLocaleString()}</span>
+                <div key={job.id} className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-lg p-4 flex flex-col gap-2">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start w-full min-w-0 gap-2 sm:gap-4">
+                    <div className="min-w-0 max-w-full">
+                      <span className="font-mono text-sm font-bold text-red-800 dark:text-red-400 block truncate">ID: {job.id}</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(job.timestamp).toLocaleString()}</span>
+                    </div>
                   </div>
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{job.name}</h4>
                   <div className="text-sm text-red-600 dark:text-red-400 mb-4 whitespace-pre-wrap font-mono bg-red-100 dark:bg-black/30 p-2 rounded">
@@ -321,7 +323,7 @@ export default function AdminQueues() {
 
       <div className="mt-12 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm dark:shadow-none">
         <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Individual Scrapers</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {[
             'scrape-remotive', 'scrape-wwr', 'scrape-remoteok', 'scrape-upwork', 'scrape-freelancer',
             'scrape-workingnomads', 'scrape-himalayas', 'scrape-jobicy', 'scrape-arbeitnow', 'scrape-remoteco',
@@ -354,7 +356,11 @@ export default function AdminQueues() {
                   setTimeout(() => setTriggeringId(null), 2000); // 2 second UI cooldown
                 }
               }}
-              className="bg-gray-100 dark:bg-white/10 hover:bg-purple-100 dark:hover:bg-purple-900/30 text-gray-700 dark:text-gray-300 hover:text-purple-700 dark:hover:text-purple-300 border border-gray-200 dark:border-white/10 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-center truncate disabled:opacity-50 disabled:cursor-wait"
+              className={`p-3 text-xs font-medium rounded-xl border text-center transition-all truncate disabled:opacity-50 disabled:cursor-wait ${
+                triggeringId === scraper
+                  ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 animate-pulse"
+                  : "bg-gray-100 dark:bg-white/10 hover:bg-purple-100 dark:hover:bg-purple-900/30 text-gray-700 dark:text-gray-300 hover:text-purple-700 dark:hover:text-purple-300 border border-gray-200 dark:border-white/10"
+              }`}
               title={scraper}
             >
               {triggeringId === scraper ? "Starting..." : scraper.replace('scrape-', '')}
