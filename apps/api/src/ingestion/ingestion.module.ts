@@ -245,7 +245,37 @@ export class IngestionModule implements OnApplicationBootstrap {
           jobId: 'repeatable-braintrust',
         },
       );
-  
+
+      // Scrape Python.org every day at 8 AM and 8 PM
+      await this.ingestionQueue.add(
+        'scrape-pythonorg',
+        {},
+        {
+          repeat: { pattern: '0 8,20 * * *' },
+          jobId: 'repeatable-pythonorg',
+        },
+      );
+
+      // Scrape VueJobs every day at 9 AM and 9 PM
+      await this.ingestionQueue.add(
+        'scrape-vuejobs',
+        {},
+        {
+          repeat: { pattern: '0 9,21 * * *' },
+          jobId: 'repeatable-vuejobs',
+        },
+      );
+
+      // Scrape LaraJobs every day at 10 AM and 10 PM
+      await this.ingestionQueue.add(
+        'scrape-larajobs',
+        {},
+        {
+          repeat: { pattern: '0 10,22 * * *' },
+          jobId: 'repeatable-larajobs',
+        },
+      );
+
       // Cleanup old jobs from database at 12:30 AM every day
       await this.ingestionQueue.add(
         'cleanup-old-jobs',

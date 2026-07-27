@@ -103,6 +103,15 @@ export class IngestionProcessor extends WorkerHost {
         case 'scrape-braintrust':
           newJobIds = await this.graphqlIngestionService.scrapeBraintrust();
           break;
+        case 'scrape-pythonorg':
+          newJobIds = await this.ingestionService.scrapePythonOrg();
+          break;
+        case 'scrape-vuejobs':
+          newJobIds = await this.ingestionService.scrapeVueJobs();
+          break;
+        case 'scrape-larajobs':
+          newJobIds = await this.ingestionService.scrapeLaraJobs();
+          break;
         default:
           this.logger.warn(`Unknown job name: ${job.name}`);
       }

@@ -699,4 +699,130 @@ export class IngestionService {
       return [];
     }
   }
+
+  async scrapePythonOrg(): Promise<string[]> {
+    this.logger.log('Starting Python.org Jobs scraping...');
+    const url = 'https://www.python.org/jobs/feed/rss/';
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(20000) });
+      if (!response.ok) throw new Error(`Python.org returned ${response.status}`);
+      const xml = await response.text();
+      const $ = cheerio.load(xml, { xmlMode: true });
+      const newJobIds: string[] = [];
+      const items = $('item').toArray();
+      
+      for (const el of items) {
+        const guid = $(el).find('guid').text();
+        const link = $(el).find('link').text();
+        const title = $(el).find('title').text();
+        const rawDesc = $(el).find('description').text();
+        const externalId = `pythonorg_${guid || link}`;
+        const cleanDesc = extractJobTextFromHtml(rawDesc || '');
+        
+        const inserted = await this.db
+          .insert(jobs)
+          .values({
+            platform: 'pythonorg',
+            externalId,
+            title,
+            company: 'Python.org',
+            description: cleanDesc.slice(0, 7000),
+            url: link,
+          })
+          .onConflictDoNothing()
+          .returning({ id: jobs.id });
+          
+        if (inserted.length > 0) newJobIds.push(inserted[0].id);
+      }
+      this.logger.log(`Ingested ${newJobIds.length} jobs from Python.org.`);
+      return newJobIds;
+    } catch (error) {
+      this.logger.error(`Failed to scrape Python.org: ${error}`);
+      return [];
+    }
+  }
+
+  async scrapeVueJobs(): Promise<string[]> {
+    this.logger.log('Starting VueJobs scraping...');
+    const url = 'https://app.vuejobs.com/feed/posts';
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(20000) });
+      if (!response.ok) throw new Error(`VueJobs returned ${response.status}`);
+      const xml = await response.text();
+      const $ = cheerio.load(xml, { xmlMode: true });
+      const newJobIds: string[] = [];
+      const items = $('item').toArray();
+      
+      for (const el of items) {
+        const guid = $(el).find('guid').text();
+        const link = $(el).find('link').text();
+        const title = $(el).find('title').text();
+        const rawDesc = $(el).find('description').text();
+        const externalId = `vuejobs_${guid || link}`;
+        const cleanDesc = extractJobTextFromHtml(rawDesc || '');
+        
+        const inserted = await this.db
+          .insert(jobs)
+          .values({
+            platform: 'vuejobs',
+            externalId,
+            title,
+            company: 'VueJobs',
+            description: cleanDesc.slice(0, 7000),
+            url: link,
+          })
+          .onConflictDoNothing()
+          .returning({ id: jobs.id });
+          
+        if (inserted.length > 0) newJobIds.push(inserted[0].id);
+      }
+      this.logger.log(`Ingested ${newJobIds.length} jobs from VueJobs.`);
+      return newJobIds;
+    } catch (error) {
+      this.logger.error(`Failed to scrape VueJobs: ${error}`);
+      return [];
+    }
+  }
+
+  async scrapeLaraJobs(): Promise<string[]> {
+    this.logger.log('Starting LaraJobs scraping...');
+    const url = 'https://larajobs.com/feed';
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(20000) });
+      if (!response.ok) throw new Error(`LaraJobs returned ${response.status}`);
+      const xml = await response.text();
+      const $ = cheerio.load(xml, { xmlMode: true });
+      const newJobIds: string[] = [];
+      const items = $('item').toArray();
+      
+      for (const el of items) {
+        const guid = $(el).find('guid').text();
+        const link = $(el).find('link').text();
+        const title = $(el).find('title').text();
+        const rawDesc = $(el).find('description').text();
+        const externalId = `larajobs_${guid || link}`;
+        const cleanDesc = extractJobTextFromHtml(rawDesc || '');
+        
+        const inserted = await this.db
+          .insert(jobs)
+          .values({
+            platform: 'larajobs',
+            externalId,
+            title,
+            company: 'LaraJobs',
+            description: cleanDesc.slice(0, 7000),
+            url: link,
+          })
+          .onConflictDoNothing()
+          .returning({ id: jobs.id });
+          
+        if (inserted.length > 0) newJobIds.push(inserted[0].id);
+      }
+      this.logger.log(`Ingested ${newJobIds.length} jobs from LaraJobs.`);
+      return newJobIds;
+    } catch (error) {
+      this.logger.error(`Failed to scrape LaraJobs: ${error}`);
+      return [];
+    }
+  }
 }

@@ -122,7 +122,7 @@ export class AdminService {
       'scrape-workingnomads', 'scrape-himalayas', 'scrape-jobicy', 'scrape-arbeitnow', 'scrape-remoteco',
       'scrape-dribbble', 'scrape-relocateme', 'scrape-ats-greenhouse', 'scrape-ats-lever', 'scrape-ats-smartrecruiters',
       'scrape-ats-workable', 'scrape-ats-breezy', 'scrape-ats-ashby', 'scrape-dorks', 'scrape-jobcity',
-      'scrape-hackernews', 'scrape-braintrust'
+      'scrape-hackernews', 'scrape-braintrust', 'scrape-pythonorg', 'scrape-vuejobs', 'scrape-larajobs'
     ];
 
     for (const source of sources) {

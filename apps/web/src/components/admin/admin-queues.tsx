@@ -165,7 +165,7 @@ export default function AdminQueues() {
                 onClick={() => fetchJobsList(name, 'waiting')}
               >
                 <div className="text-xs text-yellow-500 dark:text-yellow-400 uppercase font-bold mb-1">Waiting (Click)</div>
-                <div className="text-3xl font-mono text-gray-900 dark:text-white">{counts.waiting}</div>
+                <div className="text-3xl font-mono text-gray-900 dark:text-white">{counts.wait ?? 0}</div>
               </div>
               <div 
                 className="bg-gray-50 dark:bg-black/50 border border-gray-100 dark:border-transparent rounded-lg p-4 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
@@ -325,7 +325,7 @@ export default function AdminQueues() {
             'scrape-workingnomads', 'scrape-himalayas', 'scrape-jobicy', 'scrape-arbeitnow', 'scrape-remoteco',
             'scrape-dribbble', 'scrape-relocateme', 'scrape-ats-greenhouse', 'scrape-ats-lever', 'scrape-ats-smartrecruiters',
             'scrape-ats-workable', 'scrape-ats-breezy', 'scrape-ats-ashby', 'scrape-dorks', 'scrape-jobcity',
-            'scrape-hackernews', 'scrape-braintrust'
+            'scrape-hackernews', 'scrape-braintrust', 'scrape-pythonorg', 'scrape-vuejobs', 'scrape-larajobs'
           ].map((scraper) => (
             <button
               key={scraper}

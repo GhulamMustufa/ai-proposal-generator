@@ -70,6 +70,9 @@ export class IngestionController {
       'scrape-jobcity',
       'scrape-hackernews',
       'scrape-braintrust',
+      'scrape-pythonorg',
+      'scrape-vuejobs',
+      'scrape-larajobs',
     ];
 
     // Dispatch all jobs to the queue
