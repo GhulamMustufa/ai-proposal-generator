@@ -82,7 +82,7 @@ export class IngestionService {
   }
 
   /**
-   * Deletes jobs older than 30 days to keep the database size small and relevant.
+   * Deletes jobs older than 30 days to keep the database size small and highly relevant.
    */
   async cleanupOldJobs(): Promise<void> {
     this.logger.log('Starting cleanup of jobs older than 30 days...');
@@ -433,9 +433,9 @@ export class IngestionService {
    */
   async scrapeFreelancerCom(): Promise<string[]> {
     this.logger.log('Starting Freelancer.com scraping...');
-    // Hardcoding a generic 'javascript' query for now; can be parameterized later
+    // Fetch active generic projects
     const url =
-      'https://www.freelancer.com/api/projects/0.1/projects/active?query=javascript&compact=true&languages[]=en&limit=50';
+      'https://www.freelancer.com/api/projects/0.1/projects/active?compact=true&languages[]=en&limit=50';
 
     try {
       const response = await fetch(url, { signal: AbortSignal.timeout(20000) });

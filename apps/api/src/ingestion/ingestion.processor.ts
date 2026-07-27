@@ -47,7 +47,7 @@ export class IngestionProcessor extends WorkerHost {
           newJobIds = await this.ingestionService.scrapeRemoteOk();
           break;
         case 'scrape-upwork':
-          newJobIds = await this.ingestionService.scrapeUpworkRss('https://www.upwork.com/ab/feed/jobs/rss?q=javascript');
+          newJobIds = await this.ingestionService.scrapeUpworkRss('https://www.upwork.com/ab/feed/jobs/rss');
           break;
         case 'scrape-freelancer':
           newJobIds = await this.ingestionService.scrapeFreelancerCom();
