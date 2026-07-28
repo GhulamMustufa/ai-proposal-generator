@@ -8,6 +8,8 @@ import { ListView } from "@/components/dashboard/list-view";
 import { SyncButton } from "@/components/dashboard/sync-button";
 import { PersonaFilter } from "@/components/dashboard/persona-filter";
 import { usePersonas } from "@/hooks/use-personas";
+import { useUserPlan } from "@/hooks/use-user-plan";
+import { useUpgradeModal } from "@/context/upgrade-modal-context";
 
 // Global cache to prevent refetching jobs when switching back to a persona
 const jobsCache: Record<string, any[]> = {};
@@ -18,12 +20,21 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const activePersonaId = searchParams.get("personaId");
   const { personas } = usePersonas();
+  const { plan } = useUserPlan();
+  const { openModal } = useUpgradeModal();
 
   useEffect(() => {
     if (!userId) {
       router.push("/sign-in");
     }
   }, [userId, router]);
+
+  // Set default persona if none is selected
+  useEffect(() => {
+    if (!activePersonaId && personas && personas.length > 0) {
+      router.replace(`/dashboard?personaId=${personas[0].id}`);
+    }
+  }, [activePersonaId, personas, router]);
 
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -188,6 +199,23 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-5xl px-6 py-12">
+        {plan && plan.subscriptionStatus === 'free' && (
+          <div className="mb-8 overflow-hidden rounded-2xl border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-900/10 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-300">Free Plan Usage</h3>
+              <p className="text-xs text-indigo-700 dark:text-indigo-400 mt-1">
+                You have used {plan.generationsCount} of {plan.monthlyLimit} proposals this month.
+              </p>
+            </div>
+            <button
+              onClick={() => openModal()}
+              className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 px-4 py-2 rounded-lg transition-colors shadow-sm"
+            >
+              Upgrade to Pro
+            </button>
+          </div>
+        )}
+
         <div className="mb-8 overflow-hidden rounded-2xl border border-slate-200 dark:border-white/5 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-8 shadow-sm">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div>

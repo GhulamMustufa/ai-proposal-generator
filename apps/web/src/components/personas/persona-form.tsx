@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { TagsInput } from "./tags-input";
 import { SUGGESTED_SKILLS, SUGGESTED_COMPANIES } from "@/lib/constants";
 import { clearPersonasCache } from "@/hooks/use-personas";
+import { useUpgradeModal } from "@/context/upgrade-modal-context";
 
 type Persona = {
   id: string;
@@ -31,8 +32,9 @@ const COMPANY_SIZES = ["Early-stage Startup (1-50)", "Mid-size (51-500)", "Enter
 const INDUSTRIES = ["FinTech / Crypto", "Healthcare / MedTech", "E-Commerce", "AI / Machine Learning", "SaaS / B2B", "Developer Tools"];
 
 export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormProps) {
-  const { getToken } = useAuth();
   const router = useRouter();
+  const { getToken } = useAuth();
+  const { openModal } = useUpgradeModal();
   
   const [name, setName] = useState(initialData?.name || "");
   const [skills, setSkills] = useState<string[]>(initialData?.skills || []);
@@ -106,6 +108,11 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
           body: JSON.stringify(payload),
         }
       );
+
+      if (res.status === 402) {
+        openModal("You've reached your free plan limit for Personas. Upgrade to Pro to create multiple personas.");
+        return;
+      }
 
       if (!res.ok) {
         throw new Error("Failed to save persona");

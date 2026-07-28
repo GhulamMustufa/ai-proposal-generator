@@ -62,6 +62,26 @@ export class ProposalsController {
   ) {
     const userId = req.user.id;
 
+    // Check Freemium Paywall
+    const userRecord = await this.db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+
+    if (userRecord?.subscriptionStatus === 'free') {
+      if (body?.generationType === 'cold_email') {
+        throw new HttpException('Pro subscription required for cold emails.', 402);
+      }
+      if ((userRecord?.generationsCount || 0) >= 5) {
+        throw new HttpException('Pro subscription required for more proposals.', 402);
+      }
+
+      // Increment free usage count
+      await this.db
+        .update(users)
+        .set({ generationsCount: sql`${users.generationsCount} + 1` })
+        .where(eq(users.id, userId));
+    }
+
     // Extract IP for rate limiting
     const ipAddress =
       (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
@@ -93,8 +113,11 @@ export class ProposalsController {
     });
 
     if (userRecord?.subscriptionStatus === 'free') {
-      if ((userRecord?.generationsCount || 0) >= 3) {
-        throw new HttpException('PAYWALL_LIMIT_REACHED', HttpStatus.FORBIDDEN);
+      if (generationType === 'cold_email') {
+        throw new HttpException('Pro subscription required for cold emails.', 402);
+      }
+      if ((userRecord?.generationsCount || 0) >= 5) {
+        throw new HttpException('Pro subscription required for more proposals.', 402);
       }
 
       // Increment free usage count

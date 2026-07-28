@@ -79,11 +79,11 @@ export default function PricingPage() {
               </li>
               <li className="flex items-start">
                 <CheckIcon className="flex-shrink-0 h-6 w-6 text-emerald-500 dark:text-emerald-400" />
-                <p className="ml-3 text-base text-gray-700 dark:text-gray-300">Basic Filters (Remote, Experience)</p>
+                <p className="ml-3 text-base text-gray-700 dark:text-gray-300">1 Persona</p>
               </li>
               <li className="flex items-start">
                 <CheckIcon className="flex-shrink-0 h-6 w-6 text-emerald-500 dark:text-emerald-400" />
-                <p className="ml-3 text-base text-gray-900 dark:text-white font-bold">3 Free AI Proposals (Total)</p>
+                <p className="ml-3 text-base text-gray-900 dark:text-white font-bold">5 AI Proposals / month</p>
               </li>
             </ul>
             <div className="mt-8">
@@ -105,7 +105,7 @@ export default function PricingPage() {
               </h3>
             </div>
             <div className="mt-4 flex items-baseline text-6xl font-extrabold text-gray-900 dark:text-white">
-              $29
+              $19
               <span className="ml-1 text-2xl font-medium text-gray-500 dark:text-gray-400">/mo</span>
             </div>
             <p className="mt-5 text-lg text-emerald-800 dark:text-emerald-200">
@@ -120,11 +120,11 @@ export default function PricingPage() {
               </li>
               <li className="flex items-start">
                 <CheckIcon className="flex-shrink-0 h-6 w-6 text-emerald-500 dark:text-emerald-400" />
-                <p className="ml-3 text-base text-gray-700 dark:text-gray-300">Priority ATS Ingestion</p>
+                <p className="ml-3 text-base text-gray-700 dark:text-gray-300">Unlimited Personas</p>
               </li>
               <li className="flex items-start">
                 <CheckIcon className="flex-shrink-0 h-6 w-6 text-emerald-500 dark:text-emerald-400" />
-                <p className="ml-3 text-base text-gray-700 dark:text-gray-300">Advanced Salary Insights</p>
+                <p className="ml-3 text-base text-gray-700 dark:text-gray-300">Automated Cold Email Generation</p>
               </li>
               <li className="flex items-start">
                 <CheckIcon className="flex-shrink-0 h-6 w-6 text-emerald-500 dark:text-emerald-400" />

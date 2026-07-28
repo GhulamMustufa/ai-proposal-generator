@@ -5,6 +5,7 @@ import { toast } from "@/lib/toast";
 import { useAuth } from "@clerk/nextjs";
 import { usePersonas } from "@/hooks/use-personas";
 import { JobAnalyzerWidget } from "./job-analyzer-widget";
+import { useUpgradeModal } from "@/context/upgrade-modal-context";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const MAX_VOICE_SAMPLES = 3;
@@ -44,6 +45,7 @@ export function ProposalGenerator({ initialPersonaId }: { initialPersonaId?: str
   const [isGenerating, setIsGenerating] = useState(false);
   const [twoVariations, setTwoVariations] = useState(false);
   const { personas } = usePersonas();
+  const { openModal } = useUpgradeModal();
   const [selectedPersonaId, setSelectedPersonaId] = useState(initialPersonaId || "");
 
   // Update selected if initial changes (e.g. from nav)
@@ -92,6 +94,11 @@ export function ProposalGenerator({ initialPersonaId }: { initialPersonaId?: str
           personaId: selectedPersonaId || undefined,
         }),
       });
+
+      if (response.status === 402 || response.status === 403) {
+        openModal("You've reached your free plan limit for Proposals. Upgrade to Pro to generate unlimited custom proposals.");
+        return;
+      }
 
       if (!response.ok) {
         const data = (await response.json()) as {

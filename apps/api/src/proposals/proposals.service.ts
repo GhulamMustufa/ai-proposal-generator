@@ -20,7 +20,7 @@ const OPENAI_TIMEOUT_MS = 25000;
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
 const PLAN_LIMITS = {
-  free: { rateUser10m: 10, rateIp10m: 20, daily: 30, monthly: 300 },
+  free: { rateUser10m: 10, rateIp10m: 20, daily: 30, monthly: 5 },
   pro: { rateUser10m: 60, rateIp10m: 120, daily: 500, monthly: 5000 },
 };
 type PlanName = keyof typeof PLAN_LIMITS;

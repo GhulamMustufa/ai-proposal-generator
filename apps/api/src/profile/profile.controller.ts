@@ -13,6 +13,13 @@ export class ProfileController {
     return this.profileService.getProfile(userId);
   }
 
+  @Get('plan')
+  @UseGuards(ClerkAuthGuard)
+  async getPlan(@Req() req: any) {
+    const userId = req.user.id;
+    return this.profileService.getPlan(userId);
+  }
+
   @Put('api-keys')
   @UseGuards(ClerkAuthGuard)
   async updateApiKeys(@Req() req: any, @Body() body: any) {

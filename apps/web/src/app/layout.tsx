@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/navbar";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ClerkThemeProvider } from "@/components/providers/clerk-theme-provider";
+import { UpgradeModalProvider } from "@/context/upgrade-modal-context";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
@@ -64,9 +65,11 @@ export default function RootLayout({
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <ClerkThemeProvider>
-            <Navbar />
-            <main className="mx-auto w-full max-w-5xl px-6 py-10">{children}</main>
-            <Toaster />
+            <UpgradeModalProvider>
+              <Navbar />
+              <main className="mx-auto w-full max-w-5xl px-6 py-10">{children}</main>
+              <Toaster />
+            </UpgradeModalProvider>
           </ClerkThemeProvider>
         </ThemeProvider>
       </body>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/lib/toast";
+import { useUpgradeModal } from "@/context/upgrade-modal-context";
 
 type JobCardProps = {
   job: any;
@@ -13,6 +14,7 @@ type JobCardProps = {
 export function JobCard({ job, updateJobStatus }: JobCardProps) {
   const { getToken, userId } = useAuth();
   const router = useRouter();
+  const { openModal } = useUpgradeModal();
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [generationType, setGenerationType] = useState<'proposal' | 'cold_email'>('proposal');
@@ -58,9 +60,8 @@ export function JobCard({ job, updateJobStatus }: JobCardProps) {
         })
       });
 
-      if (res.status === 403) {
-        alert("You have reached your free generation limit! Please upgrade to Pro.");
-        router.push("/pricing");
+      if (res.status === 402 || res.status === 403) {
+        openModal("You've reached your free plan limits or tried to use a Pro feature. Upgrade to PitchPilot Pro to continue.");
         setLoading(false);
         return;
       }

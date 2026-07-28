@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { DB_CONNECTION } from '../db/db.module';
-import { userProfiles } from '../db/schema';
+import { userProfiles, users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
 @Injectable()
@@ -31,6 +31,42 @@ export class ProfileService {
       this.logger.error(`Failed to fetch profile: ${error}`);
       throw new HttpException(
         'Failed to fetch profile',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  /**
+   * Fetches the user's subscription plan and usage.
+   */
+  async getPlan(userId: string) {
+    try {
+      // JIT user provisioning
+      try {
+        await this.db
+          .insert(users)
+          .values({ id: userId, email: `${userId}@placeholder.local` })
+          .onConflictDoNothing();
+      } catch (e) {}
+
+      const user = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (user.length > 0) {
+        return {
+          subscriptionStatus: user[0].subscriptionStatus,
+          generationsCount: user[0].generationsCount,
+          monthlyLimit: user[0].subscriptionStatus === 'pro' ? 'unlimited' : 5,
+        };
+      }
+      return { subscriptionStatus: 'free', generationsCount: 0, monthlyLimit: 5 };
+    } catch (error) {
+      this.logger.error(`Failed to fetch plan: ${error}`);
+      throw new HttpException(
+        'Failed to fetch plan',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

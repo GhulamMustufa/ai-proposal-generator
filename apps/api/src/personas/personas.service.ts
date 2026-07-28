@@ -1,10 +1,10 @@
-import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, Logger, HttpException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { CreatePersonaDto } from './dto/create-persona.dto';
 import { UpdatePersonaDto } from './dto/update-persona.dto';
 import { DB_CONNECTION } from '../db/db.module';
-import { personas } from '../db/schema';
+import { personas, users } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import { generateEmbedding } from '../utils/embeddings';
@@ -20,6 +20,26 @@ export class PersonasService {
   ) {}
 
   async create(userId: string, createPersonaDto: CreatePersonaDto) {
+    // JIT user provisioning (handles E2E tests and webhook race conditions)
+    try {
+      await this.db
+        .insert(users)
+        .values({ id: userId, email: `${userId}@placeholder.local` })
+        .onConflictDoNothing();
+    } catch (e) {
+      // ignore
+    }
+
+    const [user] = await this.db.select().from(users).where(eq(users.id, userId));
+    const isPro = user?.subscriptionStatus === 'pro';
+
+    if (!isPro) {
+      const existingPersonas = await this.db.select().from(personas).where(eq(personas.userId, userId));
+      if (existingPersonas.length >= 1) {
+        throw new HttpException('Pro subscription required to create multiple personas.', 402);
+      }
+    }
+
     const skillsText = createPersonaDto.skills?.join(', ') || '';
     const textToEmbed = `${createPersonaDto.name} ${skillsText} ${createPersonaDto.resumeText || ''}`;
     const embedding = await generateEmbedding(textToEmbed);
