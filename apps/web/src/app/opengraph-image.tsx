@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Proposalio — AI Proposal Generator for Upwork Freelancers";
+export const alt = "PitchPilot — The AI-Powered Copilot for Remote Freelancers";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -57,13 +57,13 @@ export default function OgImage() {
             P
           </div>
           <span style={{ fontSize: "48px", fontWeight: 800, color: "#f1f5f9", letterSpacing: "-1px" }}>
-            Proposalio
+            PitchPilot
           </span>
         </div>
 
         {/* Headline */}
         <div style={{ fontSize: "36px", fontWeight: 700, color: "#e2e8f0", lineHeight: 1.3, maxWidth: "800px", marginBottom: "24px" }}>
-          Win more Upwork jobs with AI-written proposals
+          Win more remote jobs with AI-written proposals
         </div>
 
         {/* Subline */}

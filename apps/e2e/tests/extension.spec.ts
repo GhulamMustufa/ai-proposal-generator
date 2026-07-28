@@ -25,7 +25,7 @@ const SITES = [
   { name: 'We Work Remotely', url: 'https://weworkremotely.com/remote-jobs/fake', titleSelector: '.listing-header h1', descSelector: '.listing-container' }
 ];
 
-test.describe('Proposalio Extension E2E (20 Websites)', () => {
+test.describe('PitchPilot Extension E2E (20 Websites)', () => {
   // Use a longer timeout because extensions take time to load and OpenAI takes time to generate
   test.setTimeout(60000);
 

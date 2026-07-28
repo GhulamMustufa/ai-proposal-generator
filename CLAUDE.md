@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# Proposalio — Project Overview
+# PitchPilot — Project Overview
 
 AI-powered freelance proposal generator. Next.js 14 App Router SaaS with Supabase auth, OpenAI generation, real-time streaming, and a full application tracker.
 

@@ -5,7 +5,7 @@ test.describe('Public Navigation', () => {
     await page.goto('/');
 
     // Check title
-    await expect(page).toHaveTitle(/Proposalio/);
+    await expect(page).toHaveTitle(/PitchPilot/);
 
     // Check Hero Header
     await expect(page.locator('text=The AI platform that applies to jobs')).toBeVisible();

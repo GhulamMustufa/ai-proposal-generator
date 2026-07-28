@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "Proposalio privacy policy — how we collect, use, and protect your data.",
+  description: "PitchPilot privacy policy — how we collect, use, and protect your data.",
 };
 
 export default function PrivacyPage() {
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
       <section className="mb-8">
         <h2 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-200">Chrome extension</h2>
         <p className="text-slate-600 dark:text-slate-400">
-          The Proposalio Chrome extension runs only on <code className="rounded bg-slate-100 px-1 py-0.5 text-sm dark:bg-slate-800">upwork.com</code> pages.
+          The PitchPilot Chrome extension runs only on <code className="rounded bg-slate-100 px-1 py-0.5 text-sm dark:bg-slate-800">upwork.com</code> pages.
           It reads the job title and description from the page to pre-fill the proposal generator.
           No data from your Upwork account is stored — only the job text you explicitly choose to generate a proposal for.
           Your login token is stored locally in <code className="rounded bg-slate-100 px-1 py-0.5 text-sm dark:bg-slate-800">chrome.storage.local</code> on your device and is never transmitted to anyone other than Supabase for authentication.

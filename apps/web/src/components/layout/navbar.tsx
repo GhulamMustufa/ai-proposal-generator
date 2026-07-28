@@ -23,7 +23,7 @@ export function Navbar() {
     <header className="border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 sticky top-0 z-50">
       <nav className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-4 md:px-6">
         <Link href="/" className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          Proposalio
+          PitchPilot
         </Link>
         <div className="flex items-center gap-4">
           {/* Desktop Nav */}

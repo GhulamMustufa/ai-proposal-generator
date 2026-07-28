@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Proposalio",
+  "name": "PitchPilot",
   "version": "1.0.0",
   "description": "Generate AI proposals for Upwork jobs in one click",
   "permissions": ["storage", "activeTab", "scripting", "tabs"],
@@ -9,7 +9,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Proposalio"
+    "default_title": "PitchPilot"
   },
   "content_scripts": [
     {

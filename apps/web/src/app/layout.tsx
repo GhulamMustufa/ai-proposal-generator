@@ -10,42 +10,41 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ai-proposal-genera
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Proposalio — AI Proposal Generator for Upwork Freelancers",
-    template: "%s | Proposalio",
+    default: "PitchPilot — The AI-Powered Copilot for Remote Freelancers",
+    template: "%s | PitchPilot",
   },
   description:
-    "Generate winning Upwork proposals in seconds with AI. Tailored to your profile, your writing style, and the job. Free to start.",
+    "Generate winning proposals for remote jobs in seconds with AI. Tailored to your profile, your writing style, and the job description.",
   keywords: [
-    "upwork proposal",
-    "upwork cover letter",
+    "remote job proposal",
+    "freelance cover letter",
     "AI proposal generator",
     "freelance proposal writer",
-    "upwork proposal template",
     "AI writing tool for freelancers",
   ],
-  authors: [{ name: "Proposalio" }],
+  authors: [{ name: "PitchPilot" }],
   openGraph: {
     type: "website",
     locale: "en_US",
     url: SITE_URL,
-    siteName: "Proposalio",
-    title: "Proposalio — AI Proposal Generator for Upwork Freelancers",
+    siteName: "PitchPilot",
+    title: "PitchPilot — The AI-Powered Copilot for Remote Freelancers",
     description:
-      "Generate winning Upwork proposals in seconds with AI. Tailored to your profile, your writing style, and the job.",
+      "Generate winning proposals for remote jobs in seconds with AI. Tailored to your profile, your writing style, and the job description.",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Proposalio — AI Proposal Generator",
+        alt: "PitchPilot — AI Proposal Generator",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Proposalio — AI Proposal Generator for Upwork Freelancers",
+    title: "PitchPilot — The AI-Powered Copilot for Remote Freelancers",
     description:
-      "Generate winning Upwork proposals in seconds with AI. Tailored to your profile, your writing style, and the job.",
+      "Generate winning proposals for remote jobs in seconds with AI. Tailored to your profile, your writing style, and the job description.",
     images: ["/opengraph-image"],
   },
   robots: {

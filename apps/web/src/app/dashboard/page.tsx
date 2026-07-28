@@ -181,7 +181,7 @@ export default function DashboardPage() {
             />
           </div>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
-            We have scanned thousands of jobs across 14+ platforms. These roles have successfully bypassed your strict AI pre-filters. Review your highest probability matches below.
+            We have scanned thousands of jobs across 25+ platforms. These roles have successfully bypassed your strict AI pre-filters. Review your highest probability matches below.
           </p>
         </div>
       </header>

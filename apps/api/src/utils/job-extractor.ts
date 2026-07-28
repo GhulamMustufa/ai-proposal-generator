@@ -54,7 +54,7 @@ export async function resolveJobDescription(input: string, maxChars: number) {
 
   const response = await fetch(input, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 ProposalioBot/1.0',
+      'User-Agent': 'Mozilla/5.0 PitchPilotBot/1.0',
       Accept: 'text/html,application/xhtml+xml',
     },
     cache: 'no-store',
