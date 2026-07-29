@@ -1,6 +1,6 @@
 # Database Documentation
 
-The system uses **PostgreSQL** hosted on [Neon](https://neon.tech/) and interacts with it using **Drizzle ORM** (`@neondatabase/serverless`).
+The system uses **PostgreSQL** hosted on [Neon](https://neon.tech/) and interacts with it using **Drizzle ORM** (`@neondatabase/serverless`). It actively uses the `pgvector` extension for semantic AI matching.
 
 ## Schema Design (`apps/api/src/db/schema.ts`)
 
@@ -9,15 +9,27 @@ Tracks the core user account, their Clerk ID, and billing status.
 - `id` (text, primary key): Matches the `userId` from Clerk.
 - `email` (text): User's primary email.
 - `subscriptionStatus` (varchar): `'free'` or `'pro'`. Defaults to `'free'`.
-- `generationsCount` (integer): Tracks how many proposals a free user has generated. Limit is 3.
+- `generationsCount` (integer): Tracks how many proposals a free user has generated. Limit is 5 (or specified in controller).
 - `lemonsqueezyCustomerId` (text): Tracks the external Lemon Squeezy ID.
+- `apiKeys` (jsonb): Optional user-provided OpenAI API keys.
+
+> [!CAUTION]
+> **Security Vulnerability**: Currently, user `apiKeys` are stored as plaintext JSON in the database. This must be refactored to encrypt keys at rest using AES-256-GCM.
+
+### `personas`
+Tracks the user's different professional identities (e.g. "Frontend Engineer", "Tech Lead").
+- `id` (uuid, primary key)
+- `userId` (text, foreign key)
+- `name` (text), `skills` (text[]), `yearsOfExperience` (integer), `resumeText` (text)
+- `embedding` (vector(1536)): A `pgvector` column storing the OpenAI embedding of the persona.
 
 ### `jobs`
 A centralized repository for jobs scraped across the internet.
 - `id` (uuid, primary key)
-- `externalId` (text): The ID from the source board to prevent duplicates.
+- `externalId` (text, unique): The ID from the source board to prevent duplicates.
 - `title`, `company`, `description`, `url`, `platform` (text)
 - `scrapedAt` (timestamp)
+- `embedding` (vector(1536)): A `pgvector` column for the job description embedding.
 
 ### `ai_matches`
 Tracks the evaluation score when the AI ranks a job against a user's profile.
@@ -39,5 +51,10 @@ Stores generated proposals and cold emails.
 
 ## Drizzle ORM Conventions
 - **Migrations**: We use `drizzle-kit` to generate and apply migrations. Always run `npm run db:push` in the `apps/api` folder after modifying `schema.ts`.
-- **Typing**: Use Drizzle's `InferSelectModel` and `InferInsertModel` to generate TypeScript types directly from the schema.
-- **Connection**: We connect using `neon-http` which is optimized for serverless environments and doesn't hold persistent TCP connections open indefinitely.
+- **Connection**: We connect using `neon-http` which is optimized for serverless environments.
+
+## ⚠️ Performance Risks (Missing Indexes)
+> [!IMPORTANT]
+> **Database Optimization Needed:** 
+> 1. **Foreign Keys:** The schema lacks explicit foreign key indexes on `userId` and `personaId` in large tables like `applications` and `ai_matches`.
+> 2. **Vector Indexes:** The `jobs` and `personas` tables are missing `HNSW` or `IVFFlat` indexes on their `embedding` columns. Currently, `cosineDistance` sorting performs a linear sequential scan, which will degrade performance exponentially as thousands of jobs are ingested daily.

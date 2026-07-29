@@ -13,7 +13,7 @@ As an AI SaaS targeting professionals, the UI must feel "expensive" and dynamic.
 
 ### `JobCard` (`src/components/dashboard/job-card.tsx`)
 - Renders an individual scraped job.
-- **Core Logic**: Manages local state for generating a proposal vs. a cold email. Uses the `EventSource` API to listen to the NestJS backend for real-time completion.
+- **Core Logic**: Manages local state for generating a proposal vs. a cold email. Uses the `EventSource` API to listen to the NestJS backend for real-time completion (Server-Sent Events).
 - **Error Handling**: Gracefully handles `429 Too Many Requests` (Rate Limiting) and `403 Forbidden` (Paywall) with `react-hot-toast` notifications.
 
 ### `ManualJobEntry` (`src/components/dashboard/manual-job-entry.tsx`)
@@ -21,6 +21,10 @@ As an AI SaaS targeting professionals, the UI must feel "expensive" and dynamic.
 - **Core Logic**: Generates a local `clientReferenceId` via `crypto.randomUUID()` before calling the backend. It uses this UUID to filter the incoming SSE stream, ensuring the generated text is injected into the correct component instance.
 
 ## State Management
+
+> [!WARNING]
+> **Technical Debt**: Currently, the frontend manages API data fetching using custom React Hooks (e.g., `use-personas.ts`, `use-user-plan.ts`) built around raw `useEffect` and `fetch`. To prevent N+1 API calls, developers have implemented rudimentary module-level variable caches (`let cachedPersonas = null`). This approach lacks stale-while-revalidate logic, automatic retries, and optimistic UI updates. Transitioning this layer to **React Query (TanStack Query)** should be a high priority for better UX and maintainability.
+
 - Prefer localized React state (`useState`, `useReducer`) over global state managers (like Redux) where possible.
 - Use Next.js Server Components for initial data fetching to reduce client bundle size, passing the data as props to Client Components (`"use client"`) that handle the interactivity.
 
