@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Put, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Put, Param, Query } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
@@ -74,8 +74,11 @@ export class AdminController {
   }
 
   @Get('jobs')
-  async getRecentJobs() {
-    return this.adminService.getRecentJobs();
+  async getRecentJobs(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '50',
+  ) {
+    return this.adminService.getRecentJobs(Number(page), Number(limit));
   }
 
   @Get('matches')

@@ -162,8 +162,21 @@ export class AdminService {
     return { success: true };
   }
 
-  async getRecentJobs() {
-    return this.db.select().from(jobs).orderBy(desc(jobs.scrapedAt)).limit(100);
+  async getRecentJobs(page: number = 1, limit: number = 50) {
+    const offset = (page - 1) * limit;
+
+    const [totalCountResult] = await this.db.select({ count: count() }).from(jobs);
+    const totalCount = totalCountResult.count;
+
+    const data = await this.db.select().from(jobs).orderBy(desc(jobs.scrapedAt)).limit(limit).offset(offset);
+
+    return {
+      data,
+      total: totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit)
+    };
   }
 
   async getRecentMatches() {
