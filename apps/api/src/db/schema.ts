@@ -90,6 +90,7 @@ export const applications = pgTable('applications', {
   jobTitle: text('job_title'), // Optional title
   jobLink: text('job_link'), // Optional link
   generatedProposal: text('generated_proposal'), // The actual generated proposal text
+  generatedResume: text('generated_resume'), // Tailored resume text
   status: text('status').default('pending').notNull(), // 'pending', 'generated', 'submitted', 'failed'
   pdfUrl: text('pdf_url'), // Cloudflare R2 URL
   submissionLogs: jsonb('submission_logs'), // Playwright logs

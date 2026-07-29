@@ -69,6 +69,7 @@ export class ProposalsService {
   public readonly jobStatusEvents = new Subject<{
     userId: string;
     jobId?: string | null;
+    proposalId?: string;
     clientReferenceId?: string;
     status: string;
     generatedText?: string;
@@ -664,6 +665,78 @@ export class ProposalsService {
         and(eq(applications.id, proposalId), eq(applications.userId, userId)),
       )
       .returning();
+    return updated;
+  }
+
+  async tailorResume(userId: string, proposalId: string) {
+    const proposal = await this.getProposal(userId, proposalId);
+    if (!proposal) throw new Error('Proposal not found');
+
+    // First try to get a persona
+    let resumeTextToUse = '';
+    const [personaRecord] = await this.db
+      .select()
+      .from(personas)
+      .where(eq(personas.userId, userId))
+      .limit(1);
+
+    if (personaRecord && personaRecord.resumeText) {
+      resumeTextToUse = personaRecord.resumeText;
+    } else {
+      // Fallback to old userProfiles
+      const [profileRecord] = await this.db
+        .select()
+        .from(userProfiles)
+        .where(eq(userProfiles.userId, userId))
+        .limit(1);
+        
+      if (profileRecord && profileRecord.resumeText) {
+        resumeTextToUse = profileRecord.resumeText;
+      }
+    }
+
+    if (!resumeTextToUse) {
+      throw new Error('User base resume not found. Please upload a resume to your profile.');
+    }
+
+    const messages = [
+      {
+        role: 'system' as const,
+        content: `You are an expert technical recruiter and resume writer.
+Your goal is to tailor the candidate's existing resume to perfectly match the target job description.
+
+RULES:
+- Rewrite the bullet points to highlight experience and skills that are most relevant to the job.
+- Keep the overall formatting and length roughly identical.
+- DO NOT invent or fabricate any experience, skills, or metrics that the candidate does not have.
+- Maintain the original tone and section headers if possible.
+- Output ONLY the tailored resume text. No preamble, no explanation.`,
+      },
+      {
+        role: 'user' as const,
+        content: `JOB DESCRIPTION:\n${proposal.jobDescription || proposal.jobTitle}\n\n---\n\nBASE RESUME:\n${resumeTextToUse}`,
+      }
+    ];
+
+    const response = await this.openai.chat.completions.create({
+      model: MODEL,
+      messages,
+      temperature: 0.5,
+      max_tokens: 1500,
+    });
+
+    const generatedResume = response.choices[0]?.message?.content?.trim() ?? '';
+
+    if (!generatedResume) {
+      throw new Error('Failed to generate tailored resume');
+    }
+
+    const [updated] = await this.db
+      .update(applications)
+      .set({ generatedResume })
+      .where(and(eq(applications.id, proposalId), eq(applications.userId, userId)))
+      .returning();
+
     return updated;
   }
 

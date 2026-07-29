@@ -209,4 +209,17 @@ export class ProposalsController {
     const updated = await this.proposalsService.updateProposalStatus(userId, id, status);
     return { success: true, data: updated };
   }
+
+  @Post(':id/resume')
+  @UseGuards(ClerkAuthGuard)
+  async tailorResume(@Req() req: any, @Param('id') id: string) {
+    const userId = req.user.id;
+    try {
+      const updated = await this.proposalsService.tailorResume(userId, id);
+      return { success: true, data: updated };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Unknown error tailoring resume';
+      throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

@@ -3,7 +3,7 @@ import { AppModule } from '../app.module';
 import { DB_CONNECTION } from '../db/db.module';
 import { personas, jobs } from '../db/schema';
 import { MatcherService } from '../matcher/matcher.service';
-import { BUILT_IN_PERSONAS } from '../../../web/src/lib/built-in-personas';
+import { BUILT_IN_PERSONAS } from '../personas/built-in-personas';
 import OpenAI from 'openai';
 import * as crypto from 'crypto';
 import { isNotNull, desc } from 'drizzle-orm';

@@ -20,6 +20,7 @@ export function JobCard({ job, updateJobStatus }: JobCardProps) {
   const [generated, setGenerated] = useState(false);
   const [generationType, setGenerationType] = useState<'proposal' | 'cold_email'>('proposal');
   const [generatedProposal, setGeneratedProposal] = useState<string | null>(null);
+  const [proposalId, setProposalId] = useState<string | null>(job.applicationId || null);
   
   const searchParams = useSearchParams();
   const activePersonaId = searchParams.get("personaId");
@@ -91,6 +92,9 @@ export function JobCard({ job, updateJobStatus }: JobCardProps) {
               setGenerated(true);
               if (data.generatedText) {
                 setGeneratedProposal(data.generatedText);
+              }
+              if (data.proposalId) {
+                setProposalId(data.proposalId);
               }
               toast.success("Your AI draft has been generated!");
               eventSource.close();
@@ -222,7 +226,7 @@ export function JobCard({ job, updateJobStatus }: JobCardProps) {
             ) : generated || job.hasApplication ? (
               <div className="flex flex-col items-stretch gap-2 w-full">
                 <Link 
-                  href="/proposals"
+                  href={proposalId ? `/proposals/${proposalId}` : "/proposals"}
                   className="inline-flex items-center justify-center rounded-xl bg-emerald-500 hover:bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white transition shadow-lg shadow-emerald-500/25 w-full"
                 >
                   View Proposal ↗

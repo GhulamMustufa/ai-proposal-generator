@@ -44,14 +44,14 @@ export class ProposalsProcessor extends WorkerHost {
         );
 
         // Update database with generated proposal
-        await this.db.insert(applications).values({
+        const [application] = await this.db.insert(applications).values({
           userId,
           jobId,
           jobTitle,
           jobDescription,
           generatedProposal: generatedText,
           status: 'generated',
-        });
+        }).returning({ id: applications.id });
 
         this.logger.log(`Successfully generated proposal for job ${jobId}`);
 
@@ -59,6 +59,7 @@ export class ProposalsProcessor extends WorkerHost {
         this.proposalsService.jobStatusEvents.next({
           userId,
           jobId,
+          proposalId: application.id,
           clientReferenceId,
           status: 'generated',
           generatedText,

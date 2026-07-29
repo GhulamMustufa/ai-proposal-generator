@@ -44,6 +44,7 @@ export class JobsService {
           scrapedAt: jobs.scrapedAt,
           createdAt: aiMatches.createdAt,
           hasApplication: sql<boolean>`EXISTS (SELECT 1 FROM applications WHERE applications.job_id = ${jobs.id} AND applications.user_id = ${userId})`.mapWith(Boolean),
+          applicationId: sql<string>`(SELECT id FROM applications WHERE applications.job_id = ${jobs.id} AND applications.user_id = ${userId} ORDER BY created_at DESC LIMIT 1)`,
         })
         .from(aiMatches)
         .innerJoin(jobs, eq(aiMatches.jobId, jobs.id))

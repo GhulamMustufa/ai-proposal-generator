@@ -1,4 +1,5 @@
-import { Controller, Get, Put, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Put, Post, Body, UseGuards, Req, UseInterceptors, UploadedFile, HttpException, HttpStatus } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ProfileService } from './profile.service';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 
@@ -32,5 +33,26 @@ export class ProfileController {
   async updateDefaultPersona(@Req() req: any, @Body() body: any) {
     const userId = req.user.id;
     return this.profileService.updateDefaultPersona(userId, body.defaultPersonaId);
+  }
+
+  @Post('parse-pdf')
+  @UseGuards(ClerkAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async parsePdf(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
+    }
+    if (file.mimetype !== 'application/pdf') {
+      throw new HttpException('File must be a PDF', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      const pdf = require('pdf-parse');
+      const data = await pdf(file.buffer);
+      return { text: data.text };
+    } catch (error) {
+      console.error('Failed to parse PDF', error);
+      throw new HttpException('Failed to parse PDF', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }

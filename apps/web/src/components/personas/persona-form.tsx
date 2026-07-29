@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "@/lib/toast";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -50,6 +50,44 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
     salaryFloor: "",
   });
   const [loading, setLoading] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are supported");
+      return;
+    }
+    
+    setUploadingPdf(true);
+    try {
+      const token = await getToken();
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`${apiUrl}/api/profile/parse-pdf`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Failed to parse PDF");
+      const data = await res.json();
+      if (data.text) {
+        setResumeText(data.text);
+        toast.success("Resume text extracted successfully");
+      }
+    } catch (err) {
+      toast.error("Failed to parse PDF");
+    } finally {
+      setUploadingPdf(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
 
   function handleFilterToggle(field: string, value: string) {
     setJobFilters((prev: any) => {
@@ -353,9 +391,43 @@ export function PersonaForm({ initialData, onSuccess, onCancel }: PersonaFormPro
       </div>
 
       <div>
-        <label htmlFor="persona-resume" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-          Professional Bio / Background <span className="text-rose-500">*</span>
-        </label>
+        <div className="flex justify-between items-end mb-1.5">
+          <label htmlFor="persona-resume" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Professional Bio / Background <span className="text-rose-500">*</span>
+          </label>
+          <div>
+            <input
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPdf}
+              className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 flex items-center gap-1 disabled:opacity-50"
+            >
+              {uploadingPdf ? (
+                <>
+                  <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Extracting...
+                </>
+              ) : (
+                <>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  Upload PDF Resume
+                </>
+              )}
+            </button>
+          </div>
+        </div>
         <textarea
           id="persona-resume"
           value={resumeText}
