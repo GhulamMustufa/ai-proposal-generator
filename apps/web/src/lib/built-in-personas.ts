@@ -267,5 +267,55 @@ export const BUILT_IN_PERSONAS = [
       'Marketing Automation', 'CRM', 'ROI Analysis'
     ],
     resumeText: "Results-driven Digital Marketing Specialist with expertise in SEO, paid acquisition, and content strategy. I have a proven track record of increasing organic traffic and optimizing conversion rates through data-driven campaigns. Proficient with industry-standard tools like Google Analytics, Ahrefs, and HubSpot. I excel at keyword research, technical SEO audits, and managing multi-channel ad campaigns (Google/Meta) while strictly monitoring CPA and ROI."
+  },
+  {
+    id: 'template-customer-support',
+    name: 'Customer Support / Success Representative',
+    yearsOfExperience: 3,
+    skills: [
+      'Customer Support', 'Customer Success', 'Zendesk', 'Intercom', 'Salesforce',
+      'Freshdesk', 'Communication', 'Problem Solving', 'Conflict Resolution',
+      'Email Support', 'Live Chat Support', 'Phone Support', 'CRM', 'Ticketing Systems',
+      'Onboarding', 'Client Retention', 'Technical Support', 'Help Desk', 'Remote Support',
+      'B2B', 'B2C', 'Empathy', 'Time Management', 'De-escalation'
+    ],
+    resumeText: "Experienced Customer Support and Success Representative with a passion for delivering exceptional client experiences. Proficient in managing high-volume ticketing systems like Zendesk and Intercom. I excel at troubleshooting technical issues, de-escalating customer conflicts, and guiding new users through product onboarding. I am a strong communicator who works cross-functionally with product teams to surface user feedback and improve overall customer retention and satisfaction."
+  },
+  {
+    id: 'template-virtual-assistant',
+    name: 'Virtual Assistant / Administrative Assistant',
+    yearsOfExperience: 4,
+    skills: [
+      'Virtual Assistance', 'Administrative Support', 'Data Entry', 'Calendar Management',
+      'Email Management', 'Travel Arrangements', 'Microsoft Office', 'Google Workspace',
+      'Slack', 'Trello', 'Asana', 'Notion', 'Customer Service', 'Organization',
+      'Time Management', 'Research', 'Bookkeeping', 'QuickBooks', 'Social Media Management',
+      'Project Coordination'
+    ],
+    resumeText: "Highly organized Virtual Assistant with 4+ years of experience providing comprehensive administrative support to executives and small business owners. Expert in managing complex calendars, streamlining email inboxes, and handling confidential data entry. I am proficient in Google Workspace, Microsoft Office, and project management tools like Notion and Asana. I pride myself on extreme attention to detail, proactive problem-solving, and the ability to juggle multiple competing priorities efficiently."
+  },
+  {
+    id: 'template-sales-ae',
+    name: 'B2B Sales / Account Executive',
+    yearsOfExperience: 5,
+    skills: [
+      'B2B Sales', 'Account Executive', 'Cold Calling', 'Lead Generation', 'Salesforce',
+      'HubSpot', 'CRM', 'Negotiation', 'Closing Deals', 'Pipeline Management',
+      'SaaS Sales', 'Outbound Sales', 'Inbound Sales', 'Prospecting', 'LinkedIn Sales Navigator',
+      'Presentations', 'Relationship Building', 'Sales Strategy', 'Revenue Growth', 'Objection Handling'
+    ],
+    resumeText: "Results-driven Account Executive with a proven track record of exceeding quotas in B2B SaaS sales. I specialize in full-cycle sales, from outbound prospecting and lead generation using LinkedIn Sales Navigator, to delivering compelling product demos and negotiating complex contracts. Proficient in managing robust pipelines in Salesforce and HubSpot. I am highly motivated by revenue growth and excel at building long-term, strategic relationships with key enterprise stakeholders."
+  },
+  {
+    id: 'template-content-writer',
+    name: 'Content Writer / Copywriter',
+    yearsOfExperience: 4,
+    skills: [
+      'Content Writing', 'Copywriting', 'SEO Writing', 'Blogging', 'Technical Writing',
+      'Creative Writing', 'Editing', 'Proofreading', 'WordPress', 'Content Strategy',
+      'Social Media Copy', 'Email Campaigns', 'Newsletters', 'Grammarly', 'Google Docs',
+      'Research', 'Brand Voice', 'B2B Writing', 'B2C Writing', 'Storytelling'
+    ],
+    resumeText: "Versatile Content Writer and Copywriter specializing in creating engaging, SEO-optimized content that drives traffic and conversions. I have extensive experience writing high-quality blog posts, technical articles, compelling email newsletters, and persuasive landing page copy. I adapt quickly to different brand voices and am skilled in conducting deep research to produce authoritative content. Proficient in using CMS platforms like WordPress and optimizing copy for search intent."
   }
 ];

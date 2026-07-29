@@ -54,9 +54,9 @@ Analyze the Job Description against the Persona's skills, experience, and resume
 Determine a match score from 0 to 100 based on how qualified this persona is for this job.
 
 CRITICAL INSTRUCTIONS:
-- Give a very high score (85-100) if the core skills, experience level, and role match closely.
-- Give a moderate score (50-84) if they meet the basic requirements but lack some desired skills.
-- Give a low score (0-49) if the persona is clearly unqualified, lacks core required skills, or if the seniority level is a complete mismatch.
+- Give a very high score (85-100) if the core skills and role match closely. Do not penalize heavily for a slight seniority mismatch (e.g., Mid-level applying to Senior).
+- Give a moderate-to-high score (70-84) if they meet the core requirements but lack some secondary or 'nice-to-have' skills. Be forgiving to encourage a diverse pool of job options.
+- Give a low score (0-69) ONLY if the persona is completely unqualified and lacks the core framework/skill required for the job.
 
 Output MUST be exactly in this JSON format:
 {
@@ -190,7 +190,7 @@ Output MUST be exactly in this JSON format:
       .from(jobs)
       .where(and(...queryConditions))
       .orderBy(asc(cosineDistance(jobs.embedding, persona.embedding)))
-      .limit(50);
+      .limit(100);
 
     this.logger.log(
       `Re-evaluating Top ${jobsToEvaluate.length} matching jobs for persona ${personaId}...`,
