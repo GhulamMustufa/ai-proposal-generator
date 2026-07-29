@@ -61,6 +61,8 @@ CRITICAL INSTRUCTIONS:
 Output MUST be exactly in this JSON format:
 {
   "match_score": number (0 to 100),
+  "match_category": "elite" | "good" | "basic" | "unqualified",
+  "missing_skills": ["List", "of", "missing", "skills"],
   "match_reasoning": "A concise 1-2 sentence explanation of why this score was given. Be specific about matching or missing skills."
 }
 `;
@@ -120,6 +122,8 @@ Output MUST be exactly in this JSON format:
       personaId: persona.personaId,
       jobId: job.id,
       matchScore: finalScore,
+      matchCategory: result.match_category || 'good',
+      missingSkills: result.missing_skills || [],
       matchReasoning: finalReasoning,
     });
 
@@ -197,7 +201,7 @@ Output MUST be exactly in this JSON format:
     );
 
     // Process in batches to massively speed up OpenAI evaluation while respecting rate limits
-    const BATCH_SIZE = 10;
+    const BATCH_SIZE = 5; // Reduced from 10 to prevent 429 TPM limits
     for (let i = 0; i < jobsToEvaluate.length; i += BATCH_SIZE) {
       const batch = jobsToEvaluate.slice(i, i + BATCH_SIZE);
       
@@ -213,6 +217,9 @@ Output MUST be exactly in this JSON format:
           }
         })
       );
+      
+      // Add a small 1-second delay between batches to respect OpenAI TPM limits
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     
     // Update lastSyncedAt

@@ -37,6 +37,8 @@ export class JobsService {
           url: jobs.url,
           platform: jobs.platform,
           matchScore: aiMatches.matchScore,
+          matchCategory: aiMatches.matchCategory,
+          missingSkills: aiMatches.missingSkills,
           matchReasoning: aiMatches.matchReasoning,
           status: aiMatches.status,
           scrapedAt: jobs.scrapedAt,

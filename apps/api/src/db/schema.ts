@@ -10,7 +10,7 @@ import {
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(), // Clerk User ID (string)
-  email: text('email').notNull().unique(),
+  email: text('email').notNull(),
   stripeCustomerId: text('stripe_customer_id'),
   lemonsqueezyCustomerId: text('lemonsqueezy_customer_id'),
   lemonsqueezySubscriptionId: text('lemonsqueezy_subscription_id'),
@@ -36,7 +36,7 @@ export const userProfiles = pgTable('user_profiles', {
 export const jobs = pgTable('jobs', {
   id: uuid('id').defaultRandom().primaryKey(),
   platform: text('platform').notNull(), // 'remotive', 'lever', etc.
-  externalId: text('external_id').notNull().unique(),
+  externalId: text('external_id').notNull(),
   title: text('title').notNull(),
   company: text('company'),
   description: text('description'),
@@ -73,6 +73,8 @@ export const aiMatches = pgTable('ai_matches', {
     .references(() => jobs.id)
     .notNull(),
   matchScore: integer('match_score').notNull(),
+  matchCategory: text('match_category').default('good'), // 'elite', 'good', 'basic', 'stretch'
+  missingSkills: jsonb('missing_skills'), // Array of strings
   matchReasoning: text('match_reasoning'),
   status: text('status').default('pending').notNull(), // 'pending', 'rejected', 'accepted'
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -99,7 +101,7 @@ export const targetCompanies = pgTable('target_companies', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
   atsProvider: text('ats_provider').notNull(), // 'greenhouse', 'lever', 'workable', 'ashby', etc.
-  atsBoardToken: text('ats_board_token').notNull().unique(), // e.g. 'stripe' for greenhouse
+  atsBoardToken: text('ats_board_token').notNull(), // e.g. 'stripe' for greenhouse
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activePersonaId = searchParams.get("personaId");
-  const { personas } = usePersonas();
+  const { personas, loading: personasLoading } = usePersonas();
   const { plan } = useUserPlan();
   const { openModal } = useUpgradeModal();
 
@@ -248,7 +248,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="relative min-h-[600px] w-full max-w-4xl mx-auto">
-          {loading ? (
+          {loading || personasLoading ? (
             <div className="w-full space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="animate-pulse flex flex-col md:flex-row gap-4 p-6 rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02]">

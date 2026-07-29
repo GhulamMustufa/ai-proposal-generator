@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/lib/toast";
+import Link from 'next/link';
 import { useUpgradeModal } from "@/context/upgrade-modal-context";
 
 type JobCardProps = {
@@ -153,10 +154,20 @@ export function JobCard({ job, updateJobStatus }: JobCardProps) {
           </div>
 
           <div className="rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/5 p-4 relative overflow-hidden">
-            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500/50 to-purple-500/50" />
+            <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${scoreBg.split(' ')[0]} to-transparent opacity-50`} />
             <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
               {job.matchReasoning || "AI Evaluation completed. Profile alignment is strong across core requirements."}
             </p>
+            {job.missingSkills && job.missingSkills.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 mr-1">Missing Skills:</span>
+                {job.missingSkills.map((skill: string, i: number) => (
+                  <span key={i} className="px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 text-xs font-medium border border-rose-200 dark:border-rose-500/20">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -209,10 +220,13 @@ export function JobCard({ job, updateJobStatus }: JobCardProps) {
                 AI Generating...
               </div>
             ) : generated || job.hasApplication ? (
-              <div className="flex flex-col items-stretch gap-2">
-                <div className="inline-flex items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 px-6 py-2.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30">
-                  Generated ✨
-                </div>
+              <div className="flex flex-col items-stretch gap-2 w-full">
+                <Link 
+                  href="/proposals"
+                  className="inline-flex items-center justify-center rounded-xl bg-emerald-500 hover:bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white transition shadow-lg shadow-emerald-500/25 w-full"
+                >
+                  View Proposal ↗
+                </Link>
               </div>
             ) : (
               <button 

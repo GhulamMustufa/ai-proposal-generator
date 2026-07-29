@@ -60,17 +60,29 @@ export default async function HistoryPage() {
   if (error) {
     return (
       <section className="rounded-xl border border-slate-200 bg-white p-10 dark:border-slate-700 dark:bg-slate-900/80">
-        <p className="text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">History</p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Previous proposals</h1>
-        <p className="mt-3 text-sm text-rose-700">Failed to load history.</p>
+        <p className="text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Proposals</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">My Proposals</h1>
+        <p className="mt-3 text-sm text-rose-700">Failed to load proposals.</p>
       </section>
     );
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-10 dark:border-slate-700 dark:bg-slate-900/80">
-      <p className="text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">History</p>
-      <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Previous proposals</h1>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0A0A0B] text-slate-900 dark:text-slate-200">
+      <header className="relative overflow-hidden border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-[#0A0A0B]/80 px-6 py-12 backdrop-blur-xl">
+        <div className="absolute -top-40 right-20 h-96 w-96 rounded-full bg-indigo-500/10 blur-[100px]" />
+        
+        <div className="relative mx-auto max-w-5xl">
+          <p className="text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Proposals</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">My Proposals</h1>
+          <p className="mt-3 text-base text-slate-600 dark:text-slate-400 max-w-2xl">
+            Review the proposals you have generated. 
+          </p>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-6 py-12">
+        <section className="rounded-xl border border-slate-200 bg-white p-8 dark:border-white/5 dark:bg-white/[0.02]">
 
       {proposals.length === 0 ? (
         <EmptyState />
@@ -121,6 +133,8 @@ export default async function HistoryPage() {
           })}
         </ul>
       )}
-    </section>
+        </section>
+      </main>
+    </div>
   );
 }

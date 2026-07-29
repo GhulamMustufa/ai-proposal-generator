@@ -10,7 +10,7 @@ import { useState } from "react";
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/proposal-generator", label: "Craft Proposal" },
-  { href: "/history", label: "History" },
+  { href: "/proposals", label: "Proposals" },
   { href: "/personas", label: "Personas" },
 ];
 
