@@ -36,7 +36,7 @@ export const userProfiles = pgTable('user_profiles', {
 export const jobs = pgTable('jobs', {
   id: uuid('id').defaultRandom().primaryKey(),
   platform: text('platform').notNull(), // 'remotive', 'lever', etc.
-  externalId: text('external_id').notNull(),
+  externalId: text('external_id').notNull().unique(),
   title: text('title').notNull(),
   company: text('company'),
   description: text('description'),

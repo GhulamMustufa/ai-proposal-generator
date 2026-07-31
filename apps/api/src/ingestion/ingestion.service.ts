@@ -857,7 +857,7 @@ export class IngestionService {
             source_raw: JSON.stringify(job),
             publishedAt: new Date(), // Dev.to listings lack a created_at in listings API usually, using now
           })
-          .onConflictDoNothing({ target: [jobs.platform, jobs.externalId] })
+          .onConflictDoNothing({ target: jobs.externalId })
           .returning({ id: jobs.id });
 
         if (inserted.length > 0) newJobIds.push(inserted[0].id);
@@ -908,7 +908,7 @@ export class IngestionService {
             source_raw: JSON.stringify({ title, company, link }),
             publishedAt: new Date(),
           })
-          .onConflictDoNothing({ target: [jobs.platform, jobs.externalId] })
+          .onConflictDoNothing({ target: jobs.externalId })
           .returning({ id: jobs.id });
 
         if (inserted.length > 0) newJobIds.push(inserted[0].id);
