@@ -1,6 +1,6 @@
 import { Processor, WorkerHost, InjectQueue } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Job, Queue } from 'bullmq';
 import { IngestionService } from './ingestion.service';
 import { AtsIngestionService } from './ats-ingestion.service';
 import { DorkIngestionService } from './dork-ingestion.service';
@@ -21,12 +21,14 @@ export class IngestionProcessor extends WorkerHost {
     private readonly atsIngestionService: AtsIngestionService,
     private readonly dorkIngestionService: DorkIngestionService,
     private readonly graphqlIngestionService: GraphqlIngestionService,
+    @InjectQueue('matcher-queue') private readonly matcherQueue: Queue,
   ) {
     super();
   }
 
   async process(job: Job<any, any, string>): Promise<any> {
     this.logger.log(`Processing ingestion job ${job.id} of type ${job.name}`);
+
 
     if (job.name === 'cleanup-old-jobs') {
       await this.ingestionService.cleanupOldJobs();
@@ -128,6 +130,8 @@ export class IngestionProcessor extends WorkerHost {
 
     if (newJobIds.length > 0) {
       await this.ingestionService.embedJobs(newJobIds);
+      this.logger.log(`Dispatching match-all-personas to matcher queue for ${newJobIds.length} new jobs...`);
+      await this.matcherQueue.add('match-all-personas', {});
     }
 
     return { insertedCount: newJobIds.length };

@@ -1,6 +1,6 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Processor, WorkerHost, InjectQueue } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Job, Queue } from 'bullmq';
 
 import { MatcherService } from './matcher.service';
 
@@ -8,7 +8,10 @@ import { MatcherService } from './matcher.service';
 export class MatcherProcessor extends WorkerHost {
   private readonly logger = new Logger(MatcherProcessor.name);
 
-  constructor(private readonly matcherService: MatcherService) {
+  constructor(
+    private readonly matcherService: MatcherService,
+    @InjectQueue('matcher-queue') private readonly matcherQueue: Queue,
+  ) {
     super();
   }
 
@@ -25,6 +28,14 @@ export class MatcherProcessor extends WorkerHost {
           `Received persona ${job.data.personaId} for full re-evaluation.`,
         );
         await this.matcherService.syncPersonaJobs(job.data.personaId, true);
+        break;
+      case 'match-all-personas':
+        this.logger.log(`Received trigger to sync all personas against newly scraped jobs.`);
+        const allPersonaIds = await this.matcherService.getAllPersonaIds();
+        this.logger.log(`Found ${allPersonaIds.length} personas. Queueing syncs...`);
+        for (const pid of allPersonaIds) {
+          await this.matcherQueue.add('sync-persona', { personaId: pid });
+        }
         break;
       default:
         this.logger.warn(`Unknown job name: ${job.name}`);

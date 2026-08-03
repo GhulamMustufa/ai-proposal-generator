@@ -227,4 +227,12 @@ Output MUST be exactly in this JSON format:
 
     this.logger.log(`Completed sync for persona ${personaId}`);
   }
+
+  /**
+   * Retrieves all active persona IDs to be scheduled for syncing.
+   */
+  async getAllPersonaIds(): Promise<string[]> {
+    const results = await this.db.select({ id: personas.id }).from(personas);
+    return results.map((r: any) => r.id);
+  }
 }
